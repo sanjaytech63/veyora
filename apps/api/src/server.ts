@@ -1,31 +1,77 @@
+import http from "http";
 import { createApp } from "./app";
 import { env } from "./config/env";
-import { logger } from "@veyora/utils";
-import http from "http";
+import { logger } from "./config/logger";
+import { MongoDatabase } from "./database/mongodb";
+import { RedisService } from "./database/redis";
 
-const app = createApp();
-const server = http.createServer(app);
+async function startServer(): Promise<void> {
+  // 1. Initialize databases asynchronously
+  try {
+    await Promise.all([MongoDatabase.connect(), RedisService.connect()]);
+  } catch (err) {
+    logger.warn(
+      { error: (err as Error).message },
+      "Initial database connection warning - continuing server startup"
+    );
+  }
 
-server.listen(env.PORT, () => {
-  logger.info("API_SERVER", `Veyora API running on port ${env.PORT} in ${env.NODE_ENV} mode`, {
-    port: env.PORT,
-    prefix: env.API_PREFIX,
-    env: env.NODE_ENV,
+  // 2. Create Express app and HTTP server
+  const app = createApp();
+  const server = http.createServer(app);
+
+  server.listen(env.PORT, () => {
+    logger.info(
+      {
+        port: env.PORT,
+        env: env.NODE_ENV,
+        prefix: env.API_PREFIX,
+        docs: `http://localhost:${env.PORT}/docs`,
+      },
+      `Veyora API server listening on port ${env.PORT}`
+    );
   });
-});
 
-function handleShutdown(signal: string): void {
-  logger.info("API_SERVER", `Received ${signal}. Shutting down gracefully...`);
-  server.close(() => {
-    logger.info("API_SERVER", "HTTP server closed.");
-    process.exit(0);
-  });
+  // 3. Graceful shutdown handler
+  let isShuttingDown = false;
 
-  setTimeout(() => {
-    logger.error("API_SERVER", "Forceful shutdown after timeout.");
-    process.exit(1);
-  }, 10000);
+  const handleShutdown = async (signal: string) => {
+    if (isShuttingDown) return;
+    isShuttingDown = true;
+
+    logger.info({ signal }, `Received ${signal}. Draining connections and shutting down...`);
+
+    // Force close after timeout
+    const forceExitTimeout = setTimeout(() => {
+      logger.error("Forced termination due to shutdown timeout");
+      process.exit(1);
+    }, 10000);
+
+    try {
+      // Close HTTP server
+      await new Promise<void>((resolve, reject) => {
+        server.close((err) => (err ? reject(err) : resolve()));
+      });
+      logger.info("HTTP server closed to new requests");
+
+      // Disconnect DBs
+      await Promise.all([MongoDatabase.disconnect(), RedisService.disconnect()]);
+
+      clearTimeout(forceExitTimeout);
+      logger.info("Graceful shutdown completed successfully");
+      process.exit(0);
+    } catch (error) {
+      clearTimeout(forceExitTimeout);
+      logger.error({ error: (error as Error).message }, "Error during graceful shutdown");
+      process.exit(1);
+    }
+  };
+
+  process.on("SIGINT", () => handleShutdown("SIGINT"));
+  process.on("SIGTERM", () => handleShutdown("SIGTERM"));
 }
 
-process.on("SIGINT", () => handleShutdown("SIGINT"));
-process.on("SIGTERM", () => handleShutdown("SIGTERM"));
+startServer().catch((error) => {
+  logger.fatal({ error: (error as Error).message }, "Failed to start Veyora API");
+  process.exit(1);
+});
