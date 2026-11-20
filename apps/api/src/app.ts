@@ -12,6 +12,7 @@ import { notFoundHandler } from "./middleware/not-found";
 import { healthRouter } from "./modules/health/health.router";
 import { systemRouter } from "./modules/system/system.router";
 import { authRouter } from "./modules/auth/auth.router";
+import { catalogRouter } from "./modules/catalog/catalog.router";
 import { openApiSpec } from "./docs/openapi";
 
 export function createApp(): Application {
@@ -69,6 +70,7 @@ export function createApp(): Application {
   apiV1Router.use("/health", healthRouter);
   apiV1Router.use("/system", systemRouter);
   apiV1Router.use("/auth", authRouter);
+  apiV1Router.use("/", catalogRouter);
 
   app.use(env.API_PREFIX, apiV1Router);
 
