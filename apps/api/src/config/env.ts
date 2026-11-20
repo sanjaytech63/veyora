@@ -16,6 +16,18 @@ export const apiConfigSchema = z.object({
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
   BODY_LIMIT: z.string().default("10mb"),
   LOG_LEVEL: z.enum(["trace", "debug", "info", "warn", "error", "fatal"]).default("info"),
+  JWT_ACCESS_SECRET: z
+    .string()
+    .min(32, "JWT_ACCESS_SECRET must be at least 32 characters long")
+    .default("veyora_jwt_access_secret_super_secure_32chars_min"),
+  JWT_REFRESH_SECRET: z
+    .string()
+    .min(32, "JWT_REFRESH_SECRET must be at least 32 characters long")
+    .default("veyora_jwt_refresh_secret_super_secure_32chars_min"),
+  JWT_ACCESS_EXPIRES_IN: z.string().default("15m"),
+  JWT_REFRESH_EXPIRES_IN_DAYS: z.coerce.number().int().positive().default(7),
+  OTP_EXPIRES_IN_MINUTES: z.coerce.number().int().positive().default(10),
+  OTP_MAX_ATTEMPTS: z.coerce.number().int().positive().default(3),
   MONGODB_URI: z
     .string()
     .default("mongodb://root:veyora_mongo_dev@127.0.0.1:27017/veyora_dev?authSource=admin"),

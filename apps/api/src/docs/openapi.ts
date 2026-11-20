@@ -24,6 +24,7 @@ export const openApiSpec = {
   paths: {
     "/health": {
       get: {
+        tags: ["System"],
         summary: "Platform Health Summary",
         description: "Returns process uptime, memory metrics, and runtime environment.",
         responses: {
@@ -42,6 +43,7 @@ export const openApiSpec = {
     },
     "/health/live": {
       get: {
+        tags: ["System"],
         summary: "Liveness Probe",
         description: "Returns 200 if the process is responsive.",
         responses: {
@@ -53,6 +55,7 @@ export const openApiSpec = {
     },
     "/health/ready": {
       get: {
+        tags: ["System"],
         summary: "Readiness Probe",
         description: "Checks MongoDB and Redis dependencies before routing traffic.",
         responses: {
@@ -67,6 +70,7 @@ export const openApiSpec = {
     },
     "/system/info": {
       get: {
+        tags: ["System"],
         summary: "System Runtime Metadata",
         description: "Returns platform version, node runtime, and environment descriptor.",
         responses: {
@@ -83,9 +87,223 @@ export const openApiSpec = {
         },
       },
     },
+    "/auth/register": {
+      post: {
+        tags: ["Authentication"],
+        summary: "Customer Registration",
+        description: "Register a new customer account and send email verification OTP.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/RegisterRequest",
+              },
+            },
+          },
+        },
+        responses: {
+          "201": {
+            description: "Registration successful",
+          },
+          "409": {
+            description: "Email already registered",
+          },
+          "422": {
+            description: "Validation error",
+          },
+        },
+      },
+    },
+    "/auth/verify-email": {
+      post: {
+        tags: ["Authentication"],
+        summary: "Verify Email via OTP",
+        description: "Verify email address using the 6-digit OTP code and issue auth tokens.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/VerifyOtpRequest",
+              },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Email verified successfully, tokens issued",
+          },
+          "400": {
+            description: "Invalid or expired OTP",
+          },
+        },
+      },
+    },
+    "/auth/login": {
+      post: {
+        tags: ["Authentication"],
+        summary: "Customer Login",
+        description: "Authenticate customer with email and password.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/LoginRequest",
+              },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Login successful, tokens issued",
+          },
+          "401": {
+            description: "Invalid credentials or unverified email",
+          },
+        },
+      },
+    },
+    "/auth/admin/login": {
+      post: {
+        tags: ["Authentication"],
+        summary: "Administrator Login",
+        description: "Authenticate administrator with role verification.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/LoginRequest",
+              },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Admin login successful",
+          },
+          "403": {
+            description: "Forbidden - Administrator privileges required",
+          },
+        },
+      },
+    },
+    "/auth/refresh": {
+      post: {
+        tags: ["Authentication"],
+        summary: "Refresh Access Token",
+        description: "Rotate refresh token and issue a fresh access token.",
+        responses: {
+          "200": {
+            description: "Tokens refreshed successfully",
+          },
+          "401": {
+            description: "Invalid or revoked refresh token",
+          },
+        },
+      },
+    },
+    "/auth/logout": {
+      post: {
+        tags: ["Authentication"],
+        summary: "Logout",
+        description: "Revoke active session and clear HTTP-only cookies.",
+        responses: {
+          "200": {
+            description: "Logged out successfully",
+          },
+        },
+      },
+    },
+    "/auth/forgot-password": {
+      post: {
+        tags: ["Authentication"],
+        summary: "Forgot Password",
+        description: "Initiate password reset via OTP.",
+        responses: {
+          "200": {
+            description: "Reset code dispatched if account exists",
+          },
+        },
+      },
+    },
+    "/auth/reset-password": {
+      post: {
+        tags: ["Authentication"],
+        summary: "Reset Password",
+        description: "Reset password using verified OTP code.",
+        responses: {
+          "200": {
+            description: "Password reset successfully",
+          },
+        },
+      },
+    },
+    "/auth/me": {
+      get: {
+        tags: ["Authentication"],
+        summary: "Current Authenticated User",
+        security: [{ BearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "Profile retrieved",
+          },
+          "401": {
+            description: "Unauthenticated",
+          },
+        },
+      },
+    },
+    "/auth/sessions": {
+      get: {
+        tags: ["Authentication"],
+        summary: "User Active Sessions",
+        security: [{ BearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "Session list retrieved",
+          },
+        },
+      },
+    },
   },
   components: {
+    securitySchemes: {
+      BearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+      },
+    },
     schemas: {
+      RegisterRequest: {
+        type: "object",
+        required: ["email", "password", "firstName", "lastName"],
+        properties: {
+          email: { type: "string", format: "email" },
+          password: { type: "string", format: "password" },
+          firstName: { type: "string" },
+          lastName: { type: "string" },
+        },
+      },
+      LoginRequest: {
+        type: "object",
+        required: ["email", "password"],
+        properties: {
+          email: { type: "string", format: "email" },
+          password: { type: "string", format: "password" },
+        },
+      },
+      VerifyOtpRequest: {
+        type: "object",
+        required: ["email", "otp"],
+        properties: {
+          email: { type: "string", format: "email" },
+          otp: { type: "string", minLength: 6, maxLength: 6 },
+        },
+      },
       HealthCheckResponse: {
         type: "object",
         properties: {

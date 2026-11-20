@@ -39,6 +39,24 @@ export class BadRequestError extends AppError {
   }
 }
 
+export class UnauthorizedError extends AppError {
+  constructor(message = "Unauthorized", details?: ApiErrorDetail[]) {
+    super(message, 401, "UNAUTHORIZED", details);
+  }
+}
+
+export class ForbiddenError extends AppError {
+  constructor(message = "Forbidden", details?: ApiErrorDetail[]) {
+    super(message, 403, "FORBIDDEN", details);
+  }
+}
+
+export class ConflictError extends AppError {
+  constructor(message = "Resource already exists", details?: ApiErrorDetail[]) {
+    super(message, 409, "CONFLICT", details);
+  }
+}
+
 export class ValidationError extends AppError {
   constructor(message = "Validation failed", details?: ApiErrorDetail[]) {
     super(message, 422, "VALIDATION_ERROR", details);
