@@ -96,6 +96,7 @@ export class ApiClient {
 
     try {
       let response = await fetch(url, {
+        credentials: "include",
         ...fetchOptions,
         headers,
         body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,

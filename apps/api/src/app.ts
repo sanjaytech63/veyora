@@ -11,6 +11,7 @@ import { errorHandler } from "./middleware/error-handler";
 import { notFoundHandler } from "./middleware/not-found";
 import { healthRouter } from "./modules/health/health.router";
 import { systemRouter } from "./modules/system/system.router";
+import { authRouter } from "./modules/auth/auth.router";
 import { openApiSpec } from "./docs/openapi";
 
 export function createApp(): Application {
@@ -67,6 +68,7 @@ export function createApp(): Application {
   const apiV1Router = express.Router();
   apiV1Router.use("/health", healthRouter);
   apiV1Router.use("/system", systemRouter);
+  apiV1Router.use("/auth", authRouter);
 
   app.use(env.API_PREFIX, apiV1Router);
 
