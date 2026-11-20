@@ -1,32 +1,42 @@
 import { Request, Response, NextFunction } from "express";
-import { AnyZodObject, ZodError } from "zod";
+import { ZodTypeAny, ZodError } from "zod";
 import { ValidationError } from "@veyora/utils";
 import { ApiErrorDetail } from "@veyora/types";
 
-interface RequestSchema {
-  body?: AnyZodObject;
-  query?: AnyZodObject;
-  params?: AnyZodObject;
+export interface RequestValidationSchemas {
+  body?: ZodTypeAny;
+  query?: ZodTypeAny;
+  params?: ZodTypeAny;
+  headers?: ZodTypeAny;
 }
 
-export function validateRequest(schemas: RequestSchema) {
+/**
+ * Centralized Zod Validation Middleware for Express
+ * Validates body, query, params, and headers before controllers execute.
+ * Replaces raw request inputs with parsed/transformed and coerced data.
+ */
+export function validateRequest(schemas: RequestValidationSchemas) {
   return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     try {
       if (schemas.params) {
-        req.params = (await schemas.params.parseAsync(req.params)) as unknown as Record<
-          string,
-          string
-        >;
+        const parsedParams = await schemas.params.parseAsync(req.params);
+        req.params = parsedParams as Record<string, string>;
       }
+
       if (schemas.query) {
-        req.query = (await schemas.query.parseAsync(req.query)) as unknown as Record<
-          string,
-          string
-        >;
+        const parsedQuery = await schemas.query.parseAsync(req.query);
+        req.query = parsedQuery as Record<string, string>;
       }
+
+      if (schemas.headers) {
+        await schemas.headers.parseAsync(req.headers);
+      }
+
       if (schemas.body) {
-        req.body = await schemas.body.parseAsync(req.body);
+        const parsedBody = await schemas.body.parseAsync(req.body);
+        req.body = parsedBody;
       }
+
       next();
     } catch (error) {
       if (error instanceof ZodError) {
@@ -35,10 +45,25 @@ export function validateRequest(schemas: RequestSchema) {
           message: err.message,
           code: err.code,
         }));
-        next(new ValidationError("Request payload validation failed", details));
+
+        const fieldErrors: Record<string, string[]> = {};
+        for (const err of error.errors) {
+          const field = err.path.join(".") || "form";
+          if (!fieldErrors[field]) {
+            fieldErrors[field] = [];
+          }
+          fieldErrors[field].push(err.message);
+        }
+
+        next(new ValidationError("Validation failed", details, fieldErrors));
       } else {
         next(error);
       }
     }
   };
 }
+
+/**
+ * Reusable shorthand alias
+ */
+export const validate = validateRequest;

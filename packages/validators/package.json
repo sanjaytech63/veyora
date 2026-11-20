@@ -18,7 +18,7 @@
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "echo \"No tests in @veyora/validators\"",
+    "test": "vitest run",
     "clean": "rimraf dist"
   },
   "dependencies": {
@@ -28,6 +28,7 @@
     "@veyora/config": "*",
     "rimraf": "^6.0.1",
     "tsup": "^8.4.0",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.5"
   }
 }

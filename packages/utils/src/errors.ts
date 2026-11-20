@@ -58,8 +58,15 @@ export class ConflictError extends AppError {
 }
 
 export class ValidationError extends AppError {
-  constructor(message = "Validation failed", details?: ApiErrorDetail[]) {
+  public readonly errors?: Record<string, string[]>;
+
+  constructor(
+    message = "Validation failed",
+    details?: ApiErrorDetail[],
+    errors?: Record<string, string[]>
+  ) {
     super(message, 422, "VALIDATION_ERROR", details);
+    this.errors = errors;
   }
 }
 

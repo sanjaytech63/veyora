@@ -19,11 +19,14 @@ export interface ApiErrorDetail {
 
 export interface ApiResponseError {
   success: false;
+  message?: string;
+  code?: string;
   error: {
     code: string;
     message: string;
     details?: ApiErrorDetail[];
   };
+  errors?: Record<string, string[]>;
   timestamp: string;
 }
 
