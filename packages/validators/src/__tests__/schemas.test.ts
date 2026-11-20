@@ -32,6 +32,13 @@ import {
   createCouponSchema,
   changePasswordSchema,
   updateUserRoleSchema,
+  // Inventory
+  adjustStockSchema,
+  reserveStockSchema,
+  releaseReservationSchema,
+  commitReservationSchema,
+  updateThresholdSchema,
+  inventoryQuerySchema,
   // Env
   apiEnvSchema,
   webEnvSchema,
@@ -306,6 +313,74 @@ describe("Centralized Zod Validation Suite", () => {
     it("updateUserRoleSchema enforces valid roles", () => {
       expect(updateUserRoleSchema.safeParse({ role: "admin" }).success).toBe(true);
       expect(updateUserRoleSchema.safeParse({ role: "invalid_role" }).success).toBe(false);
+    });
+  });
+
+  describe("Inventory Schemas", () => {
+    it("adjustStockSchema validates increase, decrease, and correction operations", () => {
+      const validIncrease = {
+        sku: "PROD-SKU-01",
+        type: "increase",
+        quantity: 50,
+        reason: "Supplier shipment PO-9921",
+      };
+      expect(adjustStockSchema.safeParse(validIncrease).success).toBe(true);
+
+      const validCorrection = {
+        sku: "PROD-SKU-01",
+        type: "correction",
+        quantity: 0,
+        reason: "Physical count reconciliation",
+      };
+      expect(adjustStockSchema.safeParse(validCorrection).success).toBe(true);
+
+      // Rejects negative quantity
+      expect(
+        adjustStockSchema.safeParse({ ...validIncrease, quantity: -5 }).success
+      ).toBe(false);
+
+      // Rejects empty reason
+      expect(
+        adjustStockSchema.safeParse({ ...validIncrease, reason: "" }).success
+      ).toBe(false);
+
+      // Rejects invalid type
+      expect(
+        adjustStockSchema.safeParse({ ...validIncrease, type: "unsupported" }).success
+      ).toBe(false);
+    });
+
+    it("reserveStockSchema and releaseReservationSchema enforce positive quantities", () => {
+      const validReserve = {
+        sku: "IPHONE-15-PRO",
+        quantity: 2,
+        referenceId: "ORDER-7721",
+      };
+      expect(reserveStockSchema.safeParse(validReserve).success).toBe(true);
+      expect(releaseReservationSchema.safeParse(validReserve).success).toBe(true);
+      expect(commitReservationSchema.safeParse(validReserve).success).toBe(true);
+
+      expect(reserveStockSchema.safeParse({ ...validReserve, quantity: 0 }).success).toBe(false);
+      expect(reserveStockSchema.safeParse({ ...validReserve, referenceId: "" }).success).toBe(false);
+    });
+
+    it("updateThresholdSchema accepts valid non-negative thresholds", () => {
+      expect(updateThresholdSchema.safeParse({ lowStockThreshold: 10 }).success).toBe(true);
+      expect(updateThresholdSchema.safeParse({ lowStockThreshold: 0 }).success).toBe(true);
+      expect(updateThresholdSchema.safeParse({ lowStockThreshold: -1 }).success).toBe(false);
+    });
+
+    it("inventoryQuerySchema parses defaults and filter params", () => {
+      const parsed = inventoryQuerySchema.parse({
+        page: "2",
+        limit: "15",
+        status: "low_stock",
+        lowStockOnly: "true",
+      });
+      expect(parsed.page).toBe(2);
+      expect(parsed.limit).toBe(15);
+      expect(parsed.status).toBe("low_stock");
+      expect(parsed.lowStockOnly).toBe(true);
     });
   });
 

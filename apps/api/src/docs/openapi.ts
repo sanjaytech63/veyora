@@ -384,6 +384,92 @@ export const openApiSpec = {
         },
       },
     },
+    "/admin/inventory": {
+      get: {
+        tags: ["Inventory - Admin"],
+        summary: "List Inventory Items",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          { name: "page", in: "query", schema: { type: "integer", default: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 20 } },
+          { name: "search", in: "query", schema: { type: "string" } },
+          { name: "status", in: "query", schema: { type: "string", enum: ["all", "in_stock", "low_stock", "out_of_stock"] } },
+          { name: "lowStockOnly", in: "query", schema: { type: "boolean" } },
+        ],
+        responses: {
+          "200": { description: "Paginated inventory items" },
+          "401": { description: "Unauthorized" },
+          "403": { description: "Forbidden" },
+        },
+      },
+    },
+    "/admin/inventory/stats": {
+      get: {
+        tags: ["Inventory - Admin"],
+        summary: "Inventory Summary Metrics",
+        security: [{ BearerAuth: [] }],
+        responses: {
+          "200": { description: "Stock totals, low stock alerts, and reservation counts" },
+        },
+      },
+    },
+    "/admin/inventory/adjust": {
+      post: {
+        tags: ["Inventory - Admin"],
+        summary: "Adjust Stock Quantity",
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["sku", "type", "quantity", "reason"],
+                properties: {
+                  sku: { type: "string" },
+                  type: { type: "string", enum: ["increase", "decrease", "correction"] },
+                  quantity: { type: "integer", minimum: 0 },
+                  reason: { type: "string" },
+                  note: { type: "string" },
+                  referenceId: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "Stock adjusted successfully" },
+          "409": { description: "Conflict: insufficient available stock for decrease" },
+        },
+      },
+    },
+    "/admin/inventory/reserve": {
+      post: {
+        tags: ["Inventory - Admin"],
+        summary: "Reserve Stock Units",
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["sku", "quantity", "referenceId"],
+                properties: {
+                  sku: { type: "string" },
+                  quantity: { type: "integer", minimum: 1 },
+                  referenceId: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "Stock reserved" },
+          "409": { description: "Insufficient available stock to fulfill reservation" },
+        },
+      },
+    },
   },
   components: {
     securitySchemes: {
