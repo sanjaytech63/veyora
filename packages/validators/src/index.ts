@@ -13,4 +13,5 @@ export * from "./payments";
 export * from "./coupons";
 export * from "./customers";
 export * from "./admin";
+export * from "./inventory";
 export * from "./env";

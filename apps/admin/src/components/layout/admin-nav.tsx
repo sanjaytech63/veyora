@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   Package,
+  Boxes,
   FolderTree,
   Tags,
   Layers,
@@ -27,6 +28,7 @@ export interface NavItem {
 export const adminNavItems: NavItem[] = [
   { title: "Overview", href: "/", icon: LayoutDashboard },
   { title: "Products", href: "/products", icon: Package, badge: "Phase E" },
+  { title: "Inventory", href: "/inventory", icon: Boxes, badge: "Phase F" },
   { title: "Categories", href: "/categories", icon: FolderTree },
   { title: "Brands", href: "/brands", icon: Tags },
   { title: "UI Components", href: "/#components", icon: Layers, badge: "Phase B" },
