@@ -17,6 +17,8 @@ import {
   createProductSchema,
   updateProductSchema,
   productQuerySchema,
+  createCategorySchema,
+  createBrandSchema,
   // Cart & Checkout
   addToCartSchema,
   updateCartItemSchema,
@@ -136,13 +138,33 @@ describe("Centralized Zod Validation Suite", () => {
         price: 49.99,
         sku: "MOU-WL-001",
         stock: 120,
-        category: "Electronics",
+        categoryId: "cat-electronics-123",
+        variants: [
+          { size: "Standard", color: "Matte Black", sku: "MOU-WL-001-BLK", price: 49.99, stock: 60 },
+        ],
+        images: [{ url: "https://example.com/mouse.jpg", alt: "Mouse top view", isPrimary: true }],
       };
       const parsed = createProductSchema.parse(validProduct);
       expect(parsed.price).toBe(49.99);
       expect(parsed.sku).toBe("MOU-WL-001");
       expect(parsed.stock).toBe(120);
       expect(parsed.status).toBe("draft"); // default
+      expect(parsed.variants).toHaveLength(1);
+    });
+
+    it("createCategorySchema and createBrandSchema validate metadata", () => {
+      const category = createCategorySchema.parse({
+        name: "Laptops & Computers",
+        description: "High performance computing hardware",
+      });
+      expect(category.status).toBe("active");
+      expect(category.order).toBe(0);
+
+      const brand = createBrandSchema.parse({
+        name: "Logitech",
+        website: "https://www.logitech.com",
+      });
+      expect(brand.status).toBe("active");
     });
 
     it("createProductSchema rejects negative prices or zero stock errors", () => {
@@ -151,7 +173,7 @@ describe("Centralized Zod Validation Suite", () => {
         description: "Valid description longer than 10 characters",
         price: -10,
         sku: "ITEM-01",
-        category: "General",
+        categoryId: "cat-1",
       };
       expect(createProductSchema.safeParse(invalidProduct).success).toBe(false);
     });

@@ -6,6 +6,9 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
+  Package,
+  FolderTree,
+  Tags,
   Layers,
   Settings,
   Shield,
@@ -23,6 +26,9 @@ export interface NavItem {
 
 export const adminNavItems: NavItem[] = [
   { title: "Overview", href: "/", icon: LayoutDashboard },
+  { title: "Products", href: "/products", icon: Package, badge: "Phase E" },
+  { title: "Categories", href: "/categories", icon: FolderTree },
+  { title: "Brands", href: "/brands", icon: Tags },
   { title: "UI Components", href: "/#components", icon: Layers, badge: "Phase B" },
   { title: "Data Table", href: "/#data-table", icon: Database },
   { title: "Observability", href: "/#system", icon: Activity },

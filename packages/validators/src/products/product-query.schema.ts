@@ -6,7 +6,8 @@ import { productStatusSchema } from "./create-product.schema";
  * Product Catalog Filtering & Query Schema
  */
 export const productQuerySchema = paginationQuerySchema.extend({
-  category: z.string().trim().optional(),
+  categoryId: z.string().trim().optional(),
+  brandId: z.string().trim().optional(),
   status: productStatusSchema.optional(),
   minPrice: z.coerce.number().nonnegative().optional(),
   maxPrice: z.coerce.number().positive().optional(),

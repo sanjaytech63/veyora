@@ -268,6 +268,122 @@ export const openApiSpec = {
         },
       },
     },
+    "/products": {
+      get: {
+        tags: ["Catalog - Storefront"],
+        summary: "List Products",
+        description: "Browse published products with pagination, category/brand filters, and search query.",
+        parameters: [
+          { name: "page", in: "query", schema: { type: "integer", default: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 20 } },
+          { name: "search", in: "query", schema: { type: "string" } },
+          { name: "categoryId", in: "query", schema: { type: "string" } },
+          { name: "brandId", in: "query", schema: { type: "string" } },
+          { name: "minPrice", in: "query", schema: { type: "number" } },
+          { name: "maxPrice", in: "query", schema: { type: "number" } },
+          { name: "sort", in: "query", schema: { type: "string", enum: ["newest", "price_asc", "price_desc", "popular", "rating"] } },
+        ],
+        responses: {
+          "200": {
+            description: "Paginated list of active products",
+          },
+        },
+      },
+    },
+    "/products/{idOrSlug}": {
+      get: {
+        tags: ["Catalog - Storefront"],
+        summary: "Get Product by ID or Slug",
+        parameters: [
+          { name: "idOrSlug", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          "200": { description: "Product details with variants and attributes" },
+          "404": { description: "Product not found" },
+        },
+      },
+    },
+    "/categories": {
+      get: {
+        tags: ["Catalog - Storefront"],
+        summary: "List Active Categories",
+        responses: {
+          "200": { description: "List of categories" },
+        },
+      },
+    },
+    "/categories/tree": {
+      get: {
+        tags: ["Catalog - Storefront"],
+        summary: "Category Hierarchy Tree",
+        responses: {
+          "200": { description: "Nested tree of categories" },
+        },
+      },
+    },
+    "/brands": {
+      get: {
+        tags: ["Catalog - Storefront"],
+        summary: "List Active Brands",
+        responses: {
+          "200": { description: "List of brands" },
+        },
+      },
+    },
+    "/admin/catalog/stats": {
+      get: {
+        tags: ["Catalog - Admin"],
+        summary: "Catalog Summary Metrics",
+        security: [{ BearerAuth: [] }],
+        responses: {
+          "200": { description: "Catalog counts and stock metrics" },
+          "403": { description: "Forbidden - requires admin privilege" },
+        },
+      },
+    },
+    "/admin/products": {
+      post: {
+        tags: ["Catalog - Admin"],
+        summary: "Create New Product",
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { $ref: "#/components/schemas/CreateProductRequest" } } },
+        },
+        responses: {
+          "201": { description: "Product created" },
+          "422": { description: "Validation error" },
+        },
+      },
+    },
+    "/admin/categories": {
+      post: {
+        tags: ["Catalog - Admin"],
+        summary: "Create New Category",
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { $ref: "#/components/schemas/CreateCategoryRequest" } } },
+        },
+        responses: {
+          "201": { description: "Category created" },
+        },
+      },
+    },
+    "/admin/brands": {
+      post: {
+        tags: ["Catalog - Admin"],
+        summary: "Create New Brand",
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { $ref: "#/components/schemas/CreateBrandRequest" } } },
+        },
+        responses: {
+          "201": { description: "Brand created" },
+        },
+      },
+    },
   },
   components: {
     securitySchemes: {
@@ -369,6 +485,37 @@ export const openApiSpec = {
             },
           },
           timestamp: { type: "string", format: "date-time" },
+        },
+      },
+      CreateProductRequest: {
+        type: "object",
+        required: ["title", "description", "price", "sku", "categoryId"],
+        properties: {
+          title: { type: "string" },
+          description: { type: "string" },
+          price: { type: "number", minimum: 0 },
+          sku: { type: "string" },
+          categoryId: { type: "string" },
+          brandId: { type: "string" },
+          status: { type: "string", enum: ["draft", "active", "archived"] },
+        },
+      },
+      CreateCategoryRequest: {
+        type: "object",
+        required: ["name"],
+        properties: {
+          name: { type: "string" },
+          description: { type: "string" },
+          parentId: { type: "string" },
+        },
+      },
+      CreateBrandRequest: {
+        type: "object",
+        required: ["name"],
+        properties: {
+          name: { type: "string" },
+          description: { type: "string" },
+          website: { type: "string", format: "uri" },
         },
       },
     },
