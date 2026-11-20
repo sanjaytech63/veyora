@@ -1,454 +1,303 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ProductGrid } from "@/components/storefront/product-grid";
+import { useCategories, useFeaturedProducts, useProducts } from "@/hooks/use-catalog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/ui/error-state";
-import { LoadingState } from "@/components/ui/loading-state";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
-import { toast } from "sonner";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { useUIStore } from "@/stores/ui-store";
-import { SERVICES } from "@veyora/config";
-import { Sparkles, ShoppingBag, HelpCircle, Info } from "lucide-react";
-
-const demoFormSchema = z.object({
-  fullName: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please provide a valid email address"),
-  notifications: z.boolean().default(false),
-});
-
-type DemoFormValues = z.infer<typeof demoFormSchema>;
+  ArrowRight,
+  Sparkles,
+  ShieldCheck,
+  Truck,
+  RotateCcw,
+  Compass,
+  Headphones,
+  Laptop,
+  Zap,
+  Briefcase,
+  Star,
+} from "lucide-react";
 
 export default function StorefrontHomePage() {
-  const { cartDrawerOpen, setCartDrawerOpen } = useUIStore();
-  const [dialogOpen, setDialogOpen] = React.useState(false);
+  const { data: categories = [], isLoading: catsLoading } = useCategories();
+  const { data: featuredProducts = [], isLoading: featuredLoading } = useFeaturedProducts(4);
+  const [activeCollectionTab, setActiveCollectionTab] = React.useState<string>("all");
 
-  const form = useForm<DemoFormValues>({
-    resolver: zodResolver(demoFormSchema),
-    defaultValues: {
-      fullName: "",
-      email: "",
-      notifications: true,
-    },
+  const { data: collectionProductsData, isLoading: collectionLoading } = useProducts({
+    categoryId: activeCollectionTab === "all" ? undefined : activeCollectionTab,
+    limit: 8,
   });
 
-  const onSubmit = (data: DemoFormValues) => {
-    toast.success("Validation successful!", {
-      description: `Input validated via Zod schema for ${data.fullName} (${data.email})`,
-    });
+  const categoryIcons: Record<string, React.ElementType> = {
+    audio: Headphones,
+    workspace: Laptop,
+    power: Zap,
+    carry: Briefcase,
   };
 
   return (
-    <div className="py-8 md:py-16 space-y-16">
-      {/* Hero Section */}
-      <section>
-        <Container size="xl" className="text-center space-y-6">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-medium text-primary">
-            <Sparkles className="h-3.5 w-3.5" />
-            Phase B — Frontend Design System & UI Foundation
-          </div>
+    <div className="space-y-24 pb-24">
+      {/* 1. Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-muted/30 via-background to-background pt-12 pb-20 md:pt-20 md:pb-32 border-b border-border/40">
+        <Container size="xl" className="relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+            {/* Left Column: Editorial Headline & CTAs */}
+            <div className="lg:col-span-7 space-y-8 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-semibold tracking-wide text-primary">
+                <Sparkles className="h-3.5 w-3.5" />
+                Veyora 2026 Collection • Hardware Redefined
+              </div>
 
-          <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl text-foreground max-w-4xl mx-auto">
-            Modular Frontend Infrastructure for{" "}
-            <span className="text-primary">{SERVICES.NAME}</span>
-          </h1>
+              <h1 className="text-4xl sm:text-6xl xl:text-7xl font-extrabold tracking-tight text-foreground leading-[1.08]">
+                Precision instruments for modern living.
+              </h1>
 
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Design tokens, responsive layouts, Radix UI primitives, TanStack Query, Zustand client
-            state, and Zod-validated forms with zero hardcoded colors.
-          </p>
+              <p className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto lg:mx-0 leading-relaxed font-normal">
+                Engineered from aircraft-grade aluminum, virgin merino wool, and custom acoustic drivers. Designed for tactile clarity and effortless performance.
+              </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-            <Button
-              size="lg"
-              onClick={() =>
-                toast.success("Toast Notification Triggered", {
-                  description: "Sonner toast configured across all providers.",
-                })
-              }
-            >
-              Trigger Toast Notification
-            </Button>
-            <Button variant="outline" size="lg" onClick={() => setCartDrawerOpen(true)}>
-              <ShoppingBag className="w-4 h-4 mr-2" />
-              Toggle Zustand Cart Drawer
-            </Button>
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+                <Button asChild size="lg" className="rounded-full px-8 font-semibold shadow-md shadow-primary/10 w-full sm:w-auto">
+                  <Link href="/shop" className="inline-flex items-center gap-2">
+                    Explore Storefront
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+
+                <Button asChild variant="outline" size="lg" className="rounded-full px-8 font-semibold w-full sm:w-auto border-border/80">
+                  <Link href="/category/audio">
+                    Acoustic Hardware
+                  </Link>
+                </Button>
+              </div>
+
+              {/* Trust Metrics Pill */}
+              <div className="pt-6 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-xs text-muted-foreground border-t border-border/40">
+                <div className="flex items-center gap-1.5">
+                  <Truck className="h-4 w-4 text-primary" />
+                  <span>Carbon-Neutral Dispatch</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <ShieldCheck className="h-4 w-4 text-primary" />
+                  <span>2-Year Atelier Guarantee</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <RotateCcw className="h-4 w-4 text-primary" />
+                  <span>30-Day Risk-Free Trial</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Hero Visual Feature Stage */}
+            <div className="lg:col-span-5 relative">
+              <div className="relative mx-auto aspect-square max-w-md lg:max-w-none overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-tr from-muted/60 via-card to-card p-3 shadow-2xl">
+                <div className="relative h-full w-full overflow-hidden rounded-2xl bg-zinc-950">
+                  <img
+                    src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1200&auto=format&fit=crop"
+                    alt="Aura Spatial Wireless Headphones Flagship"
+                    className="h-full w-full object-cover object-center opacity-90 transition-transform duration-1000 hover:scale-105"
+                  />
+                  {/* Floating Highlight Card */}
+                  <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-white/10 bg-black/60 p-4 backdrop-blur-xl text-white">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">
+                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                          Flagship Release
+                        </div>
+                        <h4 className="text-sm font-semibold tracking-tight text-white mt-0.5">
+                          Aura Spatial Wireless Headphones
+                        </h4>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm font-bold text-white">$389</span>
+                        <div className="text-[10px] text-zinc-400 line-through">$449</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </Container>
       </section>
 
-      {/* Design System & Components Showcase */}
-      <section id="design-system">
-        <Container size="xl" className="space-y-8">
-          <div className="border-b border-border pb-4">
-            <h2 className="text-2xl font-bold tracking-tight">Design System Components</h2>
-            <p className="text-sm text-muted-foreground">
-              Comprehensive showcase of all 20+ required design system primitives.
-            </p>
+      {/* 2. Featured Categories Section */}
+      <section id="categories">
+        <Container size="xl" className="space-y-10">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Curated Departments
+              </span>
+              <h2 className="mt-1 text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+                Browse by Category
+              </h2>
+            </div>
+            <Link
+              href="/shop"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+            >
+              View Full Index
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
 
-          <Tabs defaultValue="actions" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
-              <TabsTrigger value="actions">Actions & Inputs</TabsTrigger>
-              <TabsTrigger value="feedback">Overlays & Popups</TabsTrigger>
-              <TabsTrigger value="forms">Zod Forms</TabsTrigger>
-              <TabsTrigger value="states">App States</TabsTrigger>
-              <TabsTrigger value="surfaces">Cards & Badges</TabsTrigger>
-            </TabsList>
-
-            {/* Tab 1: Actions & Inputs */}
-            <TabsContent value="actions" className="space-y-6">
-              <div className="grid gap-6 md:grid-cols-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Button Variants & Sizes</CardTitle>
-                    <CardDescription>
-                      Buttons with full CVA states, hover transitions, and focus rings.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex flex-wrap gap-2">
-                      <Button variant="default">Default</Button>
-                      <Button variant="secondary">Secondary</Button>
-                      <Button variant="outline">Outline</Button>
-                      <Button variant="ghost">Ghost</Button>
-                      <Button variant="destructive">Destructive</Button>
-                      <Button variant="link">Link</Button>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2 pt-2">
-                      <Button size="sm">Small</Button>
-                      <Button size="default">Default</Button>
-                      <Button size="lg">Large</Button>
-                      <Button disabled>Disabled</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Selection & Toggle Controls</CardTitle>
-                    <CardDescription>
-                      Radix primitives for Checkbox, Radio, Switch, and Select.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <label className="text-sm font-medium">Dark Mode Switch</label>
-                        <p className="text-xs text-muted-foreground">Radix switch component</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {catsLoading
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="aspect-[4/3] rounded-2xl bg-muted animate-pulse" />
+                ))
+              : categories.map((cat) => {
+                  const Icon = categoryIcons[cat.slug] || Compass;
+                  return (
+                    <Link
+                      key={cat.id}
+                      href={`/category/${cat.slug}`}
+                      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-6 transition-all duration-300 hover:border-border hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 group-hover:text-primary" />
                       </div>
-                      <Switch defaultChecked />
-                    </div>
 
-                    <div className="flex items-center gap-2">
-                      <Checkbox id="demo-check" defaultChecked />
-                      <label htmlFor="demo-check" className="text-sm font-medium">
-                        Accept terms & conditions
-                      </label>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Select Dropdown</label>
-                      <Select defaultValue="standard">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choose option" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="standard">Standard Priority</SelectItem>
-                          <SelectItem value="express">Express Priority</SelectItem>
-                          <SelectItem value="enterprise">Enterprise SLA</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <RadioGroup defaultValue="card" className="flex gap-4">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="card" id="r1" />
-                        <label htmlFor="r1" className="text-sm">
-                          Card
-                        </label>
+                      <div className="mt-12 space-y-1">
+                        <h3 className="font-bold text-foreground tracking-tight text-lg group-hover:text-primary transition-colors">
+                          {cat.name}
+                        </h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {cat.description || "Discover verified models and accessories."}
+                        </p>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="crypto" id="r2" />
-                        <label htmlFor="r2" className="text-sm">
-                          Crypto
-                        </label>
-                      </div>
-                    </RadioGroup>
-                  </CardContent>
-                </Card>
+                    </Link>
+                  );
+                })}
+          </div>
+        </Container>
+      </section>
+
+      {/* 3. Featured Products Showcase */}
+      <section>
+        <Container size="xl" className="space-y-10">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Atelier Highlights
+              </span>
+              <h2 className="mt-1 text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+                Featured Hardware
+              </h2>
+            </div>
+            <Link
+              href="/shop"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+            >
+              Shop All Products
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+
+          <ProductGrid
+            products={featuredProducts}
+            categories={categories}
+            loading={featuredLoading}
+            columns={4}
+          />
+        </Container>
+      </section>
+
+      {/* 4. Promotional Editorial Section */}
+      <section>
+        <Container size="xl">
+          <div className="relative overflow-hidden rounded-3xl bg-zinc-950 text-white p-8 sm:p-12 md:p-16 border border-zinc-800 shadow-2xl">
+            <div className="relative z-10 max-w-2xl space-y-6">
+              <Badge variant="outline" className="border-white/30 text-white font-semibold text-xs py-1 px-3">
+                Design Philosophy
+              </Badge>
+
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-tight">
+                Simplicity is the resolution of complexity.
+              </h2>
+
+              <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+                Every Veyora instrument begins with an uncompromising material foundation. We eliminate ornamental excess in pursuit of pure ergonomic performance and tactile weight.
+              </p>
+
+              <div className="pt-2 flex flex-wrap gap-4">
+                <Button asChild size="lg" className="rounded-full bg-white text-zinc-950 hover:bg-zinc-200 font-semibold">
+                  <Link href="/category/workspace">
+                    Explore Workspace Hardware
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="rounded-full border-zinc-700 text-white hover:bg-zinc-800">
+                  <Link href="/shop">
+                    View Complete Catalog
+                  </Link>
+                </Button>
               </div>
-            </TabsContent>
+            </div>
 
-            {/* Tab 2: Overlays & Popups */}
-            <TabsContent value="feedback" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Dialog, Drawer, Tooltip & Popover</CardTitle>
-                  <CardDescription>Accessible modals, slide-overs, and popovers.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-wrap gap-4">
-                  {/* Dialog */}
-                  <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline">Open Modal Dialog</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Foundation Modal</DialogTitle>
-                        <DialogDescription>
-                          Accessible modal overlay with focus trapping, ESC key listener, and
-                          keyboard navigation.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="py-4 text-sm text-muted-foreground">
-                        Phase B dialog skeleton ready for composition.
-                      </div>
-                      <Button onClick={() => setDialogOpen(false)}>Close Dialog</Button>
-                    </DialogContent>
-                  </Dialog>
+            {/* Background Accent Gradients */}
+            <div className="absolute right-0 top-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
+            <div className="absolute right-1/4 bottom-0 -mb-20 h-72 w-72 rounded-full bg-indigo-500/20 blur-3xl pointer-events-none" />
+          </div>
+        </Container>
+      </section>
 
-                  {/* Drawer */}
-                  <Drawer open={cartDrawerOpen} onOpenChange={setCartDrawerOpen}>
-                    <DrawerTrigger asChild>
-                      <Button variant="secondary">Open Slide-up Drawer</Button>
-                    </DrawerTrigger>
-                    <DrawerContent className="p-6">
-                      <DrawerHeader>
-                        <DrawerTitle>Interactive Drawer (Vaul)</DrawerTitle>
-                        <DrawerDescription>
-                          Mobile-friendly bottom drawer component with swipe-to-dismiss.
-                        </DrawerDescription>
-                      </DrawerHeader>
-                      <div className="py-6 text-center text-sm text-muted-foreground">
-                        Controlled via Zustand UI store (`cartDrawerOpen: {String(cartDrawerOpen)}
-                        `).
-                      </div>
-                      <Button onClick={() => setCartDrawerOpen(false)}>Close Drawer</Button>
-                    </DrawerContent>
-                  </Drawer>
+      {/* 5. Product Collections Tabs */}
+      <section id="collections">
+        <Container size="xl" className="space-y-8">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Curated Collections
+              </span>
+              <h2 className="mt-1 text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+                Crafted for Every Workflow
+              </h2>
+            </div>
 
-                  {/* Tooltip */}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <HelpCircle className="h-5 w-5 text-muted-foreground" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Tooltip primitive with delay duration configuration</p>
-                    </TooltipContent>
-                  </Tooltip>
+            {/* Collection Filter Buttons */}
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveCollectionTab("all")}
+                className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
+                  activeCollectionTab === "all"
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "border border-border/80 bg-card text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                All Departments
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setActiveCollectionTab(cat.id)}
+                  className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
+                    activeCollectionTab === cat.id
+                      ? "bg-primary text-primary-foreground shadow-xs"
+                      : "border border-border/80 bg-card text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          </div>
 
-                  {/* Popover */}
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="gap-2">
-                        <Info className="h-4 w-4" />
-                        Info Popover
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent>
-                      <h4 className="font-semibold text-sm mb-1">Architecture Info</h4>
-                      <p className="text-xs text-muted-foreground">
-                        Popovers provide rich contextual menus and interactive flyouts outside
-                        document flow.
-                      </p>
-                    </PopoverContent>
-                  </Popover>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Tab 3: Zod Forms */}
-            <TabsContent value="forms" className="space-y-6">
-              <Card className="max-w-xl mx-auto">
-                <CardHeader>
-                  <CardTitle>React Hook Form + Zod</CardTitle>
-                  <CardDescription>
-                    Strict type-safe form validation with error messages and accessible ARIA
-                    attributes.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="fullName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Full Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Jane Doe" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Your display name across the platform.
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email Address</FormLabel>
-                            <FormControl>
-                              <Input type="email" placeholder="jane@example.com" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="notifications"
-                        render={({ field }) => (
-                          <FormItem className="flex items-center justify-between rounded-lg border border-border p-3">
-                            <div className="space-y-0.5">
-                              <FormLabel>Notification Preferences</FormLabel>
-                              <FormDescription>Receive platform status updates.</FormDescription>
-                            </div>
-                            <FormControl>
-                              <Switch checked={field.value} onCheckedChange={field.onChange} />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-
-                      <Button type="submit" className="w-full">
-                        Validate and Submit Form
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Tab 4: App States */}
-            <TabsContent value="states" className="space-y-6">
-              <div className="grid gap-6 md:grid-cols-3">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">Skeleton Loading</CardTitle>
-                    <CardDescription>Animated shimmer pulse effect</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Skeleton className="h-6 w-3/4" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
-                    <div className="flex gap-2 pt-2">
-                      <Skeleton className="h-8 w-20" />
-                      <Skeleton className="h-8 w-20" />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <EmptyState
-                  title="Empty Catalog State"
-                  description="Pre-configured reusable empty state widget with icon and action slot."
-                  action={<Button size="sm">Explore Collections</Button>}
-                />
-
-                <ErrorState
-                  title="Network Boundary Error"
-                  message="Component error boundary or query rejection fallback."
-                  onRetry={() => toast.info("Retrying query...")}
-                />
-              </div>
-              <LoadingState message="Demonstrating LoadingState spinner component" />
-            </TabsContent>
-
-            {/* Tab 5: Surfaces, Badges & Tokens */}
-            <TabsContent value="surfaces" className="space-y-6">
-              <div className="grid gap-6 md:grid-cols-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Badge Status Variants</CardTitle>
-                    <CardDescription>Semantic badge tokens using theme variables</CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex flex-wrap gap-2">
-                    <Badge variant="default">Default Primary</Badge>
-                    <Badge variant="secondary">Secondary</Badge>
-                    <Badge variant="outline">Outline</Badge>
-                    <Badge variant="success">Active / Success</Badge>
-                    <Badge variant="warning">Pending Review</Badge>
-                    <Badge variant="destructive">Failed / Error</Badge>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Design Token Verification</CardTitle>
-                    <CardDescription>CSS variable tokens mapped in Tailwind v4</CardDescription>
-                  </CardHeader>
-                  <CardContent className="grid grid-cols-2 gap-2 text-xs font-mono">
-                    <div className="p-2 rounded bg-background border text-foreground">
-                      bg-background
-                    </div>
-                    <div className="p-2 rounded bg-card border text-card-foreground">bg-card</div>
-                    <div className="p-2 rounded bg-primary text-primary-foreground">bg-primary</div>
-                    <div className="p-2 rounded bg-secondary text-secondary-foreground">
-                      bg-secondary
-                    </div>
-                    <div className="p-2 rounded bg-muted text-muted-foreground">bg-muted</div>
-                    <div className="p-2 rounded bg-destructive text-destructive-foreground">
-                      bg-destructive
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
+          <ProductGrid
+            products={collectionProductsData?.items || []}
+            categories={categories}
+            loading={collectionLoading}
+            columns={4}
+          />
         </Container>
       </section>
     </div>

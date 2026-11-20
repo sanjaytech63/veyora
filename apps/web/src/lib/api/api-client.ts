@@ -4,6 +4,7 @@ export interface RequestOptions extends Omit<RequestInit, "body"> {
   params?: Record<string, string | number | boolean | undefined | null>;
   body?: unknown;
   timeout?: number;
+  raw?: boolean;
 }
 
 export class ApiClientError extends Error {
@@ -122,6 +123,10 @@ export class ApiClient {
         );
       }
 
+      if (options.raw) {
+        return data as T;
+      }
+
       // If wrapped in ApiResponseSuccess format, unwrap data
       if (data && typeof data === "object" && "success" in data && data.success === true) {
         return (data as ApiResponseSuccess<T>).data;
@@ -146,6 +151,13 @@ export class ApiClient {
 
   public get<T>(endpoint: string, options?: Omit<RequestOptions, "method" | "body">): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: "GET" });
+  }
+
+  public getWithMeta<T>(
+    endpoint: string,
+    options?: Omit<RequestOptions, "method" | "body" | "raw">
+  ): Promise<ApiResponseSuccess<T>> {
+    return this.request<ApiResponseSuccess<T>>(endpoint, { ...options, method: "GET", raw: true });
   }
 
   public post<T>(

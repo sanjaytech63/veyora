@@ -4,12 +4,12 @@ import * as React from "react";
 import Link from "next/link";
 import { Container } from "@/components/ui/container";
 import { StoreNav } from "./store-nav";
-import { MobileNav } from "./mobile-nav";
 import { ThemeToggle } from "@/components/common/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { useUIStore } from "@/stores/ui-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { authApi } from "@/lib/api/auth-api";
+import { SearchModal } from "@/components/storefront/search-modal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +25,7 @@ import { toast } from "sonner";
 export function StoreHeader() {
   const { setMobileNavOpen, setCartDrawerOpen } = useUIStore();
   const { user, isAuthenticated, clearAuth } = useAuthStore();
+  const [searchOpen, setSearchOpen] = React.useState(false);
 
   const handleLogout = async () => {
     try {
@@ -38,96 +39,115 @@ export function StoreHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/80 backdrop-blur-md">
-      <Container size="xl" className="flex h-16 items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setMobileNavOpen(true)}
-            aria-label="Open mobile menu"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
+    <>
+      <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur-md">
+        <Container size="xl" className="flex h-16 items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setMobileNavOpen(true)}
+              aria-label="Open mobile menu"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
 
-          <Link href="/" className="flex items-center gap-2 font-bold text-lg tracking-tight">
-            <ShoppingBag className="h-5 w-5 text-primary" />
-            <span>{SERVICES.NAME}</span>
-          </Link>
-        </div>
+            <Link href="/" className="flex items-center gap-2.5 font-bold text-lg tracking-tight">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+                <ShoppingBag className="h-4 w-4" />
+              </div>
+              <span className="font-extrabold tracking-tight">{SERVICES.NAME}</span>
+            </Link>
+          </div>
 
-        <StoreNav />
+          <StoreNav />
 
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" aria-label="Search" onClick={() => {}}>
-            <Search className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* Search Pill Trigger */}
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              className="hidden lg:flex items-center gap-3 rounded-full border border-border/80 bg-muted/40 px-3.5 py-1.5 text-xs text-muted-foreground hover:border-primary/40 hover:bg-accent/60 transition-colors"
+            >
+              <Search className="h-3.5 w-3.5" />
+              <span className="pr-4">Search hardware, audio, carry...</span>
+              <kbd className="pointer-events-none inline-flex h-4 select-none items-center gap-1 rounded bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+                ⌘K
+              </kbd>
+            </button>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Shopping Cart Drawer"
-            onClick={() => setCartDrawerOpen(true)}
-            className="relative"
-          >
-            <ShoppingCart className="h-4 w-4" />
-            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-              0
-            </span>
-          </Button>
+            {/* Mobile / Tablet search icon */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              aria-label="Search"
+              onClick={() => setSearchOpen(true)}
+            >
+              <Search className="h-4 w-4" />
+            </Button>
 
-          <ThemeToggle />
+            {/* Shopping Cart Drawer */}
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Shopping Cart Drawer"
+              onClick={() => setCartDrawerOpen(true)}
+              className="relative"
+            >
+              <ShoppingCart className="h-4 w-4" />
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                0
+              </span>
+            </Button>
 
-          {isAuthenticated && user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full ring-1 ring-border ml-1">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary">
-                    {user.firstName ? user.firstName.charAt(0).toUpperCase() : "U"}
-                  </div>
-                  <span className="sr-only">Toggle user menu</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {user.firstName} {user.lastName}
-                    </p>
-                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild className="gap-2 cursor-pointer">
-                  <Link href="/account">
-                    <UserIcon className="h-4 w-4" />
-                    <span>My Account</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="gap-2 text-destructive focus:text-destructive cursor-pointer"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Sign out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <div className="flex items-center gap-2 ml-1">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/login">Sign in</Link>
+            <ThemeToggle />
+
+            {isAuthenticated && user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full ring-1 ring-border ml-1">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary">
+                      {user.firstName ? user.firstName.charAt(0).toUpperCase() : "U"}
+                    </div>
+                    <span className="sr-only">Toggle user menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {user.firstName} {user.lastName}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="cursor-pointer">
+                      <UserIcon className="mr-2 h-4 w-4" />
+                      Account Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button asChild variant="default" size="sm" className="hidden sm:inline-flex rounded-full text-xs px-4">
+                <Link href="/login">Sign In</Link>
               </Button>
-              <Button size="sm" asChild className="hidden sm:inline-flex">
-                <Link href="/register">Sign up</Link>
-              </Button>
-            </div>
-          )}
-        </div>
-      </Container>
-      <MobileNav />
-    </header>
+            )}
+          </div>
+        </Container>
+      </header>
+
+      {/* Instant Search Overlay */}
+      <SearchModal open={searchOpen} onOpenChange={setSearchOpen} />
+    </>
   );
 }

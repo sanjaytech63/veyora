@@ -1,0 +1,477 @@
+"use client";
+
+import * as React from "react";
+import { Container } from "@/components/ui/container";
+import { ProductGrid } from "@/components/storefront/product-grid";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+  DrawerClose,
+} from "@/components/ui/drawer";
+import { useCategories, useBrands, useProducts } from "@/hooks/use-catalog";
+import { Search, X, SlidersHorizontal } from "lucide-react";
+
+export default function ShopPage() {
+  const { data: categories = [] } = useCategories();
+  const { data: brands = [] } = useBrands();
+
+  // State
+  const [search, setSearch] = React.useState("");
+  const [selectedCategory, setSelectedCategory] = React.useState<string>("all");
+  const [selectedBrand, setSelectedBrand] = React.useState<string>("all");
+  const [inStockOnly, setInStockOnly] = React.useState(false);
+  const [sortBy, setSortBy] = React.useState<"newest" | "price_asc" | "price_desc" | "title">("newest");
+  const [page, setPage] = React.useState(1);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = React.useState(false);
+
+  // Debounced search query
+  const [debouncedSearch, setDebouncedSearch] = React.useState(search);
+  React.useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Map sort parameter
+  const sortParams = React.useMemo(() => {
+    if (sortBy === "price_asc") return { sortBy: "price" as const, sortOrder: "asc" as const };
+    if (sortBy === "price_desc") return { sortBy: "price" as const, sortOrder: "desc" as const };
+    if (sortBy === "title") return { sortBy: "title" as const, sortOrder: "asc" as const };
+    return { sortBy: "createdAt" as const, sortOrder: "desc" as const };
+  }, [sortBy]);
+
+  const { data, isLoading } = useProducts({
+    page,
+    limit: 12,
+    search: debouncedSearch || undefined,
+    categoryId: selectedCategory === "all" ? undefined : selectedCategory,
+    brandId: selectedBrand === "all" ? undefined : selectedBrand,
+    sortBy: sortParams.sortBy,
+    sortOrder: sortParams.sortOrder,
+  });
+
+  const products = React.useMemo(() => {
+    const list = data?.items || [];
+    if (!inStockOnly) return list;
+    return list.filter((p) => p.stock > 0);
+  }, [data?.items, inStockOnly]);
+
+  const totalPages = data?.meta?.totalPages || 1;
+  const totalItems = data?.meta?.total || products.length;
+
+  const handleResetFilters = () => {
+    setSearch("");
+    setSelectedCategory("all");
+    setSelectedBrand("all");
+    setInStockOnly(false);
+    setSortBy("newest");
+    setPage(1);
+  };
+
+  const hasActiveFilters =
+    search !== "" || selectedCategory !== "all" || selectedBrand !== "all" || inStockOnly;
+
+  return (
+    <div className="py-8 md:py-12">
+      <Container size="xl" className="space-y-8">
+        {/* Header Breadcrumb & Title */}
+        <div className="space-y-2">
+          <div className="text-xs font-semibold uppercase tracking-wider text-primary">
+            Storefront Catalog
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
+            Explore Hardware & Atelier Instruments
+          </h1>
+          <p className="text-sm text-muted-foreground max-w-2xl">
+            Browse our complete collection of verified industrial electronics, acoustic headphones, and precision peripherals.
+          </p>
+        </div>
+
+        {/* Toolbar: Search, Mobile Filters, and Sorting */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 rounded-2xl border border-border/60 bg-card p-4 shadow-xs">
+          {/* Search Box */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3.5 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Search by title, specs, or keyword..."
+              className="pl-10 pr-9 rounded-xl border-border/60"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 justify-between sm:justify-end">
+            {/* Mobile Filter Drawer Trigger */}
+            <Drawer open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+              <DrawerTrigger asChild>
+                <Button variant="outline" size="sm" className="lg:hidden rounded-xl gap-2">
+                  <SlidersHorizontal className="h-4 w-4" />
+                  Filters
+                  {hasActiveFilters && (
+                    <span className="flex h-2 w-2 rounded-full bg-primary" />
+                  )}
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent className="p-6 max-h-[85vh]">
+                <DrawerHeader className="px-0 pt-0 pb-4 border-b">
+                  <DrawerTitle className="flex items-center justify-between text-lg font-bold">
+                    <span>Catalog Filters</span>
+                    <DrawerClose asChild>
+                      <Button variant="ghost" size="icon">
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </DrawerClose>
+                  </DrawerTitle>
+                </DrawerHeader>
+
+                <div className="py-6 space-y-6 overflow-y-auto">
+                  {/* Category Filter */}
+                  <div className="space-y-3">
+                    <label className="text-xs font-bold uppercase tracking-wider text-foreground">
+                      Category
+                    </label>
+                    <div className="flex flex-col gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCategory("all")}
+                        className={`text-left text-sm py-1.5 px-3 rounded-lg font-medium transition-colors ${
+                          selectedCategory === "all"
+                            ? "bg-primary text-primary-foreground font-semibold"
+                            : "text-muted-foreground hover:bg-muted"
+                        }`}
+                      >
+                        All Categories
+                      </button>
+                      {categories.map((c) => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => setSelectedCategory(c.id)}
+                          className={`text-left text-sm py-1.5 px-3 rounded-lg font-medium transition-colors ${
+                            selectedCategory === c.id
+                              ? "bg-primary text-primary-foreground font-semibold"
+                              : "text-muted-foreground hover:bg-muted"
+                          }`}
+                        >
+                          {c.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Stock Toggle */}
+                  <div className="flex items-center justify-between pt-4 border-t">
+                    <label htmlFor="mobile-stock-toggle" className="text-sm font-medium">
+                      In Stock Only
+                    </label>
+                    <Switch
+                      id="mobile-stock-toggle"
+                      checked={inStockOnly}
+                      onCheckedChange={setInStockOnly}
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1 rounded-xl"
+                    onClick={handleResetFilters}
+                  >
+                    Reset All
+                  </Button>
+                  <Button
+                    className="flex-1 rounded-xl"
+                    onClick={() => setMobileFiltersOpen(false)}
+                  >
+                    Show Results
+                  </Button>
+                </div>
+              </DrawerContent>
+            </Drawer>
+
+            {/* Sorting Dropdown */}
+            <div className="flex items-center gap-2">
+              <span className="hidden sm:inline-block text-xs text-muted-foreground whitespace-nowrap">
+                Sort by:
+              </span>
+              <Select
+                value={sortBy}
+                onValueChange={(val: "newest" | "price_asc" | "price_desc" | "title") => {
+                  setSortBy(val);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[180px] rounded-xl text-xs font-medium border-border/60">
+                  <SelectValue placeholder="Sort order" />
+                </SelectTrigger>
+                <SelectContent align="end">
+                  <SelectItem value="newest">Newest Arrivals</SelectItem>
+                  <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                  <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                  <SelectItem value="title">Alphabetical (A-Z)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        {/* Active Filter Chips */}
+        {hasActiveFilters && (
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <span className="text-xs text-muted-foreground">Active Filters:</span>
+            {selectedCategory !== "all" && (
+              <Badge variant="secondary" className="gap-1.5 rounded-full px-3 py-1 text-xs">
+                Category: {categories.find((c) => c.id === selectedCategory)?.name || selectedCategory}
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory("all")}
+                  className="hover:text-foreground"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            {selectedBrand !== "all" && (
+              <Badge variant="secondary" className="gap-1.5 rounded-full px-3 py-1 text-xs">
+                Brand: {brands.find((b) => b.id === selectedBrand)?.name || selectedBrand}
+                <button
+                  type="button"
+                  onClick={() => setSelectedBrand("all")}
+                  className="hover:text-foreground"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            {inStockOnly && (
+              <Badge variant="secondary" className="gap-1.5 rounded-full px-3 py-1 text-xs">
+                In Stock Only
+                <button
+                  type="button"
+                  onClick={() => setInStockOnly(false)}
+                  className="hover:text-foreground"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            {search && (
+              <Badge variant="secondary" className="gap-1.5 rounded-full px-3 py-1 text-xs">
+                Query: &ldquo;{search}&rdquo;
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="hover:text-foreground"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="text-xs font-semibold text-primary hover:underline ml-2"
+            >
+              Clear All
+            </button>
+          </div>
+        )}
+
+        {/* Main Grid & Desktop Filter Sidebar */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Desktop Filter Sidebar */}
+          <aside className="hidden lg:block space-y-8 pr-4">
+            {/* Categories */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                Departments
+              </h3>
+              <div className="space-y-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory("all");
+                    setPage(1);
+                  }}
+                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
+                    selectedCategory === "all"
+                      ? "bg-primary text-primary-foreground font-semibold"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  <span>All Products</span>
+                </button>
+                {categories.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategory(c.id);
+                      setPage(1);
+                    }}
+                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
+                      selectedCategory === c.id
+                        ? "bg-primary text-primary-foreground font-semibold"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    <span>{c.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Brands */}
+            {brands.length > 0 && (
+              <div className="space-y-4 pt-4 border-t border-border/60">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                  Ateliers & Brands
+                </h3>
+                <div className="space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedBrand("all");
+                      setPage(1);
+                    }}
+                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
+                      selectedBrand === "all"
+                        ? "bg-primary text-primary-foreground font-semibold"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    <span>All Brands</span>
+                  </button>
+                  {brands.map((b) => (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedBrand(b.id);
+                        setPage(1);
+                      }}
+                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
+                        selectedBrand === b.id
+                          ? "bg-primary text-primary-foreground font-semibold"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
+                    >
+                      <span>{b.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Inventory Status Filter */}
+            <div className="pt-4 border-t border-border/60 space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                Availability
+              </h3>
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="desktop-instock-toggle"
+                  className="text-xs font-medium text-muted-foreground cursor-pointer"
+                >
+                  In Stock Only
+                </label>
+                <Switch
+                  id="desktop-instock-toggle"
+                  checked={inStockOnly}
+                  onCheckedChange={(checked) => {
+                    setInStockOnly(checked);
+                    setPage(1);
+                  }}
+                />
+              </div>
+            </div>
+          </aside>
+
+          {/* Product Grid Area */}
+          <main className="lg:col-span-3 space-y-8">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>
+                Showing <strong className="text-foreground">{products.length}</strong> of{" "}
+                <strong className="text-foreground">{totalItems}</strong> products
+              </span>
+            </div>
+
+            <ProductGrid
+              products={products}
+              categories={categories}
+              loading={isLoading}
+              columns={3}
+              onResetFilters={handleResetFilters}
+            />
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-8 border-t border-border/40">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                  className="rounded-xl text-xs"
+                >
+                  Previous
+                </Button>
+
+                {Array.from({ length: totalPages }).map((_, i) => {
+                  const pNum = i + 1;
+                  return (
+                    <Button
+                      key={pNum}
+                      variant={page === pNum ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setPage(pNum)}
+                      className="h-8 w-8 rounded-xl p-0 text-xs font-semibold"
+                    >
+                      {pNum}
+                    </Button>
+                  );
+                })}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className="rounded-xl text-xs"
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+          </main>
+        </div>
+      </Container>
+    </div>
+  );
+}

@@ -11,18 +11,28 @@ import {
   DrawerClose,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, X } from "lucide-react";
+import { ShoppingBag, X, Compass, Headphones, Laptop, Zap, Briefcase } from "lucide-react";
+import { SERVICES } from "@veyora/config";
 
 export function MobileNav() {
   const { mobileNavOpen, setMobileNavOpen } = useUIStore();
+
+  const links = [
+    { label: "Home", href: "/", icon: Compass },
+    { label: "Shop All Products", href: "/shop", icon: ShoppingBag },
+    { label: "Acoustic Audio", href: "/category/audio", icon: Headphones },
+    { label: "Workspace Precision", href: "/category/workspace", icon: Laptop },
+    { label: "Power & Charging", href: "/category/power", icon: Zap },
+    { label: "Bespoke Carry", href: "/category/carry", icon: Briefcase },
+  ];
 
   return (
     <Drawer open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
       <DrawerContent className="p-4 max-h-[85vh]">
         <DrawerHeader className="flex items-center justify-between border-b pb-4">
-          <DrawerTitle className="flex items-center gap-2 text-base">
+          <DrawerTitle className="flex items-center gap-2 text-base font-bold">
             <ShoppingBag className="h-5 w-5 text-primary" />
-            Veyora Navigation
+            {SERVICES.NAME}
           </DrawerTitle>
           <DrawerClose asChild>
             <Button variant="ghost" size="icon">
@@ -30,35 +40,21 @@ export function MobileNav() {
             </Button>
           </DrawerClose>
         </DrawerHeader>
-        <div className="flex flex-col gap-3 py-6">
-          <Link
-            href="/"
-            onClick={() => setMobileNavOpen(false)}
-            className="flex items-center rounded-md px-3 py-2 text-base font-medium hover:bg-accent"
-          >
-            Home
-          </Link>
-          <Link
-            href="/#catalog"
-            onClick={() => setMobileNavOpen(false)}
-            className="flex items-center rounded-md px-3 py-2 text-base font-medium hover:bg-accent"
-          >
-            Catalog
-          </Link>
-          <Link
-            href="/#collections"
-            onClick={() => setMobileNavOpen(false)}
-            className="flex items-center rounded-md px-3 py-2 text-base font-medium hover:bg-accent"
-          >
-            Collections
-          </Link>
-          <Link
-            href="/#design-system"
-            onClick={() => setMobileNavOpen(false)}
-            className="flex items-center rounded-md px-3 py-2 text-base font-medium hover:bg-accent"
-          >
-            Design System Components
-          </Link>
+        <div className="flex flex-col gap-1 py-4">
+          {links.map((link) => {
+            const Icon = link.icon;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileNavOpen(false)}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium hover:bg-accent transition-colors"
+              >
+                <Icon className="h-4 w-4 text-primary" />
+                <span>{link.label}</span>
+              </Link>
+            );
+          })}
         </div>
       </DrawerContent>
     </Drawer>
