@@ -1,0 +1,18 @@
+# Optional Docker Compose Override Example
+# Rename to docker-compose.override.yml to enable custom developer overrides or containerized app services
+
+services:
+  # Example: Exposing extra ports or debug logging
+  redis:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  mongodb:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

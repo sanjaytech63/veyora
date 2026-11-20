@@ -1,0 +1,47 @@
+{
+  "name": "veyora-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev:api",
+    "dev:web": "npm run dev --workspace=@veyora/web",
+    "dev:admin": "npm run dev --workspace=@veyora/admin",
+    "dev:api": "npm run dev --workspace=@veyora/api",
+    "dev:worker": "npm run dev --workspace=@veyora/worker",
+    "dev:turbo": "turbo run dev",
+    "build:packages": "npm run build --workspace=@veyora/config && npm run build --workspace=@veyora/types && npm run build --workspace=@veyora/validators && npm run build --workspace=@veyora/utils",
+    "build:web": "npm run build:packages && npm run build --workspace=@veyora/web",
+    "build:admin": "npm run build:packages && npm run build --workspace=@veyora/admin",
+    "build:api": "npm run build:packages && npm run build --workspace=@veyora/api",
+    "build:worker": "npm run build:packages && npm run build --workspace=@veyora/worker",
+    "build": "npm run build:packages && npm run build --workspace=@veyora/api && npm run build --workspace=@veyora/worker && npm run build --workspace=@veyora/web && npm run build --workspace=@veyora/admin",
+    "build:turbo": "turbo run build",
+    "lint": "eslint .",
+    "lint:turbo": "turbo run lint",
+    "typecheck": "tsc --noEmit -p packages/config && tsc --noEmit -p packages/types && tsc --noEmit -p packages/validators && tsc --noEmit -p packages/utils && tsc --noEmit -p apps/api && tsc --noEmit -p apps/worker && tsc --noEmit -p apps/web && tsc --noEmit -p apps/admin",
+    "typecheck:turbo": "turbo run typecheck",
+    "test": "npm run test --workspaces --if-present",
+    "test:turbo": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mjs,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mjs,json,md,yml,yaml}\"",
+    "clean": "rimraf node_modules apps/*/node_modules apps/*/.next apps/*/dist packages/*/node_modules packages/*/dist .turbo"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "eslint": "^9.21.0",
+    "globals": "^16.0.0",
+    "prettier": "^3.5.3",
+    "rimraf": "^6.0.1",
+    "turbo": "^2.4.4",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.26.0"
+  },
+  "engines": {
+    "node": ">=24.13.0",
+    "npm": ">=11.21.0"
+  }
+}
