@@ -16,6 +16,8 @@ import { catalogRouter } from "./modules/catalog/catalog.router";
 import { inventoryRouter } from "./modules/inventory/inventory.router";
 import { cartRouter } from "./modules/cart/cart.router";
 import { wishlistRouter } from "./modules/wishlist/wishlist.router";
+import { addressRouter } from "./modules/checkout/address.router";
+import { checkoutRouter } from "./modules/checkout/checkout.router";
 import { openApiSpec } from "./docs/openapi";
 
 export function createApp(): Application {
@@ -77,6 +79,8 @@ export function createApp(): Application {
   apiV1Router.use("/", inventoryRouter);
   apiV1Router.use("/", cartRouter);
   apiV1Router.use("/", wishlistRouter);
+  apiV1Router.use("/", addressRouter);
+  apiV1Router.use("/", checkoutRouter);
 
   app.use(env.API_PREFIX, apiV1Router);
 

@@ -27,3 +27,20 @@ export const checkoutSessionSchema = z.object({
 
 export type CheckoutSessionInput = z.input<typeof checkoutSessionSchema>;
 export type CheckoutSessionData = z.output<typeof checkoutSessionSchema>;
+
+/**
+ * Create Order Checkout Request Schema (Phase I)
+ */
+export const createOrderCheckoutSchema = z.object({
+  customerEmail: z.string().email("Valid email address is required").trim().toLowerCase(),
+  customerName: z.string().min(2, "Customer name is required").trim(),
+  shippingAddress: addressSchema,
+  billingAddress: addressSchema.optional(),
+  sameAsShipping: z.boolean().default(true),
+  shippingMethod: z.enum(["standard", "express"]).default("standard"),
+  customerNote: z.string().max(500, "Notes cannot exceed 500 characters").trim().optional(),
+  idempotencyKey: z.string().trim().optional(),
+});
+
+export type CreateOrderCheckoutInput = z.input<typeof createOrderCheckoutSchema>;
+export type CreateOrderCheckoutData = z.output<typeof createOrderCheckoutSchema>;

@@ -8,61 +8,217 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { useCart } from "@/lib/hooks/use-cart";
+import { useAddresses } from "@/lib/hooks/use-addresses";
+import { useCheckout } from "@/lib/hooks/use-checkout";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   ShieldCheck,
   Lock,
   ArrowLeft,
   CheckCircle2,
-  CreditCard,
+  AlertTriangle,
   Sparkles,
+  Truck,
+  MapPin,
+  Plus,
+  Loader2,
+  ShoppingBag,
 } from "lucide-react";
 import { toast } from "sonner";
+import { AddressDto, CreateAddressPayload, OrderDto } from "@veyora/types";
 
 export default function CheckoutPage() {
-  const { items, clearCart, totals } = useCart();
-  const [mounted, setMounted] = React.useState(false);
+  const { user, isAuthenticated } = useAuthStore();
+  const { items: cartItems, totals: cartTotals, clearCart } = useCart();
   const [shippingMethod, setShippingMethod] = React.useState<"standard" | "express">("standard");
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [orderComplete, setOrderComplete] = React.useState(false);
-  const [orderId, setOrderId] = React.useState("");
 
-  // Form State
+  const {
+    validation,
+    isValid: isCheckoutValid,
+    warnings,
+    shippingOptions,
+    totals: serverTotals,
+    placeOrderAsync,
+    isPlacingOrder,
+  } = useCheckout(shippingMethod);
+
+  const {
+    addresses,
+    createAddressAsync,
+  } = useAddresses();
+
+  const [mounted, setMounted] = React.useState(false);
+  const [completedOrder, setCompletedOrder] = React.useState<OrderDto | null>(null);
+
+  // Idempotency token per checkout session
+  const [idempotencyKey, setIdempotencyKey] = React.useState<string>("");
+
+  // Address selection mode: "saved" (using a saved address id) or "new"
+  const [selectedAddressId, setSelectedAddressId] = React.useState<string>("new");
+
+  // Contact State
   const [email, setEmail] = React.useState("");
+  const [phone, setPhone] = React.useState("");
   const [firstName, setFirstName] = React.useState("");
   const [lastName, setLastName] = React.useState("");
-  const [address, setAddress] = React.useState("");
+
+  // Shipping Destination Form
+  const [street, setStreet] = React.useState("");
+  const [apartment, setApartment] = React.useState("");
   const [city, setCity] = React.useState("");
+  const [state, setState] = React.useState("");
   const [postalCode, setPostalCode] = React.useState("");
+  const [country, setCountry] = React.useState("India");
+  const [saveToAddresses, setSaveToAddresses] = React.useState(false);
+
+  // Billing address state
+  const [sameAsShipping, setSameAsShipping] = React.useState(true);
+  const [billingFirstName, setBillingFirstName] = React.useState("");
+  const [billingLastName, setBillingLastName] = React.useState("");
+  const [billingStreet, setBillingStreet] = React.useState("");
+  const [billingCity, setBillingCity] = React.useState("");
+  const [billingState, setBillingState] = React.useState("");
+  const [billingPostalCode, setBillingPostalCode] = React.useState("");
+  const [billingCountry] = React.useState("India");
+
+  const [customerNote, setCustomerNote] = React.useState("");
 
   React.useEffect(() => {
     setMounted(true);
+    // Initialize idempotency key
+    if (typeof window !== "undefined") {
+      setIdempotencyKey(crypto.randomUUID());
+    }
   }, []);
 
-  const subtotal = mounted ? totals.subtotal : 0;
-  const shippingFee = shippingMethod === "express" ? 25 : subtotal >= 150 ? 0 : 15;
-  const tax = mounted ? totals.estimatedTax : 0;
-  const total = subtotal + shippingFee + tax;
+  // Pre-fill user profile if available
+  React.useEffect(() => {
+    if (user) {
+      if (!email && user.email) setEmail(user.email);
+      if (!firstName && user.firstName) setFirstName(user.firstName);
+      if (!lastName && user.lastName) setLastName(user.lastName);
+    }
+  }, [user, email, firstName, lastName]);
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
+  // If saved addresses load and user hasn't chosen one, pick default
+  React.useEffect(() => {
+    if (addresses.length > 0 && selectedAddressId === "new") {
+      const defaultAddr = addresses.find((a) => a.isDefault) || addresses[0];
+      if (defaultAddr) {
+        setSelectedAddressId(defaultAddr.id);
+      }
+    }
+  }, [addresses, selectedAddressId]);
+
+  // Verified totals from server or fallback to client totals
+  const activeTotals = serverTotals || cartTotals;
+  const subtotal = activeTotals.subtotal;
+  const discount = activeTotals.discount;
+  const shippingFee = activeTotals.shipping;
+  const tax = activeTotals.estimatedTax;
+  const total = activeTotals.total;
+
+  const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !firstName || !address || !city || !postalCode) {
-      toast.error("Required fields missing", { description: "Please complete all shipping address fields." });
+
+    if (!email) {
+      toast.error("Contact details required", { description: "Please provide a valid patron email address." });
       return;
     }
 
-    setIsSubmitting(true);
-    const generatedId = `VY-ORD-${Math.floor(100000 + Math.random() * 900000)}`;
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setOrderId(generatedId);
-      setOrderComplete(true);
-      clearCart();
-      toast.success("Order Placed Successfully", {
-        description: `Confirmation dispatched to ${email}`,
+    let resolvedShippingAddress: CreateAddressPayload;
+
+    if (selectedAddressId !== "new") {
+      const saved = addresses.find((a) => a.id === selectedAddressId);
+      if (!saved) {
+        toast.error("Selected address not found", { description: "Please pick or enter a delivery address." });
+        return;
+      }
+      resolvedShippingAddress = {
+        firstName: saved.firstName,
+        lastName: saved.lastName,
+        street: saved.street,
+        apartment: saved.apartment,
+        city: saved.city,
+        state: saved.state,
+        postalCode: saved.postalCode,
+        country: saved.country,
+        phone: saved.phone || phone,
+      };
+    } else {
+      if (!firstName || !street || !city || !state || !postalCode) {
+        toast.error("Incomplete delivery destination", {
+          description: "First name, street, city, state and postal code are strictly required.",
+        });
+        return;
+      }
+      resolvedShippingAddress = {
+        firstName,
+        lastName: lastName || firstName,
+        street,
+        apartment,
+        city,
+        state,
+        postalCode,
+        country,
+        phone,
+      };
+
+      // If user wants to save address
+      if (saveToAddresses && isAuthenticated) {
+        try {
+          await createAddressAsync({
+            ...resolvedShippingAddress,
+            isDefault: addresses.length === 0,
+          });
+        } catch {
+          // Non-blocking for order completion
+        }
+      }
+    }
+
+    let resolvedBillingAddress: CreateAddressPayload | undefined;
+    if (!sameAsShipping) {
+      if (!billingFirstName || !billingStreet || !billingCity || !billingState || !billingPostalCode) {
+        toast.error("Incomplete billing address", {
+          description: "Please complete all required billing address fields.",
+        });
+        return;
+      }
+      resolvedBillingAddress = {
+        firstName: billingFirstName,
+        lastName: billingLastName || billingFirstName,
+        street: billingStreet,
+        city: billingCity,
+        state: billingState,
+        postalCode: billingPostalCode,
+        country: billingCountry,
+      };
+    }
+
+    try {
+      const order = await placeOrderAsync({
+        customerEmail: email,
+        customerName: `${resolvedShippingAddress.firstName} ${resolvedShippingAddress.lastName}`.trim(),
+        shippingAddress: resolvedShippingAddress,
+        billingAddress: resolvedBillingAddress,
+        sameAsShipping,
+        shippingMethod,
+        customerNote: customerNote || undefined,
+        idempotencyKey: idempotencyKey || crypto.randomUUID(),
       });
-    }, 1200);
+
+      setCompletedOrder(order);
+      clearCart();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unable to place order. Please check stock.";
+      toast.error("Checkout Request Declined", { description: message });
+    }
   };
 
   if (!mounted) {
@@ -70,13 +226,14 @@ export default function CheckoutPage() {
       <div className="py-16">
         <Container size="xl" className="space-y-6">
           <div className="h-8 w-48 rounded-lg bg-muted animate-pulse" />
-          <div className="h-96 rounded-2xl bg-muted/40 animate-pulse" />
+          <div className="h-96 rounded-3xl bg-muted/40 animate-pulse" />
         </Container>
       </div>
     );
   }
 
-  if (orderComplete) {
+  // Confirmation View
+  if (completedOrder) {
     return (
       <div className="py-20 md:py-28">
         <Container size="sm" className="space-y-8 text-center">
@@ -86,51 +243,83 @@ export default function CheckoutPage() {
 
           <div className="space-y-3">
             <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-              Order Confirmed // {orderId}
+              Order Confirmed // {completedOrder.orderNumber}
             </span>
             <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
               Thank You for Your Patronage
             </h1>
             <p className="mx-auto max-w-md text-sm text-muted-foreground leading-relaxed">
-              We have dispatched your receipt and real-time shipment telemetry to{" "}
-              <strong className="text-foreground">{email}</strong>. Our climate-controlled atelier has commenced preparation.
+              We have dispatched your verified receipt to{" "}
+              <strong className="text-foreground">{completedOrder.customerEmail}</strong>.
+              Our climate-controlled atelier has commenced tailored fulfillment.
             </p>
           </div>
 
-          <div className="rounded-3xl border border-border/80 bg-card p-6 text-left space-y-4 max-w-md mx-auto text-xs">
+          <div className="rounded-3xl border border-border/80 bg-card p-6 text-left space-y-4 max-w-md mx-auto text-xs shadow-sm">
             <div className="flex justify-between border-b border-border/60 pb-3">
               <span className="text-muted-foreground">Courier Service</span>
               <span className="font-semibold text-foreground">
-                {shippingMethod === "express" ? "Atelier Express Priority (1-2 Days)" : "Carbon-Neutral Ground (3-5 Days)"}
+                {completedOrder.shippingMethod === "express"
+                  ? "Atelier Express Priority (1-2 Days)"
+                  : "Carbon-Neutral Ground Courier (3-5 Days)"}
               </span>
             </div>
+
             <div className="flex justify-between border-b border-border/60 pb-3">
-              <span className="text-muted-foreground">Delivery Destination</span>
-              <span className="font-semibold text-foreground">{address}, {city}</span>
+              <span className="text-muted-foreground">Recipient</span>
+              <span className="font-semibold text-foreground">
+                {completedOrder.shippingAddress.firstName} {completedOrder.shippingAddress.lastName}
+              </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Settlement Total</span>
-              <span className="font-bold text-foreground tabular-nums">${total.toFixed(2)}</span>
+
+            <div className="flex justify-between border-b border-border/60 pb-3">
+              <span className="text-muted-foreground">Destination</span>
+              <span className="font-semibold text-foreground">
+                {completedOrder.shippingAddress.street}, {completedOrder.shippingAddress.city},{" "}
+                {completedOrder.shippingAddress.state} {completedOrder.shippingAddress.postalCode}
+              </span>
+            </div>
+
+            <div className="flex justify-between border-b border-border/60 pb-3">
+              <span className="text-muted-foreground">Settlement Status</span>
+              <Badge variant="outline" className="border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono text-[10px]">
+                PENDING FULFILLMENT
+              </Badge>
+            </div>
+
+            <div className="flex justify-between pt-1">
+              <span className="text-muted-foreground">Total Authorized</span>
+              <span className="font-bold text-base text-foreground tabular-nums">
+                ${completedOrder.total.toFixed(2)}
+              </span>
             </div>
           </div>
 
-          <Button asChild size="lg" className="rounded-full px-8 text-xs font-semibold">
-            <Link href="/shop">Return to Catalog</Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <Button asChild size="lg" className="rounded-full px-8 text-xs font-semibold">
+              <Link href="/shop">Continue Exploring Haute Couture</Link>
+            </Button>
+          </div>
         </Container>
       </div>
     );
   }
 
-  if (items.length === 0) {
+  // Empty Bag View
+  if (cartItems.length === 0) {
     return (
       <div className="py-20 text-center">
         <Container size="sm" className="space-y-6">
-          <h1 className="text-2xl font-bold">Your bag is empty</h1>
-          <p className="text-xs text-muted-foreground">
-            Please add items to your shopping bag before proceeding to checkout.
-          </p>
-          <Button asChild className="rounded-full px-6 text-xs font-semibold">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/60 text-muted-foreground">
+            <ShoppingBag className="h-8 w-8" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold tracking-tight">Your shopping bag is empty</h1>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+              Select garments from our seasonal collection before proceeding through atelier checkout.
+            </p>
+          </div>
+          <Button asChild className="rounded-full px-8 text-xs font-semibold">
             <Link href="/shop">Explore Haute Couture</Link>
           </Button>
         </Container>
@@ -141,7 +330,7 @@ export default function CheckoutPage() {
   return (
     <div className="py-10 md:py-16 space-y-8">
       <Container size="xl" className="space-y-8">
-        {/* Header */}
+        {/* Navigation & Encryption Header */}
         <div className="flex items-center justify-between border-b border-border/60 pb-5">
           <Link
             href="/cart"
@@ -153,272 +342,521 @@ export default function CheckoutPage() {
 
           <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
             <Lock className="h-3.5 w-3.5 text-primary" />
-            <span>256-Bit SSL Encrypted Checkout</span>
+            <span>256-Bit SSL Atelier Encrypted Checkout</span>
           </div>
         </div>
+
+        {/* Validation Warning Alert if items unavailable */}
+        {warnings && warnings.length > 0 && (
+          <Alert variant="destructive" className="rounded-2xl border-destructive/40 bg-destructive/10">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle className="text-xs font-bold uppercase tracking-wider">Inventory Notice</AlertTitle>
+            <AlertDescription className="text-xs space-y-1">
+              {warnings.map((w, idx) => (
+                <p key={idx}>{w}</p>
+              ))}
+            </AlertDescription>
+          </Alert>
+        )}
 
         <form onSubmit={handlePlaceOrder}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
             {/* Left Column: Form Fields */}
             <div className="lg:col-span-7 space-y-8">
-              {/* Express checkout */}
-              <div className="rounded-3xl border border-border/80 bg-muted/20 p-5 space-y-3">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block text-center">
-                  Instant Express Checkout
-                </span>
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-11 rounded-2xl border-border bg-card font-semibold text-xs hover:bg-accent"
-                    onClick={() => toast.info("Express payment connected")}
-                  >
-                    Apple Pay
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-11 rounded-2xl border-border bg-card font-semibold text-xs hover:bg-accent"
-                    onClick={() => toast.info("Express payment connected")}
-                  >
-                    Google Pay
-                  </Button>
-                </div>
-              </div>
-
-              <div className="relative flex items-center justify-center">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border/60" />
-                </div>
-                <span className="relative bg-background px-3 text-[11px] uppercase tracking-wider text-muted-foreground font-mono">
-                  Or continue below
-                </span>
-              </div>
-
               {/* 1. Contact Information */}
-              <div className="rounded-3xl border border-border/80 bg-card p-6 space-y-4">
-                <h2 className="text-base font-bold tracking-tight text-foreground">
-                  1. Contact Information
-                </h2>
-                <div className="space-y-1.5">
-                  <Label htmlFor="email" className="text-xs">
-                    Email Address <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    required
-                    placeholder="patron@atelier.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="rounded-xl text-xs h-10"
-                  />
-                  <p className="text-[11px] text-muted-foreground">
-                    Order confirmation and courier telemetry will be dispatched to this address.
-                  </p>
+              <div className="rounded-3xl border border-border/80 bg-card p-6 space-y-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-base font-bold tracking-tight text-foreground">
+                    1. Contact Information
+                  </h2>
+                  {isAuthenticated && (
+                    <Badge variant="outline" className="text-[10px] font-mono border-primary/30 text-primary">
+                      AUTHENTICATED PATRON
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label htmlFor="email" className="text-xs font-medium">
+                      Email Address <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      required
+                      placeholder="patron@atelier.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="rounded-xl text-xs h-10"
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      Order confirmation telemetry and climate shipment alerts will be dispatched here.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label htmlFor="phone" className="text-xs font-medium">
+                      Phone Number (for courier delivery notifications)
+                    </Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="+91 98765 43210"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="rounded-xl text-xs h-10"
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* 2. Shipping Destination */}
-              <div className="rounded-3xl border border-border/80 bg-card p-6 space-y-4">
-                <h2 className="text-base font-bold tracking-tight text-foreground">
-                  2. Shipping Destination
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="firstName" className="text-xs">
-                      First Name <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="firstName"
-                      required
-                      placeholder="Jane"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      className="rounded-xl text-xs h-10"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="lastName" className="text-xs">
-                      Last Name
-                    </Label>
-                    <Input
-                      id="lastName"
-                      placeholder="Doe"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      className="rounded-xl text-xs h-10"
-                    />
-                  </div>
+              <div className="rounded-3xl border border-border/80 bg-card p-6 space-y-5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-base font-bold tracking-tight text-foreground flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-primary" />
+                    <span>2. Delivery Destination</span>
+                  </h2>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="address" className="text-xs">
-                    Street Address <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="address"
-                    required
-                    placeholder="742 Evergreen Terrace, Suite 4B"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className="rounded-xl text-xs h-10"
-                  />
-                </div>
+                {/* Saved Address Selector (if any saved addresses) */}
+                {addresses.length > 0 && (
+                  <div className="space-y-3 pb-2 border-b border-border/60">
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+                      Saved Atelier Addresses
+                    </span>
+                    <RadioGroup
+                      value={selectedAddressId}
+                      onValueChange={(val) => setSelectedAddressId(val)}
+                      className="grid grid-cols-1 gap-2.5"
+                    >
+                      {addresses.map((addr: AddressDto) => (
+                        <div
+                          key={addr.id}
+                          className={`flex items-start gap-3 rounded-2xl border p-3.5 cursor-pointer transition-all ${
+                            selectedAddressId === addr.id
+                              ? "border-primary bg-primary/5 shadow-xs"
+                              : "border-border/70 hover:bg-muted/30"
+                          }`}
+                          onClick={() => setSelectedAddressId(addr.id)}
+                        >
+                          <RadioGroupItem value={addr.id} id={`addr-${addr.id}`} className="mt-0.5" />
+                          <Label htmlFor={`addr-${addr.id}`} className="cursor-pointer text-xs space-y-1 flex-1">
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold text-foreground">
+                                {addr.firstName} {addr.lastName}
+                              </span>
+                              {addr.isDefault && (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-mono">
+                                  DEFAULT
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-muted-foreground text-[11px] leading-relaxed">
+                              {addr.street}
+                              {addr.apartment ? `, ${addr.apartment}` : ""}, {addr.city}, {addr.state}{" "}
+                              {addr.postalCode}, {addr.country}
+                            </p>
+                            {addr.phone && (
+                              <p className="text-[10px] text-muted-foreground font-mono">Ph: {addr.phone}</p>
+                            )}
+                          </Label>
+                        </div>
+                      ))}
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="city" className="text-xs">
-                      City <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="city"
-                      required
-                      placeholder="New York"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      className="rounded-xl text-xs h-10"
-                    />
+                      <div
+                        className={`flex items-center gap-3 rounded-2xl border p-3.5 cursor-pointer transition-all ${
+                          selectedAddressId === "new"
+                            ? "border-primary bg-primary/5"
+                            : "border-border/70 hover:bg-muted/30"
+                        }`}
+                        onClick={() => setSelectedAddressId("new")}
+                      >
+                        <RadioGroupItem value="new" id="addr-new" />
+                        <Label htmlFor="addr-new" className="cursor-pointer text-xs font-medium flex items-center gap-1.5">
+                          <Plus className="h-3.5 w-3.5 text-primary" />
+                          <span>Deliver to a New Atelier Destination</span>
+                        </Label>
+                      </div>
+                    </RadioGroup>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="state" className="text-xs">
-                      State / Region
-                    </Label>
-                    <Input id="state" placeholder="NY" className="rounded-xl text-xs h-10" />
+                )}
+
+                {/* New Address Fields (Rendered when no addresses or selectedAddressId === 'new') */}
+                {(addresses.length === 0 || selectedAddressId === "new") && (
+                  <div className="space-y-4 pt-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="firstName" className="text-xs font-medium">
+                          First Name <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="firstName"
+                          required
+                          placeholder="Priya"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          className="rounded-xl text-xs h-10"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="lastName" className="text-xs font-medium">
+                          Last Name <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="lastName"
+                          required
+                          placeholder="Sharma"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          className="rounded-xl text-xs h-10"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="street" className="text-xs font-medium">
+                        Street Address <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="street"
+                        required
+                        placeholder="Flat 402, Lotus Grandeur, 14th Main Road"
+                        value={street}
+                        onChange={(e) => setStreet(e.target.value)}
+                        className="rounded-xl text-xs h-10"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="apartment" className="text-xs font-medium">
+                        Apartment, Suite, Unit (Optional)
+                      </Label>
+                      <Input
+                        id="apartment"
+                        placeholder="Tower B, Indiranagar"
+                        value={apartment}
+                        onChange={(e) => setApartment(e.target.value)}
+                        className="rounded-xl text-xs h-10"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="city" className="text-xs font-medium">
+                          City <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="city"
+                          required
+                          placeholder="Bengaluru"
+                          value={city}
+                          onChange={(e) => setCity(e.target.value)}
+                          className="rounded-xl text-xs h-10"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="state" className="text-xs font-medium">
+                          State / Region <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="state"
+                          required
+                          placeholder="Karnataka"
+                          value={state}
+                          onChange={(e) => setState(e.target.value)}
+                          className="rounded-xl text-xs h-10"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                        <Label htmlFor="postalCode" className="text-xs font-medium">
+                          Postal Code <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="postalCode"
+                          required
+                          placeholder="560038"
+                          value={postalCode}
+                          onChange={(e) => setPostalCode(e.target.value)}
+                          className="rounded-xl text-xs h-10"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="country" className="text-xs font-medium">
+                        Country / Territory <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="country"
+                        required
+                        placeholder="India"
+                        value={country}
+                        onChange={(e) => setCountry(e.target.value)}
+                        className="rounded-xl text-xs h-10"
+                      />
+                    </div>
+
+                    {isAuthenticated && (
+                      <div className="flex items-center space-x-2 pt-2">
+                        <Checkbox
+                          id="saveToAddresses"
+                          checked={saveToAddresses}
+                          onCheckedChange={(checked) => setSaveToAddresses(Boolean(checked))}
+                        />
+                        <Label
+                          htmlFor="saveToAddresses"
+                          className="text-xs font-normal text-muted-foreground cursor-pointer"
+                        >
+                          Save this delivery address to my Veyora patron profile
+                        </Label>
+                      </div>
+                    )}
                   </div>
-                  <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                    <Label htmlFor="postalCode" className="text-xs">
-                      Postal Code <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="postalCode"
-                      required
-                      placeholder="10001"
-                      value={postalCode}
-                      onChange={(e) => setPostalCode(e.target.value)}
-                      className="rounded-xl text-xs h-10"
-                    />
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* 3. Delivery Method */}
-              <div className="rounded-3xl border border-border/80 bg-card p-6 space-y-4">
-                <h2 className="text-base font-bold tracking-tight text-foreground">
-                  3. Delivery Method
-                </h2>
+              <div className="rounded-3xl border border-border/80 bg-card p-6 space-y-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-base font-bold tracking-tight text-foreground flex items-center gap-2">
+                    <Truck className="h-4 w-4 text-primary" />
+                    <span>3. Delivery Method</span>
+                  </h2>
+                </div>
+
                 <RadioGroup
                   value={shippingMethod}
                   onValueChange={(v) => setShippingMethod(v as "standard" | "express")}
                   className="space-y-2.5"
                 >
-                  <div className="flex items-center justify-between rounded-2xl border border-border/80 p-3.5 transition-colors hover:bg-muted/30">
-                    <div className="flex items-center gap-3">
-                      <RadioGroupItem value="standard" id="shipping-standard" />
-                      <Label htmlFor="shipping-standard" className="cursor-pointer text-xs space-y-0.5">
-                        <div className="font-semibold text-foreground">Carbon-Neutral Ground Courier</div>
-                        <div className="text-muted-foreground text-[11px]">3–5 business days with insured tracking</div>
-                      </Label>
-                    </div>
-                    <span className="text-xs font-semibold tabular-nums text-foreground">
-                      {subtotal >= 150 ? "Complimentary" : "$15.00"}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between rounded-2xl border border-border/80 p-3.5 transition-colors hover:bg-muted/30">
-                    <div className="flex items-center gap-3">
-                      <RadioGroupItem value="express" id="shipping-express" />
-                      <Label htmlFor="shipping-express" className="cursor-pointer text-xs space-y-0.5">
-                        <div className="font-semibold text-foreground flex items-center gap-1.5">
-                          <span>Atelier Priority Air Express</span>
-                          <Sparkles className="h-3 w-3 text-amber-500" />
+                  {shippingOptions && shippingOptions.length > 0 ? (
+                    shippingOptions.map((opt) => (
+                      <div
+                        key={opt.id}
+                        className={`flex items-center justify-between rounded-2xl border p-4 transition-all cursor-pointer ${
+                          shippingMethod === opt.id
+                            ? "border-primary bg-primary/5"
+                            : "border-border/80 hover:bg-muted/30"
+                        }`}
+                        onClick={() => setShippingMethod(opt.id)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <RadioGroupItem value={opt.id} id={`opt-${opt.id}`} />
+                          <Label htmlFor={`opt-${opt.id}`} className="cursor-pointer text-xs space-y-0.5">
+                            <div className="font-semibold text-foreground flex items-center gap-1.5">
+                              <span>{opt.name}</span>
+                              {opt.id === "express" && <Sparkles className="h-3 w-3 text-amber-500" />}
+                            </div>
+                            <div className="text-muted-foreground text-[11px]">{opt.description}</div>
+                          </Label>
                         </div>
-                        <div className="text-muted-foreground text-[11px]">1–2 business days prioritized handling</div>
-                      </Label>
-                    </div>
-                    <span className="text-xs font-semibold tabular-nums text-foreground">$25.00</span>
-                  </div>
+                        <span className="text-xs font-semibold tabular-nums text-foreground">
+                          {opt.price === 0 ? "Complimentary" : `$${opt.price.toFixed(2)}`}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <>
+                      <div
+                        className={`flex items-center justify-between rounded-2xl border p-4 transition-all cursor-pointer ${
+                          shippingMethod === "standard"
+                            ? "border-primary bg-primary/5"
+                            : "border-border/80 hover:bg-muted/30"
+                        }`}
+                        onClick={() => setShippingMethod("standard")}
+                      >
+                        <div className="flex items-center gap-3">
+                          <RadioGroupItem value="standard" id="shipping-standard" />
+                          <Label htmlFor="shipping-standard" className="cursor-pointer text-xs space-y-0.5">
+                            <div className="font-semibold text-foreground">Carbon-Neutral Ground Courier</div>
+                            <div className="text-muted-foreground text-[11px]">3–5 business days with insured tracking</div>
+                          </Label>
+                        </div>
+                        <span className="text-xs font-semibold tabular-nums text-foreground">
+                          {subtotal >= 150 ? "Complimentary" : "$15.00"}
+                        </span>
+                      </div>
+
+                      <div
+                        className={`flex items-center justify-between rounded-2xl border p-4 transition-all cursor-pointer ${
+                          shippingMethod === "express"
+                            ? "border-primary bg-primary/5"
+                            : "border-border/80 hover:bg-muted/30"
+                        }`}
+                        onClick={() => setShippingMethod("express")}
+                      >
+                        <div className="flex items-center gap-3">
+                          <RadioGroupItem value="express" id="shipping-express" />
+                          <Label htmlFor="shipping-express" className="cursor-pointer text-xs space-y-0.5">
+                            <div className="font-semibold text-foreground flex items-center gap-1.5">
+                              <span>Atelier Priority Air Express</span>
+                              <Sparkles className="h-3 w-3 text-amber-500" />
+                            </div>
+                            <div className="text-muted-foreground text-[11px]">1–2 business days prioritized handling</div>
+                          </Label>
+                        </div>
+                        <span className="text-xs font-semibold tabular-nums text-foreground">$25.00</span>
+                      </div>
+                    </>
+                  )}
                 </RadioGroup>
               </div>
 
-              {/* 4. Payment Settlement Preview */}
-              <div className="rounded-3xl border border-border/80 bg-card p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-base font-bold tracking-tight text-foreground">
-                    4. Payment Method
-                  </h2>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <CreditCard className="h-4 w-4" />
-                    <span>Credit / Debit Card</span>
-                  </div>
+              {/* 4. Billing Information */}
+              <div className="rounded-3xl border border-border/80 bg-card p-6 space-y-4 shadow-sm">
+                <h2 className="text-base font-bold tracking-tight text-foreground">
+                  4. Billing Destination
+                </h2>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="sameAsShipping"
+                    checked={sameAsShipping}
+                    onCheckedChange={(checked) => setSameAsShipping(Boolean(checked))}
+                  />
+                  <Label
+                    htmlFor="sameAsShipping"
+                    className="text-xs font-normal text-muted-foreground cursor-pointer"
+                  >
+                    Billing address is identical to shipping destination
+                  </Label>
                 </div>
 
-                <div className="space-y-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="cardNumber" className="text-xs">
-                      Card Number
-                    </Label>
-                    <Input
-                      id="cardNumber"
-                      placeholder="4000 1234 5678 9010"
-                      defaultValue="•••• •••• •••• 4242"
-                      className="rounded-xl text-xs h-10 font-mono"
-                    />
-                  </div>
+                {!sameAsShipping && (
+                  <div className="space-y-4 pt-3 border-t border-border/60">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="billingFirstName" className="text-xs font-medium">
+                          First Name <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="billingFirstName"
+                          required
+                          value={billingFirstName}
+                          onChange={(e) => setBillingFirstName(e.target.value)}
+                          className="rounded-xl text-xs h-10"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="billingLastName" className="text-xs font-medium">
+                          Last Name <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="billingLastName"
+                          required
+                          value={billingLastName}
+                          onChange={(e) => setBillingLastName(e.target.value)}
+                          className="rounded-xl text-xs h-10"
+                        />
+                      </div>
+                    </div>
 
-                  <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label htmlFor="cardExpiry" className="text-xs">
-                        Expiry Date
+                      <Label htmlFor="billingStreet" className="text-xs font-medium">
+                        Street Address <span className="text-destructive">*</span>
                       </Label>
                       <Input
-                        id="cardExpiry"
-                        placeholder="MM / YY"
-                        defaultValue="12 / 28"
-                        className="rounded-xl text-xs h-10 font-mono"
+                        id="billingStreet"
+                        required
+                        value={billingStreet}
+                        onChange={(e) => setBillingStreet(e.target.value)}
+                        className="rounded-xl text-xs h-10"
                       />
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="cardCvc" className="text-xs">
-                        CVC Security Code
-                      </Label>
-                      <Input
-                        id="cardCvc"
-                        placeholder="CVC"
-                        defaultValue="888"
-                        className="rounded-xl text-xs h-10 font-mono"
-                      />
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="billingCity" className="text-xs font-medium">
+                          City <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="billingCity"
+                          required
+                          value={billingCity}
+                          onChange={(e) => setBillingCity(e.target.value)}
+                          className="rounded-xl text-xs h-10"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="billingState" className="text-xs font-medium">
+                          State <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="billingState"
+                          required
+                          value={billingState}
+                          onChange={(e) => setBillingState(e.target.value)}
+                          className="rounded-xl text-xs h-10"
+                        />
+                      </div>
+                      <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                        <Label htmlFor="billingPostalCode" className="text-xs font-medium">
+                          Postal Code <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="billingPostalCode"
+                          required
+                          value={billingPostalCode}
+                          onChange={(e) => setBillingPostalCode(e.target.value)}
+                          className="rounded-xl text-xs h-10"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
+              </div>
+
+              {/* 5. Special Atelier Requests / Notes */}
+              <div className="rounded-3xl border border-border/80 bg-card p-6 space-y-3 shadow-sm">
+                <Label htmlFor="customerNote" className="text-xs font-bold text-foreground">
+                  Order Instructions & Packaging Notes (Optional)
+                </Label>
+                <Input
+                  id="customerNote"
+                  placeholder="e.g., Leave package with security desk, eco-friendly unboxing"
+                  value={customerNote}
+                  onChange={(e) => setCustomerNote(e.target.value)}
+                  className="rounded-xl text-xs h-10"
+                />
               </div>
 
               {/* Submit CTA */}
               <Button
                 type="submit"
                 size="lg"
-                disabled={isSubmitting}
+                disabled={isPlacingOrder || (validation !== undefined && !isCheckoutValid)}
                 className="w-full rounded-2xl font-bold text-sm shadow-lg shadow-primary/20 h-13"
               >
-                {isSubmitting ? "Authorizing Atelier Settlement..." : `Place Order • $${total.toFixed(2)}`}
+                {isPlacingOrder ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Verifying Atelier Stock & Placing Order...</span>
+                  </span>
+                ) : (
+                  `Place Order • $${total.toFixed(2)}`
+                )}
               </Button>
             </div>
 
-            {/* Right Column: Order Line Items Sidebar */}
+            {/* Right Column: Order Line Items & Financial Breakdown */}
             <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-6">
               <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm space-y-5">
                 <div className="flex items-center justify-between">
                   <h2 className="text-base font-bold tracking-tight text-foreground">
-                    Order Items
+                    Order Summary
                   </h2>
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground tabular-nums">
-                    {items.length} items
+                  <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground tabular-nums">
+                    {cartItems.reduce((acc, i) => acc + i.quantity, 0)} garments
                   </span>
                 </div>
 
                 {/* Line Items */}
-                <div className="max-h-72 overflow-y-auto divide-y divide-border/60 pr-1">
-                  {items.map((item) => (
+                <div className="max-h-72 overflow-y-auto divide-y divide-border/60 pr-1 space-y-0.5">
+                  {cartItems.map((item) => (
                     <div key={item.id} className="flex items-center justify-between gap-3 py-3">
                       <div className="flex items-center gap-3">
                         <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-border/60 bg-muted/40">
@@ -461,7 +899,7 @@ export default function CheckoutPage() {
 
                 <Separator />
 
-                {/* Calculation */}
+                {/* Financial Ledger Calculation */}
                 <div className="space-y-2.5 text-xs">
                   <div className="flex justify-between text-muted-foreground">
                     <span>Subtotal</span>
@@ -469,10 +907,25 @@ export default function CheckoutPage() {
                       ${subtotal.toFixed(2)}
                     </span>
                   </div>
+
+                  {discount > 0 && (
+                    <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-medium">
+                      <span>Privilege Discount</span>
+                      <span className="tabular-nums">-${discount.toFixed(2)}</span>
+                    </div>
+                  )}
+
                   <div className="flex justify-between text-muted-foreground">
-                    <span>Courier Dispatch</span>
-                    <span>{shippingFee === 0 ? "Complimentary" : `$${shippingFee.toFixed(2)}`}</span>
+                    <span>Insured Courier Delivery</span>
+                    <span className="tabular-nums">
+                      {shippingFee === 0 ? (
+                        <span className="text-emerald-600 dark:text-emerald-400 font-medium">Complimentary</span>
+                      ) : (
+                        `$${shippingFee.toFixed(2)}`
+                      )}
+                    </span>
                   </div>
+
                   <div className="flex justify-between text-muted-foreground">
                     <span>Estimated Tax (8%)</span>
                     <span className="tabular-nums">${tax.toFixed(2)}</span>
@@ -481,14 +934,14 @@ export default function CheckoutPage() {
                   <Separator />
 
                   <div className="flex items-baseline justify-between text-sm font-bold text-foreground">
-                    <span>Due Today</span>
+                    <span>Authorized Total</span>
                     <span className="text-xl tabular-nums">${total.toFixed(2)}</span>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground pt-2">
                   <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                  <span>Backed by Veyora 100% Pure Fabric Quality Assurance</span>
+                  <span>Veyora Pure Fabric & Artisan Quality Guaranteed</span>
                 </div>
               </div>
             </div>

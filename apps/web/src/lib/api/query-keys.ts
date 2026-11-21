@@ -32,6 +32,22 @@ export const wishlistKeys = {
   current: () => ["wishlist", "current"] as const,
 };
 
+export const addressKeys = {
+  all: ["addresses"] as const,
+  list: () => ["addresses", "list"] as const,
+};
+
+export const checkoutKeys = {
+  all: ["checkout"] as const,
+  validation: (method?: string) => ["checkout", "validation", method ?? "standard"] as const,
+};
+
+export const orderKeys = {
+  all: ["orders"] as const,
+  list: () => ["orders", "list"] as const,
+  detail: (id: string) => ["orders", "detail", id] as const,
+};
+
 export function createEntityKeyFactory(entityName: string) {
   return {
     all: [entityName] as const,
