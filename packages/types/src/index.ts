@@ -11,3 +11,4 @@ export * from "./order";
 export * from "./checkout";
 export * from "./payment";
 export * from "./coupon";
+export * from "./customer";

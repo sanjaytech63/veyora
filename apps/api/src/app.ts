@@ -20,6 +20,7 @@ import { addressRouter } from "./modules/checkout/address.router";
 import { checkoutRouter } from "./modules/checkout/checkout.router";
 import { paymentRouter } from "./modules/payment/payment.router";
 import { couponRouter } from "./modules/coupon/coupon.router";
+import { customerRouter } from "./modules/customer/customer.router";
 import { openApiSpec } from "./docs/openapi";
 
 export function createApp(): Application {
@@ -92,6 +93,7 @@ export function createApp(): Application {
   apiV1Router.use("/", checkoutRouter);
   apiV1Router.use("/", paymentRouter);
   apiV1Router.use("/", couponRouter);
+  apiV1Router.use("/", customerRouter);
 
   app.use(env.API_PREFIX, apiV1Router);
 
