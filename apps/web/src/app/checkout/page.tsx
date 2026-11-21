@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import * as React from "react";
@@ -11,10 +12,18 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { useCart } from "@/lib/hooks/use-cart";
 import { useAddresses } from "@/lib/hooks/use-addresses";
 import { useCheckout } from "@/lib/hooks/use-checkout";
+import { usePayment } from "@/lib/hooks/use-payment";
 import { useAuthStore } from "@/stores/auth-store";
 import {
   ShieldCheck,
@@ -30,7 +39,27 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { toast } from "sonner";
-import { AddressDto, CreateAddressPayload, OrderDto } from "@veyora/types";
+import {
+  AddressDto,
+  CreateAddressPayload,
+  OrderDto,
+  PaymentOrderInitDto,
+  PaymentVerificationResultDto,
+} from "@veyora/types";
+
+function loadRazorpayScript(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined") return resolve(false);
+    if ((window as any).Razorpay) return resolve(true);
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
 
 export default function CheckoutPage() {
   const { user, isAuthenticated } = useAuthStore();
@@ -47,6 +76,8 @@ export default function CheckoutPage() {
     isPlacingOrder,
   } = useCheckout(shippingMethod);
 
+  const { initiatePaymentAsync, verifyPaymentAsync } = usePayment();
+
   const {
     addresses,
     createAddressAsync,
@@ -54,6 +85,11 @@ export default function CheckoutPage() {
 
   const [mounted, setMounted] = React.useState(false);
   const [completedOrder, setCompletedOrder] = React.useState<OrderDto | null>(null);
+  const [pendingPaymentOrder, setPendingPaymentOrder] = React.useState<OrderDto | null>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = React.useState(false);
+  const [simulatedModalOpen, setSimulatedModalOpen] = React.useState(false);
+  const [currentInitDto, setCurrentInitDto] = React.useState<PaymentOrderInitDto | null>(null);
+  const [verifiedPayment, setVerifiedPayment] = React.useState<PaymentVerificationResultDto | null>(null);
 
   // Idempotency token per checkout session
   const [idempotencyKey, setIdempotencyKey] = React.useState<string>("");
@@ -213,11 +249,127 @@ export default function CheckoutPage() {
         idempotencyKey: idempotencyKey || crypto.randomUUID(),
       });
 
-      setCompletedOrder(order);
-      clearCart();
+      setPendingPaymentOrder(order);
+      await launchPayment(order);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unable to place order. Please check stock.";
       toast.error("Checkout Request Declined", { description: message });
+    }
+  };
+
+  const launchPayment = async (order: OrderDto) => {
+    try {
+      setIsProcessingPayment(true);
+      const initDto = await initiatePaymentAsync({
+        orderId: order.id,
+        provider: "razorpay",
+        currency: "INR",
+      });
+      setCurrentInitDto(initDto);
+      setPendingPaymentOrder(order);
+
+      const rzpLoaded = await loadRazorpayScript();
+      if (rzpLoaded && (window as any).Razorpay) {
+        const rzp = new (window as any).Razorpay({
+          key: initDto.keyId,
+          amount: initDto.amountSubunits,
+          currency: initDto.currency,
+          name: "Veyora Haute Couture",
+          description: `Order #${initDto.orderNumber}`,
+          order_id: initDto.gatewayOrderId,
+          prefill: {
+            name: initDto.customer?.name,
+            email: initDto.customer?.email,
+            contact: initDto.customer?.phone,
+          },
+          theme: {
+            color: "#0a0a0a",
+          },
+          handler: async function (response: {
+            razorpay_order_id: string;
+            razorpay_payment_id: string;
+            razorpay_signature: string;
+          }) {
+            try {
+              setIsProcessingPayment(true);
+              const verification = await verifyPaymentAsync({
+                orderId: initDto.orderId,
+                gatewayOrderId: response.razorpay_order_id,
+                gatewayPaymentId: response.razorpay_payment_id,
+                gatewaySignature: response.razorpay_signature,
+              });
+
+              toast.success("Payment Verified & Confirmed", {
+                description: `Transaction ${response.razorpay_payment_id} successfully confirmed.`,
+              });
+              setVerifiedPayment(verification);
+              setCompletedOrder({ ...order, status: "confirmed" });
+              setPendingPaymentOrder(null);
+              clearCart();
+            } catch (err: unknown) {
+              const msg = err instanceof Error ? err.message : "Cryptographic verification failed.";
+              toast.error("Payment Verification Failed", { description: msg });
+            } finally {
+              setIsProcessingPayment(false);
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              toast.info("Payment Incomplete", {
+                description: "Payment modal was closed. You can complete settlement when ready.",
+              });
+              setIsProcessingPayment(false);
+            },
+          },
+        });
+
+        rzp.on("payment.failed", function (response: any) {
+          toast.error("Payment Declined by Issuer", {
+            description: response.error?.description || "Payment failed. Please retry with another payment instrument.",
+          });
+          setIsProcessingPayment(false);
+        });
+
+        rzp.open();
+      } else {
+        // Fallback simulation dialog for offline/dev test environment
+        setSimulatedModalOpen(true);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Could not initiate payment.";
+      toast.error("Payment Initiation Error", { description: msg });
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  const handleConfirmSimulatedPayment = async () => {
+    if (!currentInitDto || !pendingPaymentOrder) return;
+    try {
+      setIsProcessingPayment(true);
+      const simulatedPaymentId = `pay_sim_${crypto.randomUUID().slice(0, 8)}`;
+      const simulatedSignature = `dev_simulated_${currentInitDto.orderId}_${simulatedPaymentId}`;
+
+      const verification = await verifyPaymentAsync({
+        orderId: currentInitDto.orderId,
+        gatewayOrderId: currentInitDto.gatewayOrderId,
+        gatewayPaymentId: simulatedPaymentId,
+        gatewaySignature: simulatedSignature,
+      });
+
+      toast.success("Dev Payment Verified & Confirmed", {
+        description: `Simulated transaction ${simulatedPaymentId} verified successfully.`,
+      });
+      setVerifiedPayment(verification);
+      setCompletedOrder({ ...pendingPaymentOrder, status: "confirmed" });
+      setPendingPaymentOrder(null);
+      setSimulatedModalOpen(false);
+      clearCart();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Cryptographic verification failed.";
+      toast.error("Verification Declined", { description: msg });
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 
@@ -243,7 +395,7 @@ export default function CheckoutPage() {
 
           <div className="space-y-3">
             <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-              Order Confirmed // {completedOrder.orderNumber}
+              Order Confirmed & Settled // {completedOrder.orderNumber}
             </span>
             <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
               Thank You for Your Patronage
@@ -251,11 +403,28 @@ export default function CheckoutPage() {
             <p className="mx-auto max-w-md text-sm text-muted-foreground leading-relaxed">
               We have dispatched your verified receipt to{" "}
               <strong className="text-foreground">{completedOrder.customerEmail}</strong>.
-              Our climate-controlled atelier has commenced tailored fulfillment.
+              Payment has been cryptographically confirmed and our climate-controlled atelier has commenced tailored fulfillment.
             </p>
           </div>
 
           <div className="rounded-3xl border border-border/80 bg-card p-6 text-left space-y-4 max-w-md mx-auto text-xs shadow-sm">
+            <div className="flex justify-between border-b border-border/60 pb-3">
+              <span className="text-muted-foreground">Payment Verification</span>
+              <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] flex items-center gap-1">
+                <ShieldCheck className="h-3 w-3" />
+                <span>HMAC VERIFIED & SETTLED</span>
+              </Badge>
+            </div>
+
+            {verifiedPayment?.gatewayPaymentId && (
+              <div className="flex justify-between border-b border-border/60 pb-3">
+                <span className="text-muted-foreground">Gateway Payment ID</span>
+                <span className="font-mono text-[11px] text-foreground font-semibold">
+                  {verifiedPayment.gatewayPaymentId}
+                </span>
+              </div>
+            )}
+
             <div className="flex justify-between border-b border-border/60 pb-3">
               <span className="text-muted-foreground">Courier Service</span>
               <span className="font-semibold text-foreground">
@@ -280,13 +449,6 @@ export default function CheckoutPage() {
               </span>
             </div>
 
-            <div className="flex justify-between border-b border-border/60 pb-3">
-              <span className="text-muted-foreground">Settlement Status</span>
-              <Badge variant="outline" className="border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono text-[10px]">
-                PENDING FULFILLMENT
-              </Badge>
-            </div>
-
             <div className="flex justify-between pt-1">
               <span className="text-muted-foreground">Total Authorized</span>
               <span className="font-bold text-base text-foreground tabular-nums">
@@ -297,6 +459,9 @@ export default function CheckoutPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <Button asChild size="lg" className="rounded-full px-8 text-xs font-semibold">
+              <Link href="/orders">Inspect Order Status & Telemetry</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="rounded-full px-8 text-xs font-semibold">
               <Link href="/shop">Continue Exploring Haute Couture</Link>
             </Button>
           </div>
@@ -828,16 +993,20 @@ export default function CheckoutPage() {
               <Button
                 type="submit"
                 size="lg"
-                disabled={isPlacingOrder || (validation !== undefined && !isCheckoutValid)}
+                disabled={isPlacingOrder || isProcessingPayment || (validation !== undefined && !isCheckoutValid)}
                 className="w-full rounded-2xl font-bold text-sm shadow-lg shadow-primary/20 h-13"
               >
-                {isPlacingOrder ? (
+                {isPlacingOrder || isProcessingPayment ? (
                   <span className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Verifying Atelier Stock & Placing Order...</span>
+                    <span>
+                      {isPlacingOrder
+                        ? "Verifying Atelier Stock & Placing Order..."
+                        : "Connecting to Secure Payment Gateway..."}
+                    </span>
                   </span>
                 ) : (
-                  `Place Order • $${total.toFixed(2)}`
+                  `Proceed to Secure Payment • $${total.toFixed(2)}`
                 )}
               </Button>
             </div>
@@ -947,6 +1116,68 @@ export default function CheckoutPage() {
             </div>
           </div>
         </form>
+
+        {/* Fallback Simulation Dialog for Offline / Dev Environments */}
+        <Dialog open={simulatedModalOpen} onOpenChange={setSimulatedModalOpen}>
+          <DialogContent className="sm:max-w-md rounded-3xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-base">
+                <ShieldCheck className="h-5 w-5 text-emerald-500" />
+                <span>Veyora Secure Payment Gateway</span>
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                Razorpay Test Mode // Order #{currentInitDto?.orderNumber}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-2 text-xs">
+              <div className="rounded-2xl border border-border/70 p-4 space-y-2 bg-muted/20">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Provider:</span>
+                  <span className="font-semibold uppercase text-foreground">Razorpay Test</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Gateway Order ID:</span>
+                  <span className="font-mono text-foreground">{currentInitDto?.gatewayOrderId}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total Settlement:</span>
+                  <span className="font-bold text-foreground tabular-nums">${currentInitDto?.amount.toFixed(2)}</span>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                This transaction will be cryptographically verified with constant-time HMAC-SHA256 signature verification on the Veyora API server before the order transitions to confirmed.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSimulatedModalOpen(false)}
+                className="rounded-xl text-xs"
+              >
+                Dismiss
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleConfirmSimulatedPayment}
+                disabled={isProcessingPayment}
+                className="rounded-xl text-xs font-semibold"
+              >
+                {isProcessingPayment ? (
+                  <span className="flex items-center gap-1.5">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>Verifying Signature...</span>
+                  </span>
+                ) : (
+                  "Simulate & Verify Payment"
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </Container>
     </div>
   );

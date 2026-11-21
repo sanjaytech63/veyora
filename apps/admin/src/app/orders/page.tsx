@@ -32,6 +32,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { adminOrdersApi } from "@/lib/api/admin-orders-api";
+import { adminPaymentApi } from "@/lib/api/admin-payment-api";
 import {
   OrderDto,
   OrderStatus,
@@ -131,6 +132,12 @@ export default function AdminOrdersPage() {
   const [trackingUrl, setTrackingUrl] = React.useState("");
   const [estimatedDelivery, setEstimatedDelivery] = React.useState("");
 
+  // Refund Form state
+  const [refundModalOpen, setRefundModalOpen] = React.useState(false);
+  const [orderToRefund, setOrderToRefund] = React.useState<OrderDto | null>(null);
+  const [refundAmount, setRefundAmount] = React.useState("");
+  const [refundReason, setRefundReason] = React.useState("");
+
   // Debounce search
   React.useEffect(() => {
     const handler = setTimeout(() => {
@@ -208,6 +215,54 @@ export default function AdminOrdersPage() {
         trackingUrl: newStatus === "shipped" ? trackingUrl || undefined : undefined,
         estimatedDeliveryDate: newStatus === "shipped" ? estimatedDelivery || undefined : undefined,
       },
+    });
+  };
+
+  // Mutation: refund payment
+  const refundMutation = useMutation({
+    mutationFn: ({
+      orderId,
+      amount,
+      reason,
+    }: {
+      orderId: string;
+      amount?: number;
+      reason?: string;
+    }) => adminPaymentApi.refundPayment(orderId, { amount, reason }),
+    onSuccess: (refund) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+      toast.success("Refund processed successfully", {
+        description: `Refund ID ${refund.refundId} for $${refund.amount.toFixed(2)} processed via gateway.`,
+      });
+      setRefundModalOpen(false);
+      setOrderToRefund(null);
+      refetch();
+      if (selectedOrder) {
+        setSelectedOrder(null);
+      }
+    },
+    onError: (err: Error) => {
+      toast.error("Refund declined", {
+        description: err.message || "Gateway declined the refund transaction.",
+      });
+    },
+  });
+
+  const handleOpenRefundModal = (order: OrderDto) => {
+    setOrderToRefund(order);
+    setRefundAmount(order.total.toFixed(2));
+    setRefundReason("");
+    setRefundModalOpen(true);
+  };
+
+  const handleSaveRefund = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!orderToRefund) return;
+    const num = Number(refundAmount);
+    refundMutation.mutate({
+      orderId: orderToRefund.id,
+      amount: !isNaN(num) && num > 0 ? num : undefined,
+      reason: refundReason || undefined,
     });
   };
 
@@ -581,6 +636,22 @@ export default function AdminOrdersPage() {
                   <span>Total Authorized</span>
                   <span className="text-base font-mono tabular-nums">${selectedOrder.total.toFixed(2)}</span>
                 </div>
+
+                {selectedOrder.status !== "pending" &&
+                  selectedOrder.status !== "cancelled" &&
+                  selectedOrder.status !== "refunded" && (
+                    <div className="pt-2 flex justify-end">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleOpenRefundModal(selectedOrder)}
+                        className="rounded-xl text-xs h-8 text-rose-600 border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-700"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+                        <span>Issue Gateway Refund</span>
+                      </Button>
+                    </div>
+                  )}
               </div>
 
               {/* Status History & Audit Log */}
@@ -725,6 +796,87 @@ export default function AdminOrdersPage() {
                   className="rounded-xl text-xs font-semibold"
                 >
                   {updateStatusMutation.isPending ? "Executing Transition..." : "Commit State Change"}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* 3. REFUND DIALOG */}
+      {orderToRefund && (
+        <Dialog open={refundModalOpen} onOpenChange={setRefundModalOpen}>
+          <DialogContent className="max-w-md rounded-3xl">
+            <DialogHeader>
+              <DialogTitle className="text-base font-bold flex items-center gap-2 text-rose-600">
+                <RotateCcw className="h-4 w-4" />
+                <span>Issue Gateway Refund // {orderToRefund.orderNumber}</span>
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                Process an authorized reversal through Razorpay payment gateway.
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleSaveRefund} className="space-y-4 pt-2">
+              <div className="rounded-2xl border border-border/70 p-3 bg-muted/20 text-xs space-y-1">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Customer:</span>
+                  <span className="font-semibold text-foreground">{orderToRefund.customerName}</span>
+                </div>
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Total Settled:</span>
+                  <span className="font-bold text-foreground tabular-nums">${orderToRefund.total.toFixed(2)}</span>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="refundAmount" className="text-xs font-semibold">
+                  Refund Amount (USD / Currency Units)
+                </Label>
+                <Input
+                  id="refundAmount"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  max={orderToRefund.total}
+                  value={refundAmount}
+                  onChange={(e) => setRefundAmount(e.target.value)}
+                  className="h-10 rounded-xl text-xs font-mono"
+                  required
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  Leave at ${orderToRefund.total.toFixed(2)} for full settlement refund, or enter a partial amount.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="refundReason" className="text-xs font-semibold">
+                  Reason for Refund
+                </Label>
+                <Input
+                  id="refundReason"
+                  placeholder="e.g., Fabric fitting return, patron request, damage in transit"
+                  value={refundReason}
+                  onChange={(e) => setRefundReason(e.target.value)}
+                  className="h-10 rounded-xl text-xs"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setRefundModalOpen(false)}
+                  className="rounded-xl text-xs"
+                >
+                  Dismiss
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={refundMutation.isPending || !refundAmount}
+                  className="rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white"
+                >
+                  {refundMutation.isPending ? "Contacting Gateway..." : "Authorize Refund"}
                 </Button>
               </div>
             </form>

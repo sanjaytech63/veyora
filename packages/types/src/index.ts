@@ -9,3 +9,4 @@ export * from "./wishlist";
 export * from "./address";
 export * from "./order";
 export * from "./checkout";
+export * from "./payment";

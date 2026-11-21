@@ -18,6 +18,7 @@ import { cartRouter } from "./modules/cart/cart.router";
 import { wishlistRouter } from "./modules/wishlist/wishlist.router";
 import { addressRouter } from "./modules/checkout/address.router";
 import { checkoutRouter } from "./modules/checkout/checkout.router";
+import { paymentRouter } from "./modules/payment/payment.router";
 import { openApiSpec } from "./docs/openapi";
 
 export function createApp(): Application {
@@ -52,7 +53,14 @@ export function createApp(): Application {
   app.use(cookieParser(env.COOKIE_SECRET));
 
   // 6. Request Body Parsers with configurable size limits
-  app.use(express.json({ limit: env.BODY_LIMIT }));
+  app.use(
+    express.json({
+      limit: env.BODY_LIMIT,
+      verify: (req: express.Request & { rawBody?: string }, _res, buf) => {
+        req.rawBody = buf.toString("utf8");
+      },
+    })
+  );
   app.use(express.urlencoded({ extended: true, limit: env.BODY_LIMIT }));
 
   // 7. Structured Pino Request Logging
@@ -81,6 +89,7 @@ export function createApp(): Application {
   apiV1Router.use("/", wishlistRouter);
   apiV1Router.use("/", addressRouter);
   apiV1Router.use("/", checkoutRouter);
+  apiV1Router.use("/", paymentRouter);
 
   app.use(env.API_PREFIX, apiV1Router);
 
