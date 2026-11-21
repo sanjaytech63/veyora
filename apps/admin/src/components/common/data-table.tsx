@@ -117,13 +117,16 @@ export function DataTable<T extends Record<string, unknown>>({
                 {columns.map((col) => (
                   <TableHead key={String(col.key)}>
                     {col.sortable ? (
-                      <button
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleSort(String(col.key))}
-                        className="flex items-center gap-1 hover:text-foreground font-semibold"
+                        className="-ml-3 h-8 flex items-center gap-1 hover:text-foreground font-semibold px-3"
                       >
                         {col.header}
                         <ArrowUpDown className="h-3 w-3" />
-                      </button>
+                      </Button>
                     ) : (
                       col.header
                     )}

@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { ApiClientError } from "@/lib/api/api-client";
-import { UserPlus, Loader2 } from "lucide-react";
+import { UserPlus, LoaderCircle } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -163,7 +163,7 @@ export default function RegisterPage() {
               <Button type="submit" className="w-full mt-2" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                     Creating account...
                   </>
                 ) : (

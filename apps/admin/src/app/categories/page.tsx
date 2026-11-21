@@ -6,6 +6,22 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -174,104 +190,90 @@ export default function CategoriesPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="relative w-full overflow-auto">
-              <table className="w-full caption-bottom text-sm">
-                <thead className="[&_tr]:border-b">
-                  <tr className="border-b transition-colors hover:bg-muted/50">
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Category Name
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Slug
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Parent Category
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Display Order
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Status
-                    </th>
-                    <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="[&_tr:last-child]:border-0">
-                  {loading ? (
-                    <tr>
-                      <td colSpan={6} className="h-24 text-center text-muted-foreground">
-                        Loading categories...
-                      </td>
-                    </tr>
-                  ) : categories.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="h-32 text-center text-muted-foreground">
-                        <div className="flex flex-col items-center justify-center gap-2">
-                          <Folder className="h-8 w-8 text-muted-foreground/40" />
-                          <p className="font-medium">No categories created yet</p>
-                          <Button size="sm" variant="outline" onClick={handleOpenCreate}>
-                            Create First Category
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : (
-                    categories.map((cat) => {
-                      const parent = categories.find((c) => c.id === cat.parentId);
-                      return (
-                        <tr key={cat.id} className="border-b transition-colors hover:bg-muted/50">
-                          <td className="p-4 align-middle font-medium">
-                            <div className="flex items-center gap-2">
-                              {cat.parentId ? (
-                                <>
-                                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground ml-3" />
-                                  <Folder className="h-4 w-4 text-muted-foreground" />
-                                </>
-                              ) : (
-                                <FolderPlus className="h-4 w-4 text-primary" />
-                              )}
-                              <span>{cat.name}</span>
-                            </div>
-                          </td>
-                          <td className="p-4 align-middle font-mono text-xs">{cat.slug}</td>
-                          <td className="p-4 align-middle text-muted-foreground">
-                            {parent ? parent.name : "— Root Category —"}
-                          </td>
-                          <td className="p-4 align-middle">{cat.order}</td>
-                          <td className="p-4 align-middle">
-                            <Badge variant={cat.status === "active" ? "default" : "secondary"}>
-                              {cat.status}
-                            </Badge>
-                          </td>
-                          <td className="p-4 align-middle text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                                onClick={() => handleOpenEdit(cat)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 text-destructive"
-                                onClick={() => handleDelete(cat)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Category Name</TableHead>
+                  <TableHead>Slug</TableHead>
+                  <TableHead>Parent Category</TableHead>
+                  <TableHead>Display Order</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                      Loading categories...
+                    </TableCell>
+                  </TableRow>
+                ) : categories.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <Folder className="h-8 w-8 text-muted-foreground/40" />
+                        <p className="font-medium">No categories created yet</p>
+                        <Button size="sm" variant="outline" onClick={handleOpenCreate}>
+                          Create First Category
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  categories.map((cat) => {
+                    const parent = categories.find((c) => c.id === cat.parentId);
+                    return (
+                      <TableRow key={cat.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {cat.parentId ? (
+                              <>
+                                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground ml-3" />
+                                <Folder className="h-4 w-4 text-muted-foreground" />
+                              </>
+                            ) : (
+                              <FolderPlus className="h-4 w-4 text-primary" />
+                            )}
+                            <span>{cat.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">{cat.slug}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {parent ? parent.name : "— Root Category —"}
+                        </TableCell>
+                        <TableCell>{cat.order}</TableCell>
+                        <TableCell>
+                          <Badge variant={cat.status === "active" ? "default" : "secondary"}>
+                            {cat.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() => handleOpenEdit(cat)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-destructive"
+                              onClick={() => handleDelete(cat)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </div>
@@ -310,27 +312,27 @@ export default function CategoriesPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Parent Category</label>
-              <select
-                value={parentId}
-                onChange={(e) => setParentId(e.target.value)}
-                className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                <option value="">None (Top-Level Category)</option>
-                {categories
-                  .filter((c) => !editingCategory || c.id !== editingCategory.id)
-                  .map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-              </select>
+              <Select value={parentId || "none"} onValueChange={(val) => setParentId(val === "none" ? "" : val)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select parent category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None (Top-Level Category)</SelectItem>
+                  {categories
+                    .filter((c) => !editingCategory || c.id !== editingCategory.id)
+                    .map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Description</label>
-              <textarea
+              <Textarea
                 rows={2}
-                className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
@@ -348,14 +350,15 @@ export default function CategoriesPage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Status</label>
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value as "active" | "inactive")}
-                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
+                <Select value={status} onValueChange={(val) => setStatus(val as "active" | "inactive")}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

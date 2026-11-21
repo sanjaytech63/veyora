@@ -8,6 +8,21 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -228,17 +243,17 @@ export default function AdminInventoryPage() {
               />
             </div>
             <div className="flex items-center gap-2">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                aria-label="Filter by Inventory Status"
-                className="h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                <option value="all">All Inventory Statuses</option>
-                <option value="in_stock">In Stock</option>
-                <option value="low_stock">Low Stock Alerts</option>
-                <option value="out_of_stock">Out of Stock</option>
-              </select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Inventory Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Inventory Statuses</SelectItem>
+                  <SelectItem value="in_stock">In Stock</SelectItem>
+                  <SelectItem value="low_stock">Low Stock Alerts</SelectItem>
+                  <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>
@@ -247,142 +262,126 @@ export default function AdminInventoryPage() {
       {/* 3. Inventory Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="relative w-full overflow-auto">
-            <table className="w-full caption-bottom text-sm">
-              <thead className="[&_tr]:border-b">
-                <tr className="border-b transition-colors hover:bg-muted/50">
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    SKU & Product
-                  </th>
-                  <th className="h-12 px-4 text-center align-middle font-medium text-muted-foreground">
-                    On Hand
-                  </th>
-                  <th className="h-12 px-4 text-center align-middle font-medium text-muted-foreground">
-                    Reserved
-                  </th>
-                  <th className="h-12 px-4 text-center align-middle font-medium text-muted-foreground">
-                    Available
-                  </th>
-                  <th className="h-12 px-4 text-center align-middle font-medium text-muted-foreground">
-                    Threshold
-                  </th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Status
-                  </th>
-                  <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="[&_tr:last-child]:border-0">
-                {loading ? (
-                  <tr>
-                    <td colSpan={7} className="h-24 text-center text-muted-foreground">
-                      Loading inventory records...
-                    </td>
-                  </tr>
-                ) : filteredItems.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="h-32 text-center text-muted-foreground">
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <Boxes className="h-8 w-8 text-muted-foreground/40" />
-                        <p className="font-medium">No inventory records found</p>
-                        <p className="text-xs">
-                          Inventory records are created when catalog products and variants are added.
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredItems.map((item) => (
-                    <tr key={item.id} className="border-b transition-colors hover:bg-muted/50">
-                      <td className="p-4 align-middle">
-                        <div className="flex flex-col">
-                          <span className="font-mono text-xs font-bold text-foreground">
-                            {item.sku}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>SKU & Product</TableHead>
+                <TableHead className="text-center">On Hand</TableHead>
+                <TableHead className="text-center">Reserved</TableHead>
+                <TableHead className="text-center">Available</TableHead>
+                <TableHead className="text-center">Threshold</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                    Loading inventory records...
+                  </TableCell>
+                </TableRow>
+              ) : filteredItems.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Boxes className="h-8 w-8 text-muted-foreground/40" />
+                      <p className="font-medium">No inventory records found</p>
+                      <p className="text-xs">
+                        Inventory records are created when catalog products and variants are added.
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredItems.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-mono text-xs font-bold text-foreground">
+                          {item.sku}
+                        </span>
+                        <span className="text-sm font-medium text-foreground">
+                          {item.productTitle}
+                        </span>
+                        {item.variantName && (
+                          <span className="text-xs text-muted-foreground">
+                            Variant: {item.variantName}
                           </span>
-                          <span className="text-sm font-medium text-foreground">
-                            {item.productTitle}
-                          </span>
-                          {item.variantName && (
-                            <span className="text-xs text-muted-foreground">
-                              Variant: {item.variantName}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4 align-middle text-center font-bold text-base">
-                        {item.onHand}
-                      </td>
-                      <td className="p-4 align-middle text-center">
-                        {item.reserved > 0 ? (
-                          <span className="font-medium text-amber-600 bg-amber-50 dark:bg-amber-950/20 px-2 py-0.5 rounded text-xs">
-                            {item.reserved}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground text-xs">0</span>
                         )}
-                      </td>
-                      <td className="p-4 align-middle text-center font-extrabold text-base text-foreground">
-                        {item.available}
-                      </td>
-                      <td className="p-4 align-middle text-center text-muted-foreground text-xs">
-                        {item.lowStockThreshold}
-                      </td>
-                      <td className="p-4 align-middle">
-                        <Badge
-                          variant={
-                            item.status === "in_stock"
-                              ? "default"
-                              : item.status === "low_stock"
-                              ? "secondary"
-                              : "destructive"
-                          }
-                          className={
-                            item.status === "in_stock"
-                              ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                              : item.status === "low_stock"
-                              ? "bg-amber-500 text-white hover:bg-amber-600"
-                              : ""
-                          }
-                        >
-                          {item.status === "in_stock"
-                            ? "In Stock"
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center font-bold text-base">
+                      {item.onHand}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {item.reserved > 0 ? (
+                        <span className="font-medium text-amber-600 bg-amber-50 dark:bg-amber-950/20 px-2 py-0.5 rounded text-xs">
+                          {item.reserved}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">0</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center font-extrabold text-base text-foreground">
+                      {item.available}
+                    </TableCell>
+                    <TableCell className="text-center text-muted-foreground text-xs">
+                      {item.lowStockThreshold}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          item.status === "in_stock"
+                            ? "default"
                             : item.status === "low_stock"
-                            ? "Low Stock"
-                            : "Out of Stock"}
-                        </Badge>
-                      </td>
-                      <td className="p-4 align-middle text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 text-xs flex items-center gap-1"
-                            onClick={() => handleOpenAdjust(item)}
-                          >
-                            <SlidersHorizontal className="h-3.5 w-3.5" />
-                            Adjust
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            asChild
-                            className="h-8 text-xs flex items-center gap-1 text-muted-foreground"
-                          >
-                            <Link href={`/inventory/${item.sku}`}>
-                              <History className="h-3.5 w-3.5" />
-                              Audit Ledger
-                            </Link>
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                            ? "secondary"
+                            : "destructive"
+                        }
+                        className={
+                          item.status === "in_stock"
+                            ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                            : item.status === "low_stock"
+                            ? "bg-amber-500 text-white hover:bg-amber-600"
+                            : ""
+                        }
+                      >
+                        {item.status === "in_stock"
+                          ? "In Stock"
+                          : item.status === "low_stock"
+                          ? "Low Stock"
+                          : "Out of Stock"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs flex items-center gap-1"
+                          onClick={() => handleOpenAdjust(item)}
+                        >
+                          <SlidersHorizontal className="h-3.5 w-3.5" />
+                          Adjust
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          asChild
+                          className="h-8 text-xs flex items-center gap-1 text-muted-foreground"
+                        >
+                          <Link href={`/inventory/${item.sku}`}>
+                            <History className="h-3.5 w-3.5" />
+                            Audit Ledger
+                          </Link>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
@@ -421,15 +420,19 @@ export default function AdminInventoryPage() {
           <form onSubmit={handleAdjustSubmit} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Operation Type</label>
-              <select
+              <Select
                 value={adjType}
-                onChange={(e) => setAdjType(e.target.value as "increase" | "decrease" | "correction")}
-                className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                onValueChange={(val) => setAdjType(val as "increase" | "decrease" | "correction")}
               >
-                <option value="increase">Restock / Add Stock (+ Units)</option>
-                <option value="decrease">Write-off / Damage / Remove (- Units)</option>
-                <option value="correction">Physical Count Correction (Set Absolute Total)</option>
-              </select>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select operation" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="increase">Restock / Add Stock (+ Units)</SelectItem>
+                  <SelectItem value="decrease">Write-off / Damage / Remove (- Units)</SelectItem>
+                  <SelectItem value="correction">Physical Count Correction (Set Absolute Total)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

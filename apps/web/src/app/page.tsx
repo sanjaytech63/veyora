@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { ProductGrid } from "@/components/storefront/product-grid";
 import { useCategories, useFeaturedProducts, useProducts } from "@/hooks/use-catalog";
 import {
@@ -95,10 +96,13 @@ export default function StorefrontHomePage() {
             <div className="lg:col-span-5 relative">
               <div className="relative mx-auto aspect-square max-w-md lg:max-w-none overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-tr from-muted/60 via-card to-card p-3 shadow-2xl">
                 <div className="relative h-full w-full overflow-hidden rounded-2xl bg-zinc-950">
-                  <img
+                  <OptimizedImage
                     src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1200&auto=format&fit=crop"
                     alt="Aura Spatial Wireless Headphones Flagship"
+                    fill
+                    priority
                     className="h-full w-full object-cover object-center opacity-90 transition-transform duration-1000 hover:scale-105"
+                    sizes="(max-width: 1024px) 100vw, 40vw"
                   />
                   {/* Floating Highlight Card */}
                   <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-white/10 bg-black/60 p-4 backdrop-blur-xl text-white">
@@ -264,30 +268,26 @@ export default function StorefrontHomePage() {
 
             {/* Collection Filter Buttons */}
             <div className="flex flex-wrap gap-2">
-              <button
+              <Button
                 type="button"
+                variant={activeCollectionTab === "all" ? "default" : "outline"}
+                size="sm"
                 onClick={() => setActiveCollectionTab("all")}
-                className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
-                  activeCollectionTab === "all"
-                    ? "bg-primary text-primary-foreground shadow-xs"
-                    : "border border-border/80 bg-card text-muted-foreground hover:text-foreground"
-                }`}
+                className="rounded-full text-xs font-semibold"
               >
                 All Departments
-              </button>
+              </Button>
               {categories.map((cat) => (
-                <button
+                <Button
                   key={cat.id}
                   type="button"
+                  variant={activeCollectionTab === cat.id ? "default" : "outline"}
+                  size="sm"
                   onClick={() => setActiveCollectionTab(cat.id)}
-                  className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
-                    activeCollectionTab === cat.id
-                      ? "bg-primary text-primary-foreground shadow-xs"
-                      : "border border-border/80 bg-card text-muted-foreground hover:text-foreground"
-                  }`}
+                  className="rounded-full text-xs font-semibold"
                 >
                   {cat.name}
-                </button>
+                </Button>
               ))}
             </div>
           </div>

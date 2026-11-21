@@ -1,13 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { ProductImage } from "@veyora/types";
+import { ProductImage as ProductImageType } from "@veyora/types";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 interface ProductGalleryProps {
-  images: ProductImage[];
+  images: ProductImageType[];
   title: string;
   selectedVariantImage?: string;
   className?: string;
@@ -47,10 +48,13 @@ export function ProductGallery({
       {/* Main Display Stage */}
       <div className="group relative aspect-square w-full overflow-hidden rounded-3xl border border-border/60 bg-muted/30 shadow-xs">
         {currentImage?.url ? (
-          <img
+          <OptimizedImage
             src={currentImage.url}
             alt={currentImage.alt || title}
-            className="h-full w-full object-cover object-center transition-all duration-500 ease-out group-hover:scale-105"
+            fill
+            priority
+            className="object-cover object-center transition-all duration-500 ease-out group-hover:scale-105"
+            sizes="(max-width: 1024px) 100vw, 55vw"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center p-8 text-center text-muted-foreground">
@@ -59,7 +63,7 @@ export function ProductGallery({
         )}
 
         {/* Floating Zoom / Expand Icon Hint */}
-        <div className="absolute right-4 top-4 rounded-full bg-background/80 p-2 text-foreground/70 backdrop-blur-md transition-opacity opacity-0 group-hover:opacity-100 shadow-xs">
+        <div className="absolute right-4 top-4 rounded-full bg-background/80 p-2 text-foreground/70 backdrop-blur-md transition-opacity opacity-0 group-hover:opacity-100 shadow-xs pointer-events-none">
           <Maximize2 className="h-4 w-4" />
         </div>
 
@@ -90,7 +94,7 @@ export function ProductGallery({
 
         {/* Image index indicator pill */}
         {allImages.length > 1 && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-background/80 px-3 py-1 text-[11px] font-semibold backdrop-blur-md border border-border/40 shadow-xs text-foreground/80">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-background/80 px-3 py-1 text-[11px] font-semibold backdrop-blur-md border border-border/40 shadow-xs text-foreground/80 pointer-events-none">
             {activeIndex + 1} / {allImages.length}
           </div>
         )}
@@ -100,23 +104,27 @@ export function ProductGallery({
       {allImages.length > 1 && (
         <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none">
           {allImages.map((img, idx) => (
-            <button
+            <Button
               key={idx}
               type="button"
+              variant="outline"
+              size="icon"
               onClick={() => setActiveIndex(idx)}
               className={cn(
-                "relative aspect-square h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl border bg-muted/40 transition-all",
+                "relative aspect-square h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl border p-0 transition-all",
                 activeIndex === idx
                   ? "border-primary ring-2 ring-primary/30 opacity-100 scale-95"
                   : "border-border/60 opacity-60 hover:opacity-100"
               )}
             >
-              <img
+              <OptimizedImage
                 src={img.url}
                 alt={img.alt || `${title} thumbnail ${idx + 1}`}
-                className="h-full w-full object-cover"
+                fill
+                className="object-cover"
+                sizes="80px"
               />
-            </button>
+            </Button>
           ))}
         </div>
       )}

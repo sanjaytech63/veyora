@@ -4,6 +4,7 @@ import * as React from "react";
 import { ProductAttribute } from "@veyora/types";
 import { cn } from "@/lib/utils";
 import { ChevronDown, ShieldCheck, Truck, Layers } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ProductAccordionProps {
   attributes?: ProductAttribute[];
@@ -109,10 +110,11 @@ export function ProductAccordion({
 
         return (
           <div key={item.id} className="py-4">
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => toggleItem(item.id)}
-              className="flex w-full items-center justify-between text-left text-sm font-semibold text-foreground transition-colors hover:text-primary"
+              className="flex w-full items-center justify-between text-left text-sm font-semibold text-foreground transition-colors hover:text-primary hover:bg-transparent p-0 h-auto"
             >
               <div className="flex items-center gap-2.5">
                 <Icon className="h-4 w-4 text-muted-foreground" />
@@ -124,7 +126,7 @@ export function ProductAccordion({
                   isOpen && "rotate-180 text-foreground"
                 )}
               />
-            </button>
+            </Button>
             {isOpen && <div className="mt-3 pr-2 animate-in fade-in-50 duration-200">{item.content}</div>}
           </div>
         );

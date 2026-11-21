@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { ApiClientError } from "@/lib/api/api-client";
-import { Shield, Loader2 } from "lucide-react";
+import { Shield, LoaderCircle } from "lucide-react";
 
 function AdminLoginForm() {
   const router = useRouter();
@@ -125,7 +125,7 @@ function AdminLoginForm() {
               <Button type="submit" className="w-full mt-2" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                     Authenticating...
                   </>
                 ) : (

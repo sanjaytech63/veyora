@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/drawer";
 import { useCategories, useBrands, useProducts } from "@/hooks/use-catalog";
 import { Search, X, SlidersHorizontal } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function ShopPage() {
   const { data: categories = [] } = useCategories();
@@ -115,13 +116,16 @@ export default function ShopPage() {
               className="pl-10 pr-9 rounded-xl border-border/60"
             />
             {search && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setSearch("")}
-                className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                className="absolute right-2 top-2 h-7 w-7 text-muted-foreground hover:text-foreground"
+                aria-label="Clear search"
               >
                 <X className="h-4 w-4" />
-              </button>
+              </Button>
             )}
           </div>
 
@@ -156,30 +160,32 @@ export default function ShopPage() {
                       Category
                     </label>
                     <div className="flex flex-col gap-1.5">
-                      <button
+                      <Button
                         type="button"
+                        variant={selectedCategory === "all" ? "default" : "ghost"}
+                        size="sm"
                         onClick={() => setSelectedCategory("all")}
-                        className={`text-left text-sm py-1.5 px-3 rounded-lg font-medium transition-colors ${
-                          selectedCategory === "all"
-                            ? "bg-primary text-primary-foreground font-semibold"
-                            : "text-muted-foreground hover:bg-muted"
-                        }`}
+                        className={cn(
+                          "justify-start text-xs rounded-lg font-medium h-9",
+                          selectedCategory !== "all" && "text-muted-foreground"
+                        )}
                       >
                         All Categories
-                      </button>
+                      </Button>
                       {categories.map((c) => (
-                        <button
+                        <Button
                           key={c.id}
                           type="button"
+                          variant={selectedCategory === c.id ? "default" : "ghost"}
+                          size="sm"
                           onClick={() => setSelectedCategory(c.id)}
-                          className={`text-left text-sm py-1.5 px-3 rounded-lg font-medium transition-colors ${
-                            selectedCategory === c.id
-                              ? "bg-primary text-primary-foreground font-semibold"
-                              : "text-muted-foreground hover:bg-muted"
-                          }`}
+                          className={cn(
+                            "justify-start text-xs rounded-lg font-medium h-9",
+                            selectedCategory !== c.id && "text-muted-foreground"
+                          )}
                         >
                           {c.name}
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   </div>
@@ -248,58 +254,72 @@ export default function ShopPage() {
             {selectedCategory !== "all" && (
               <Badge variant="secondary" className="gap-1.5 rounded-full px-3 py-1 text-xs">
                 Category: {categories.find((c) => c.id === selectedCategory)?.name || selectedCategory}
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setSelectedCategory("all")}
-                  className="hover:text-foreground"
+                  className="h-4 w-4 p-0 ml-1 hover:text-foreground hover:bg-transparent"
+                  aria-label="Remove category filter"
                 >
                   <X className="h-3 w-3" />
-                </button>
+                </Button>
               </Badge>
             )}
             {selectedBrand !== "all" && (
               <Badge variant="secondary" className="gap-1.5 rounded-full px-3 py-1 text-xs">
                 Brand: {brands.find((b) => b.id === selectedBrand)?.name || selectedBrand}
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setSelectedBrand("all")}
-                  className="hover:text-foreground"
+                  className="h-4 w-4 p-0 ml-1 hover:text-foreground hover:bg-transparent"
+                  aria-label="Remove brand filter"
                 >
                   <X className="h-3 w-3" />
-                </button>
+                </Button>
               </Badge>
             )}
             {inStockOnly && (
               <Badge variant="secondary" className="gap-1.5 rounded-full px-3 py-1 text-xs">
                 In Stock Only
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setInStockOnly(false)}
-                  className="hover:text-foreground"
+                  className="h-4 w-4 p-0 ml-1 hover:text-foreground hover:bg-transparent"
+                  aria-label="Remove in-stock filter"
                 >
                   <X className="h-3 w-3" />
-                </button>
+                </Button>
               </Badge>
             )}
             {search && (
               <Badge variant="secondary" className="gap-1.5 rounded-full px-3 py-1 text-xs">
                 Query: &ldquo;{search}&rdquo;
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setSearch("")}
-                  className="hover:text-foreground"
+                  className="h-4 w-4 p-0 ml-1 hover:text-foreground hover:bg-transparent"
+                  aria-label="Clear search query"
                 >
                   <X className="h-3 w-3" />
-                </button>
+                </Button>
               </Badge>
             )}
-            <button
+            <Button
               type="button"
+              variant="link"
+              size="sm"
               onClick={handleResetFilters}
-              className="text-xs font-semibold text-primary hover:underline ml-2"
+              className="text-xs font-semibold text-primary p-0 h-auto ml-2 hover:underline"
             >
               Clear All
-            </button>
+            </Button>
           </div>
         )}
 
@@ -313,36 +333,38 @@ export default function ShopPage() {
                 Departments
               </h3>
               <div className="space-y-1">
-                <button
+                <Button
                   type="button"
+                  variant={selectedCategory === "all" ? "default" : "ghost"}
+                  size="sm"
                   onClick={() => {
                     setSelectedCategory("all");
                     setPage(1);
                   }}
-                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
-                    selectedCategory === "all"
-                      ? "bg-primary text-primary-foreground font-semibold"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
+                  className={cn(
+                    "w-full justify-between rounded-xl px-3 text-xs font-medium h-9",
+                    selectedCategory !== "all" && "text-muted-foreground"
+                  )}
                 >
                   <span>All Products</span>
-                </button>
+                </Button>
                 {categories.map((c) => (
-                  <button
+                  <Button
                     key={c.id}
                     type="button"
+                    variant={selectedCategory === c.id ? "default" : "ghost"}
+                    size="sm"
                     onClick={() => {
                       setSelectedCategory(c.id);
                       setPage(1);
                     }}
-                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
-                      selectedCategory === c.id
-                        ? "bg-primary text-primary-foreground font-semibold"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
+                    className={cn(
+                      "w-full justify-between rounded-xl px-3 text-xs font-medium h-9",
+                      selectedCategory !== c.id && "text-muted-foreground"
+                    )}
                   >
                     <span>{c.name}</span>
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -354,36 +376,38 @@ export default function ShopPage() {
                   Ateliers & Brands
                 </h3>
                 <div className="space-y-1">
-                  <button
+                  <Button
                     type="button"
+                    variant={selectedBrand === "all" ? "default" : "ghost"}
+                    size="sm"
                     onClick={() => {
                       setSelectedBrand("all");
                       setPage(1);
                     }}
-                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
-                      selectedBrand === "all"
-                        ? "bg-primary text-primary-foreground font-semibold"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
+                    className={cn(
+                      "w-full justify-between rounded-xl px-3 text-xs font-medium h-9",
+                      selectedBrand !== "all" && "text-muted-foreground"
+                    )}
                   >
                     <span>All Brands</span>
-                  </button>
+                  </Button>
                   {brands.map((b) => (
-                    <button
+                    <Button
                       key={b.id}
                       type="button"
+                      variant={selectedBrand === b.id ? "default" : "ghost"}
+                      size="sm"
                       onClick={() => {
                         setSelectedBrand(b.id);
                         setPage(1);
                       }}
-                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
-                        selectedBrand === b.id
-                          ? "bg-primary text-primary-foreground font-semibold"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      }`}
+                      className={cn(
+                        "w-full justify-between rounded-xl px-3 text-xs font-medium h-9",
+                        selectedBrand !== b.id && "text-muted-foreground"
+                      )}
                     >
                       <span>{b.name}</span>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>

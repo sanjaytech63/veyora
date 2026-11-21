@@ -9,6 +9,21 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -299,100 +314,84 @@ export default function InventoryDetailPage() {
           </Button>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="relative w-full overflow-auto">
-            <table className="w-full caption-bottom text-sm">
-              <thead className="[&_tr]:border-b">
-                <tr className="border-b transition-colors hover:bg-muted/50">
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Date & Time
-                  </th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Movement Type
-                  </th>
-                  <th className="h-12 px-4 text-center align-middle font-medium text-muted-foreground">
-                    Change
-                  </th>
-                  <th className="h-12 px-4 text-center align-middle font-medium text-muted-foreground">
-                    On-Hand Balance
-                  </th>
-                  <th className="h-12 px-4 text-center align-middle font-medium text-muted-foreground">
-                    Reserved Balance
-                  </th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Reason & Reference
-                  </th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Initiated By
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="[&_tr:last-child]:border-0">
-                {movements.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="h-28 text-center text-muted-foreground">
-                      No stock movement history recorded for this SKU yet.
-                    </td>
-                  </tr>
-                ) : (
-                  movements.map((m) => {
-                    const isPositive = m.quantity > 0;
-                    return (
-                      <tr key={m.id} className="border-b transition-colors hover:bg-muted/50">
-                        <td className="p-4 align-middle text-xs text-muted-foreground font-mono">
-                          {new Date(m.createdAt).toLocaleString()}
-                        </td>
-                        <td className="p-4 align-middle">
-                          <Badge variant="outline" className="capitalize text-xs">
-                            {m.type.replace("_", " ")}
-                          </Badge>
-                        </td>
-                        <td className="p-4 align-middle text-center font-bold">
-                          <span
-                            className={
-                              isPositive
-                                ? "text-emerald-600 inline-flex items-center"
-                                : m.quantity < 0
-                                ? "text-rose-600 inline-flex items-center"
-                                : "text-muted-foreground"
-                            }
-                          >
-                            {isPositive ? (
-                              <ArrowUpRight className="h-3.5 w-3.5 mr-0.5" />
-                            ) : m.quantity < 0 ? (
-                              <ArrowDownRight className="h-3.5 w-3.5 mr-0.5" />
-                            ) : (
-                              <RotateCcw className="h-3.5 w-3.5 mr-0.5" />
-                            )}
-                            {isPositive ? `+${m.quantity}` : m.quantity}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date & Time</TableHead>
+                <TableHead>Movement Type</TableHead>
+                <TableHead className="text-center">Change</TableHead>
+                <TableHead className="text-center">On-Hand Balance</TableHead>
+                <TableHead className="text-center">Reserved Balance</TableHead>
+                <TableHead>Reason & Reference</TableHead>
+                <TableHead>Initiated By</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {movements.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-28 text-center text-muted-foreground">
+                    No stock movement history recorded for this SKU yet.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                movements.map((m) => {
+                  const isPositive = m.quantity > 0;
+                  return (
+                    <TableRow key={m.id}>
+                      <TableCell className="text-xs text-muted-foreground font-mono">
+                        {new Date(m.createdAt).toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="capitalize text-xs">
+                          {m.type.replace("_", " ")}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center font-bold">
+                        <span
+                          className={
+                            isPositive
+                              ? "text-emerald-600 inline-flex items-center"
+                              : m.quantity < 0
+                              ? "text-rose-600 inline-flex items-center"
+                              : "text-muted-foreground"
+                          }
+                        >
+                          {isPositive ? (
+                            <ArrowUpRight className="h-3.5 w-3.5 mr-0.5" />
+                          ) : m.quantity < 0 ? (
+                            <ArrowDownRight className="h-3.5 w-3.5 mr-0.5" />
+                          ) : (
+                            <RotateCcw className="h-3.5 w-3.5 mr-0.5" />
+                          )}
+                          {isPositive ? `+${m.quantity}` : m.quantity}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-center font-mono text-xs">
+                        {m.previousOnHand} &rarr; <span className="font-bold">{m.newOnHand}</span>
+                      </TableCell>
+                      <TableCell className="text-center font-mono text-xs text-amber-600">
+                        {m.previousReserved} &rarr; {m.newReserved}
+                      </TableCell>
+                      <TableCell>
+                        <p className="font-medium text-foreground text-xs">{m.reason}</p>
+                        {m.referenceId && (
+                          <span className="font-mono text-[10px] text-muted-foreground">
+                            Ref: {m.referenceId}
                           </span>
-                        </td>
-                        <td className="p-4 align-middle text-center font-mono text-xs">
-                          {m.previousOnHand} &rarr; <span className="font-bold">{m.newOnHand}</span>
-                        </td>
-                        <td className="p-4 align-middle text-center font-mono text-xs text-amber-600">
-                          {m.previousReserved} &rarr; {m.newReserved}
-                        </td>
-                        <td className="p-4 align-middle">
-                          <p className="font-medium text-foreground text-xs">{m.reason}</p>
-                          {m.referenceId && (
-                            <span className="font-mono text-[10px] text-muted-foreground">
-                              Ref: {m.referenceId}
-                            </span>
-                          )}
-                          {m.note && (
-                            <p className="text-[11px] text-muted-foreground italic">{m.note}</p>
-                          )}
-                        </td>
-                        <td className="p-4 align-middle text-xs text-muted-foreground">
-                          {m.userName || "System"}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+                        )}
+                        {m.note && (
+                          <p className="text-[11px] text-muted-foreground italic">{m.note}</p>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {m.userName || "System"}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
@@ -409,15 +408,19 @@ export default function InventoryDetailPage() {
           <form onSubmit={handleAdjustSubmit} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Operation</label>
-              <select
+              <Select
                 value={adjType}
-                onChange={(e) => setAdjType(e.target.value as "increase" | "decrease" | "correction")}
-                className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                onValueChange={(val) => setAdjType(val as "increase" | "decrease" | "correction")}
               >
-                <option value="increase">Restock / Add Stock (+ Units)</option>
-                <option value="decrease">Write-off / Damage / Remove (- Units)</option>
-                <option value="correction">Physical Count Correction (Set Absolute Total)</option>
-              </select>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select operation" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="increase">Restock / Add Stock (+ Units)</SelectItem>
+                  <SelectItem value="decrease">Write-off / Damage / Remove (- Units)</SelectItem>
+                  <SelectItem value="correction">Physical Count Correction (Set Absolute Total)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

@@ -4,6 +4,8 @@ import * as React from "react";
 import Link from "next/link";
 import { Product } from "@veyora/types";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { StockBadge } from "./stock-badge";
 import { cn } from "@/lib/utils";
 import { ArrowUpRight, Sparkles, Star } from "lucide-react";
@@ -59,11 +61,12 @@ export function ProductCard({
         className="relative block aspect-[4/5] w-full overflow-hidden bg-muted/40"
       >
         {activeImage ? (
-          <img
+          <OptimizedImage
             src={activeImage}
             alt={product.title}
-            className="h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
-            loading="lazy"
+            fill
+            className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-tr from-muted/80 to-muted/30 p-6 text-center">
@@ -123,25 +126,27 @@ export function ProductCard({
         {colorVariants.length > 1 && (
           <div className="mt-3 flex items-center gap-1.5">
             {colorVariants.slice(0, 4).map((c) => (
-              <button
+              <Button
                 key={c.name}
                 type="button"
+                variant="ghost"
+                size="icon"
                 aria-label={`Preview ${c.name}`}
                 title={c.name}
                 onMouseEnter={() => {
                   if (c.image) setActiveImage(c.image);
                 }}
                 className={cn(
-                  "h-3.5 w-3.5 rounded-full border border-background ring-1 ring-border/80 transition-transform hover:scale-125",
+                  "h-4 w-4 p-0 rounded-full border border-background ring-1 ring-border/80 transition-transform hover:scale-125",
                   c.name.toLowerCase().includes("black") || c.name.toLowerCase().includes("obsidian")
-                    ? "bg-zinc-900"
+                    ? "bg-zinc-900 hover:bg-zinc-900"
                     : c.name.toLowerCase().includes("silver") || c.name.toLowerCase().includes("frost")
-                    ? "bg-zinc-300"
+                    ? "bg-zinc-300 hover:bg-zinc-300"
                     : c.name.toLowerCase().includes("sand") || c.name.toLowerCase().includes("cognac")
-                    ? "bg-amber-700"
+                    ? "bg-amber-700 hover:bg-amber-700"
                     : c.name.toLowerCase().includes("white") || c.name.toLowerCase().includes("chalk")
-                    ? "bg-zinc-100"
-                    : "bg-primary"
+                    ? "bg-zinc-100 hover:bg-zinc-100"
+                    : "bg-primary hover:bg-primary"
                 )}
               />
             ))}

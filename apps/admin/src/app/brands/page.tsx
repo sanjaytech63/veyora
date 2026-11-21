@@ -6,6 +6,23 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import {
   Dialog,
   DialogContent,
@@ -160,120 +177,110 @@ export default function BrandsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="relative w-full overflow-auto">
-              <table className="w-full caption-bottom text-sm">
-                <thead className="[&_tr]:border-b">
-                  <tr className="border-b transition-colors hover:bg-muted/50">
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Brand Name
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Slug
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Website
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Status
-                    </th>
-                    <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="[&_tr:last-child]:border-0">
-                  {loading ? (
-                    <tr>
-                      <td colSpan={5} className="h-24 text-center text-muted-foreground">
-                        Loading brands...
-                      </td>
-                    </tr>
-                  ) : brands.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="h-32 text-center text-muted-foreground">
-                        <div className="flex flex-col items-center justify-center gap-2">
-                          <Tags className="h-8 w-8 text-muted-foreground/40" />
-                          <p className="font-medium">No brands found</p>
-                          <Button size="sm" variant="outline" onClick={handleOpenCreate}>
-                            Add First Brand
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Brand Name</TableHead>
+                  <TableHead>Slug</TableHead>
+                  <TableHead>Website</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                      Loading brands...
+                    </TableCell>
+                  </TableRow>
+                ) : brands.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <Tags className="h-8 w-8 text-muted-foreground/40" />
+                        <p className="font-medium">No brands found</p>
+                        <Button size="sm" variant="outline" onClick={handleOpenCreate}>
+                          Add First Brand
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  brands.map((b) => (
+                    <TableRow key={b.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-3">
+                          {b.logo ? (
+                            <OptimizedImage
+                              src={b.logo}
+                              alt={b.name}
+                              width={32}
+                              height={32}
+                              className="h-8 w-8 rounded-md border object-contain p-0.5"
+                            />
+                          ) : (
+                            <div className="h-8 w-8 rounded-md border bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">
+                              {b.name.substring(0, 2).toUpperCase()}
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-semibold text-foreground">{b.name}</p>
+                            {b.description && (
+                              <p className="text-xs text-muted-foreground line-clamp-1">
+                                {b.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">{b.slug}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {b.website ? (
+                          <a
+                            href={b.website}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 text-primary hover:underline"
+                          >
+                            <Globe className="h-3.5 w-3.5" />
+                            <span className="truncate max-w-[200px]">{b.website}</span>
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={b.status === "active" ? "default" : "secondary"}>
+                          {b.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handleOpenEdit(b)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-destructive"
+                            onClick={() => handleDelete(b)}
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
-                      </td>
-                    </tr>
-                  ) : (
-                    brands.map((b) => (
-                      <tr key={b.id} className="border-b transition-colors hover:bg-muted/50">
-                        <td className="p-4 align-middle font-medium">
-                          <div className="flex items-center gap-3">
-                            {b.logo ? (
-                              <img
-                                src={b.logo}
-                                alt={b.name}
-                                className="h-8 w-8 rounded-md border object-contain p-0.5"
-                              />
-                            ) : (
-                              <div className="h-8 w-8 rounded-md border bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">
-                                {b.name.substring(0, 2).toUpperCase()}
-                              </div>
-                            )}
-                            <div>
-                              <p className="font-semibold text-foreground">{b.name}</p>
-                              {b.description && (
-                                <p className="text-xs text-muted-foreground line-clamp-1">
-                                  {b.description}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-4 align-middle font-mono text-xs">{b.slug}</td>
-                        <td className="p-4 align-middle text-muted-foreground">
-                          {b.website ? (
-                            <a
-                              href={b.website}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1 text-primary hover:underline"
-                            >
-                              <Globe className="h-3.5 w-3.5" />
-                              <span className="truncate max-w-[200px]">{b.website}</span>
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-                        <td className="p-4 align-middle">
-                          <Badge variant={b.status === "active" ? "default" : "secondary"}>
-                            {b.status}
-                          </Badge>
-                        </td>
-                        <td className="p-4 align-middle text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              onClick={() => handleOpenEdit(b)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-destructive"
-                              onClick={() => handleDelete(b)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </div>
@@ -332,9 +339,8 @@ export default function BrandsPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Description</label>
-              <textarea
+              <Textarea
                 rows={2}
-                className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
@@ -342,14 +348,15 @@ export default function BrandsPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Status</label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as "active" | "inactive")}
-                className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
+              <Select value={status} onValueChange={(val) => setStatus(val as "active" | "inactive")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2">

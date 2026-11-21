@@ -8,6 +8,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { adminCatalogApi } from "@/lib/api/admin-catalog-api";
 import { Product, Category, CatalogStats } from "@veyora/types";
 import { toast } from "sonner";
@@ -179,31 +195,31 @@ export default function AdminProductsPage() {
               />
             </div>
             <div className="flex items-center gap-2">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                aria-label="Filter by Status"
-                className="h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                <option value="all">All Statuses</option>
-                <option value="active">Active</option>
-                <option value="draft">Draft</option>
-                <option value="archived">Archived</option>
-              </select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
+                </SelectContent>
+              </Select>
 
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                aria-label="Filter by Category"
-                className="h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                <option value="all">All Categories</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>
@@ -212,160 +228,143 @@ export default function AdminProductsPage() {
       {/* 3. Products Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="relative w-full overflow-auto">
-            <table className="w-full caption-bottom text-sm">
-              <thead className="[&_tr]:border-b">
-                <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Product
-                  </th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    SKU
-                  </th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Price
-                  </th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Inventory
-                  </th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Variants
-                  </th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Status
-                  </th>
-                  <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="[&_tr:last-child]:border-0">
-                {loading ? (
-                  <tr>
-                    <td colSpan={7} className="h-24 text-center text-muted-foreground">
-                      Loading catalog products...
-                    </td>
-                  </tr>
-                ) : filteredProducts.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="h-32 text-center text-muted-foreground">
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <Boxes className="h-8 w-8 text-muted-foreground/50" />
-                        <p className="font-medium">No products found</p>
-                        <p className="text-xs">
-                          {search || statusFilter !== "all"
-                            ? "Try clearing filters to see more results."
-                            : "Get started by adding your first product."}
-                        </p>
-                        <Button asChild size="sm" variant="outline" className="mt-2">
-                          <Link href="/products/new">Add Product</Link>
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredProducts.map((product) => {
-                    const primaryImage =
-                      product.images?.find((img) => img.isPrimary)?.url ||
-                      product.images?.[0]?.url;
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead>SKU</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Inventory</TableHead>
+                <TableHead>Variants</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                    Loading catalog products...
+                  </TableCell>
+                </TableRow>
+              ) : filteredProducts.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Boxes className="h-8 w-8 text-muted-foreground/50" />
+                      <p className="font-medium">No products found</p>
+                      <p className="text-xs">
+                        {search || statusFilter !== "all"
+                          ? "Try clearing filters to see more results."
+                          : "Get started by adding your first product."}
+                      </p>
+                      <Button asChild size="sm" variant="outline" className="mt-2">
+                        <Link href="/products/new">Add Product</Link>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredProducts.map((product) => {
+                  const primaryImage =
+                    product.images?.find((img) => img.isPrimary)?.url ||
+                    product.images?.[0]?.url;
 
-                    return (
-                      <tr
-                        key={product.id}
-                        className="border-b transition-colors hover:bg-muted/50"
-                      >
-                        <td className="p-4 align-middle">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-md border bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                              {primaryImage ? (
-                                <img
-                                  src={primaryImage}
-                                  alt={product.title}
-                                  className="h-full w-full object-cover"
-                                />
-                              ) : (
-                                <Package className="h-5 w-5 text-muted-foreground/60" />
-                              )}
-                            </div>
-                            <div className="flex flex-col min-w-0">
-                              <span className="font-semibold text-foreground truncate max-w-[220px]">
-                                {product.title}
-                              </span>
-                              <span className="text-xs text-muted-foreground truncate">
-                                {product.category?.name || "Uncategorized"}
-                              </span>
-                            </div>
+                  return (
+                    <TableRow key={product.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-md border bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                            {primaryImage ? (
+                              <OptimizedImage
+                                src={primaryImage}
+                                alt={product.title}
+                                width={40}
+                                height={40}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <Package className="h-5 w-5 text-muted-foreground/60" />
+                            )}
                           </div>
-                        </td>
-                        <td className="p-4 align-middle font-mono text-xs">
-                          {product.sku}
-                        </td>
-                        <td className="p-4 align-middle font-medium">
-                          ${product.price.toFixed(2)}
-                          {product.compareAtPrice && product.compareAtPrice > product.price && (
-                            <span className="ml-1.5 text-xs text-muted-foreground line-through">
-                              ${product.compareAtPrice.toFixed(2)}
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-semibold text-foreground truncate max-w-[220px]">
+                              {product.title}
                             </span>
-                          )}
-                        </td>
-                        <td className="p-4 align-middle">
-                          {product.stock > 0 ? (
-                            <Badge variant="outline" className="text-emerald-600 border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20">
-                              {product.stock} in stock
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-rose-600 border-rose-200 bg-rose-50 dark:bg-rose-950/20">
-                              Out of stock
-                            </Badge>
-                          )}
-                        </td>
-                        <td className="p-4 align-middle">
-                          <Badge variant="secondary">
-                            {product.variants?.length || 0} variants
-                          </Badge>
-                        </td>
-                        <td className="p-4 align-middle">
-                          <Badge
-                            variant={
-                              product.status === "active"
-                                ? "default"
-                                : product.status === "draft"
-                                ? "secondary"
-                                : "outline"
-                            }
-                          >
-                            {product.status}
-                          </Badge>
-                        </td>
-                        <td className="p-4 align-middle text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              onClick={() => router.push(`/products/${product.id}`)}
-                              title="Edit product"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                              onClick={() => handleDelete(product.id, product.title)}
-                              title="Delete or Archive product"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <span className="text-xs text-muted-foreground truncate">
+                              {product.category?.name || "Uncategorized"}
+                            </span>
                           </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {product.sku}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        ${product.price.toFixed(2)}
+                        {product.compareAtPrice && product.compareAtPrice > product.price && (
+                          <span className="ml-1.5 text-xs text-muted-foreground line-through">
+                            ${product.compareAtPrice.toFixed(2)}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {product.stock > 0 ? (
+                          <Badge variant="outline" className="text-emerald-600 border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20">
+                            {product.stock} in stock
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-rose-600 border-rose-200 bg-rose-50 dark:bg-rose-950/20">
+                            Out of stock
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">
+                          {product.variants?.length || 0} variants
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            product.status === "active"
+                              ? "default"
+                              : product.status === "draft"
+                              ? "secondary"
+                              : "outline"
+                          }
+                        >
+                          {product.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => router.push(`/products/${product.id}`)}
+                            title="Edit product"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                            onClick={() => handleDelete(product.id, product.title)}
+                            title="Delete or Archive product"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </PageContainer>

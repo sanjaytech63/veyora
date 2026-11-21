@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAdminAuthStore } from "@/stores/admin-auth-store";
-import { Loader2 } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 
 interface AdminProtectedRouteProps {
   children: React.ReactNode;
@@ -30,7 +30,7 @@ export function AdminProtectedRoute({ children }: AdminProtectedRouteProps) {
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <LoaderCircle className="h-8 w-8 animate-spin text-primary" />
         <p className="text-sm text-muted-foreground">Verifying administrator permissions...</p>
       </div>
     );

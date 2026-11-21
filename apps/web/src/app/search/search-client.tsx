@@ -66,17 +66,20 @@ export function SearchClient() {
               autoFocus
             />
             {inputVal && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => {
                   setInputVal("");
                   setActiveQuery("");
                   router.push("/search");
                 }}
-                className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
+                className="absolute right-2 top-2.5 h-7 w-7 text-muted-foreground hover:text-foreground"
+                aria-label="Clear search"
               >
                 <X className="h-4 w-4" />
-              </button>
+              </Button>
             )}
           </form>
 
@@ -86,14 +89,16 @@ export function SearchClient() {
               <Sparkles className="h-3 w-3 text-primary" /> Suggestions:
             </span>
             {SUGGESTED_TERMS.map((term) => (
-              <button
+              <Button
                 key={term}
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => handleSelectSuggested(term)}
-                className="rounded-full border border-border/60 bg-muted/30 px-3 py-1 text-xs font-medium text-foreground hover:bg-accent hover:border-primary/40 transition-colors"
+                className="rounded-full border-border/60 bg-muted/30 px-3 h-7 text-xs font-medium text-foreground hover:bg-accent hover:border-primary/40 transition-colors"
               >
                 {term}
-              </button>
+              </Button>
             ))}
           </div>
         </div>

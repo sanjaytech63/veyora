@@ -10,8 +10,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { useSearch } from "@/hooks/use-catalog";
-import { Search, ArrowRight, Loader2, Package, Sparkles } from "lucide-react";
+import { Search, ArrowRight, LoaderCircle, Package, Sparkles } from "lucide-react";
 
 interface SearchModalProps {
   open: boolean;
@@ -72,7 +74,7 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
               className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0 text-base shadow-none bg-transparent"
               autoFocus
             />
-            {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+            {isLoading && <LoaderCircle className="h-4 w-4 animate-spin text-muted-foreground" />}
           </div>
         </form>
 
@@ -85,14 +87,16 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
               </div>
               <div className="flex flex-wrap gap-2">
                 {POPULAR_SEARCHES.map((term) => (
-                  <button
+                  <Button
                     key={term}
                     type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={() => handleSelectQuickSearch(term)}
-                    className="rounded-full border border-border/60 bg-muted/30 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent hover:border-primary/40 transition-colors"
+                    className="rounded-full text-xs font-medium h-7 px-3 bg-muted/30 hover:bg-accent hover:border-primary/40"
                   >
                     {term}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -109,12 +113,14 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
                     onClick={() => onOpenChange(false)}
                     className="flex items-center gap-3.5 p-2.5 rounded-xl hover:bg-accent/60 transition-colors group"
                   >
-                    <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-muted/40 border border-border/40">
+                    <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-muted/40 border border-border/40">
                       {product.images?.[0]?.url ? (
-                        <img
+                        <OptimizedImage
                           src={product.images[0].url}
                           alt={product.title}
-                          className="h-full w-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="48px"
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
@@ -140,14 +146,16 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
               </div>
 
               <div className="pt-2 text-center">
-                <button
+                <Button
                   type="button"
+                  variant="link"
+                  size="sm"
                   onClick={handleSubmit}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                  className="text-xs font-semibold text-primary"
                 >
                   View all results for &ldquo;{query}&rdquo;
-                  <ArrowRight className="h-3 w-3" />
-                </button>
+                  <ArrowRight className="ml-1 h-3 w-3" />
+                </Button>
               </div>
             </div>
           ) : (

@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { ApiClientError } from "@/lib/api/api-client";
-import { KeyRound, Loader2, RefreshCw } from "lucide-react";
+import { KeyRound, LoaderCircle, RefreshCw } from "lucide-react";
 
 function VerifyOtpForm() {
   const router = useRouter();
@@ -169,7 +169,7 @@ function VerifyOtpForm() {
               <Button type="submit" className="w-full mt-2" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                     Verifying...
                   </>
                 ) : (

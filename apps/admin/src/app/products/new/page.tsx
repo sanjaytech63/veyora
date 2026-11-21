@@ -7,6 +7,16 @@ import { PageContainer } from "@/components/layout/page-container";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { adminCatalogApi } from "@/lib/api/admin-catalog-api";
 import { Category, Brand } from "@veyora/types";
 import { CreateProductInput } from "@veyora/validators";
@@ -239,10 +249,9 @@ export default function NewProductPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Description *</label>
-              <textarea
+              <Textarea
                 required
                 rows={4}
-                className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 placeholder="Detailed description of features, materials, and specifications..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -342,16 +351,14 @@ export default function NewProductPage() {
               </div>
 
               <div className="flex items-center gap-2 pt-2">
-                <input
-                  type="checkbox"
+                <Checkbox
                   id="trackQuantity"
                   checked={trackQuantity}
-                  onChange={(e) => setTrackQuantity(e.target.checked)}
-                  className="rounded border-input"
+                  onCheckedChange={(checked) => setTrackQuantity(Boolean(checked))}
                 />
-                <label htmlFor="trackQuantity" className="text-sm cursor-pointer">
+                <Label htmlFor="trackQuantity" className="text-sm cursor-pointer">
                   Track stock quantity automatically
-                </label>
+                </Label>
               </div>
             </CardContent>
           </Card>
@@ -369,50 +376,52 @@ export default function NewProductPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Category *</label>
-                <select
-                  required
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  <option value="" disabled>
-                    Select category
-                  </option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                <Select value={categoryId} onValueChange={setCategoryId}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Brand (Optional)</label>
-                <select
-                  value={brandId}
-                  onChange={(e) => setBrandId(e.target.value)}
-                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  <option value="">No brand</option>
-                  {brands.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
+                <Select value={brandId || "none"} onValueChange={(val) => setBrandId(val === "none" ? "" : val)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select brand" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No brand</SelectItem>
+                    {brands.map((b) => (
+                      <SelectItem key={b.id} value={b.id}>
+                        {b.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Status</label>
-                <select
+                <Select
                   value={status}
-                  onChange={(e) => setStatus(e.target.value as "active" | "draft" | "archived")}
-                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  onValueChange={(val) => setStatus(val as "active" | "draft" | "archived")}
                 >
-                  <option value="active">Active (Published)</option>
-                  <option value="draft">Draft (Unpublished)</option>
-                  <option value="archived">Archived</option>
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active (Published)</SelectItem>
+                    <SelectItem value="draft">Draft (Unpublished)</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -475,22 +484,22 @@ export default function NewProductPage() {
                   }
                   className="w-48"
                 />
-                <label className="flex items-center gap-1.5 text-xs cursor-pointer shrink-0">
-                  <input
-                    type="radio"
-                    name="primaryImage"
-                    checked={img.isPrimary}
-                    onChange={() => {
-                      setImages(
-                        images.map((item, i) => ({
-                          ...item,
-                          isPrimary: i === index,
-                        }))
-                      );
-                    }}
-                  />
-                  Cover
-                </label>
+                <Button
+                  type="button"
+                  variant={img.isPrimary ? "default" : "outline"}
+                  size="sm"
+                  className="h-9 text-xs shrink-0"
+                  onClick={() => {
+                    setImages(
+                      images.map((item, i) => ({
+                        ...item,
+                        isPrimary: i === index,
+                      }))
+                    );
+                  }}
+                >
+                  {img.isPrimary ? "Primary Cover" : "Set Cover"}
+                </Button>
                 {images.length > 1 && (
                   <Button
                     type="button"
@@ -632,9 +641,8 @@ export default function NewProductPage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Meta Description</label>
-              <textarea
+              <Textarea
                 rows={2}
-                className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 placeholder="Concise 160-character summary for search results"
                 value={seoDescription}
                 onChange={(e) => setSeoDescription(e.target.value)}

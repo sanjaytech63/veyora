@@ -65,17 +65,19 @@ export function StoreHeader() {
 
           <div className="flex items-center gap-2">
             {/* Search Pill Trigger */}
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={() => setSearchOpen(true)}
-              className="hidden lg:flex items-center gap-3 rounded-full border border-border/80 bg-muted/40 px-3.5 py-1.5 text-xs text-muted-foreground hover:border-primary/40 hover:bg-accent/60 transition-colors"
+              className="hidden lg:flex items-center gap-3 rounded-full border-border/80 bg-muted/40 px-3.5 py-1.5 text-xs text-muted-foreground hover:border-primary/40 hover:bg-accent/60 transition-colors h-8 font-normal"
             >
               <Search className="h-3.5 w-3.5" />
               <span className="pr-4">Search hardware, audio, carry...</span>
               <kbd className="pointer-events-none inline-flex h-4 select-none items-center gap-1 rounded bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
                 ⌘K
               </kbd>
-            </button>
+            </Button>
 
             {/* Mobile / Tablet search icon */}
             <Button

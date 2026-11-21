@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Loader2 } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface LoadingStateProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -27,7 +27,7 @@ export function LoadingState({
       )}
       {...props}
     >
-      <Loader2 className={cn("animate-spin text-primary", iconSizes[size])} />
+      <LoaderCircle className={cn("animate-spin text-primary", iconSizes[size])} />
       {message && <p className="text-sm font-medium">{message}</p>}
     </div>
   );

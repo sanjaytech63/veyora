@@ -4,6 +4,7 @@ import * as React from "react";
 import { ProductVariant } from "@veyora/types";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface VariantSelectorProps {
   variants: ProductVariant[];
@@ -91,17 +92,19 @@ export function VariantSelector({
               const isOutOfStock = matchingVar ? matchingVar.stock <= 0 : false;
 
               return (
-                <button
+                <Button
                   key={color}
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => handleColorChange(color)}
                   aria-label={`Select ${color}`}
                   title={`${color}${isOutOfStock ? " (Out of Stock)" : ""}`}
                   className={cn(
-                    "relative flex h-9 w-9 items-center justify-center rounded-full transition-all ring-offset-background",
+                    "relative flex h-9 w-9 items-center justify-center rounded-full transition-all ring-offset-background p-0",
                     getColorClass(color),
                     isSelected
-                      ? "ring-2 ring-primary ring-offset-2 scale-110 shadow-sm"
+                      ? "ring-2 ring-primary ring-offset-2 scale-110 shadow-sm hover:opacity-100"
                       : "hover:scale-105 opacity-85 hover:opacity-100",
                     isOutOfStock && "opacity-40"
                   )}
@@ -121,7 +124,7 @@ export function VariantSelector({
                       <div className="h-0.5 w-full bg-destructive rotate-45" />
                     </div>
                   )}
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -147,22 +150,24 @@ export function VariantSelector({
               const isOutOfStock = matchingVar ? matchingVar.stock <= 0 : false;
 
               return (
-                <button
+                <Button
                   key={size}
                   type="button"
+                  variant={isSelected ? "default" : "outline"}
+                  size="sm"
                   onClick={() => handleSizeChange(size)}
                   disabled={isOutOfStock}
                   className={cn(
-                    "rounded-xl px-4 py-2 text-xs font-semibold tracking-tight transition-all border",
+                    "rounded-xl px-4 py-2 text-xs font-semibold tracking-tight transition-all",
                     isSelected
-                      ? "border-primary bg-primary text-primary-foreground shadow-xs"
-                      : "border-border/80 bg-background text-foreground hover:border-foreground/40 hover:bg-accent/40",
+                      ? "shadow-xs"
+                      : "hover:border-foreground/40 hover:bg-accent/40",
                     isOutOfStock &&
-                      "cursor-not-allowed border-dashed border-border/60 bg-muted/20 text-muted-foreground line-through opacity-50"
+                      "cursor-not-allowed border-dashed bg-muted/20 text-muted-foreground line-through opacity-50"
                   )}
                 >
                   {size}
-                </button>
+                </Button>
               );
             })}
           </div>

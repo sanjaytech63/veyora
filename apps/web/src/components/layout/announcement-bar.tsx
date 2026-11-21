@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { X, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useUIStore } from "@/stores/ui-store";
 
 export function AnnouncementBar() {
@@ -15,14 +16,16 @@ export function AnnouncementBar() {
         <Sparkles className="h-3.5 w-3.5 shrink-0" />
         <span>Veyora Platform Phase B UI Foundation Live</span>
       </div>
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         onClick={dismissAnnouncement}
-        className="-m-1.5 p-1.5 text-primary-foreground/80 hover:text-primary-foreground focus:outline-none"
+        className="-m-1.5 h-6 w-6 text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10 focus:outline-none"
         aria-label="Dismiss announcement"
       >
         <X className="h-4 w-4" />
-      </button>
+      </Button>
     </div>
   );
 }
