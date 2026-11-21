@@ -42,7 +42,7 @@ export const VALID_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
 };
 
 export class CheckoutService {
-  private toAddressDto(doc: IAddress): AddressDto {
+  public toAddressDto(doc: IAddress): AddressDto {
     return {
       id: doc._id.toString(),
       userId: doc.userId ? doc.userId.toString() : undefined,
@@ -62,7 +62,7 @@ export class CheckoutService {
     };
   }
 
-  private toOrderDto(doc: IOrder): OrderDto {
+  public toOrderDto(doc: IOrder): OrderDto {
     return {
       id: doc._id.toString(),
       orderNumber: doc.orderNumber,
@@ -139,8 +139,8 @@ export class CheckoutService {
         : undefined,
       cancelReason: doc.cancelReason || undefined,
       cancelledAt: doc.cancelledAt ? doc.cancelledAt.toISOString() : undefined,
-      createdAt: doc.createdAt.toISOString(),
-      updatedAt: doc.updatedAt.toISOString(),
+      createdAt: doc.createdAt ? (doc.createdAt instanceof Date ? doc.createdAt.toISOString() : new Date(doc.createdAt).toISOString()) : new Date().toISOString(),
+      updatedAt: doc.updatedAt ? (doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : new Date(doc.updatedAt).toISOString()) : new Date().toISOString(),
     };
   }
 
