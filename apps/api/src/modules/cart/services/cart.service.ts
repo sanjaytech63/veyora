@@ -4,6 +4,8 @@ import mongoose, { Types } from "mongoose";
 import { Cart, ICart, ICartItem } from "../models/cart.model";
 import { Product, IProduct } from "../../catalog/models/product.model";
 import { Inventory } from "../../inventory/models/inventory.model";
+import { Coupon } from "../../coupon/models/coupon.model";
+import { couponService } from "../../coupon/services/coupon.service";
 import {
   CartDto,
   CartItemDto,
@@ -407,6 +409,52 @@ export class CartService {
     code: string
   ): Promise<CartDto> {
     const cleanCode = code.trim().toUpperCase();
+
+    // Check dynamic database coupon if database is connected
+    if (mongoose.connection.readyState === 1) {
+      const dbCoupon = await Coupon.findOne({ code: cleanCode });
+      if (dbCoupon) {
+        const cart = await this.getOrCreateCart(userId, guestId);
+        const items = cart.items.map((i) => ({
+          productId: i.productId.toString(),
+          price: i.addedPrice || 0,
+          quantity: i.quantity,
+        }));
+
+        let subtotal = 0;
+        for (const item of items) {
+          subtotal += item.price * item.quantity;
+        }
+
+        try {
+          const validation = await couponService.validateAndCalculateDiscount(
+            cleanCode,
+            subtotal,
+            items,
+            userId ? { userId } : undefined
+          );
+
+          if (!validation.isValid) {
+            throw new BadRequestError(validation.message || "Invalid or ineligible promotional code.");
+          }
+
+          cart.couponCode = cleanCode;
+          if (dbCoupon.discountType === "percentage") {
+            cart.discountPercent = dbCoupon.discountValue;
+          } else {
+            const eligSubtotal = validation.eligibleSubtotal || subtotal;
+            cart.discountPercent =
+              eligSubtotal > 0 ? Math.round((validation.discountAmount / eligSubtotal) * 100) : 0;
+          }
+          await cart.save();
+          return this.toCartDto(cart);
+        } catch (err: any) {
+          throw new BadRequestError(err.message || "Invalid or ineligible promotional code.");
+        }
+      }
+    }
+
+    // Fallback to static coupons for mock/test compatibility
     const discountPercent = ACTIVE_COUPONS[cleanCode];
 
     if (!discountPercent) {
