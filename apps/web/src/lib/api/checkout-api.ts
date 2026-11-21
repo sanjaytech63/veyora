@@ -3,6 +3,7 @@ import {
   CheckoutValidationDto,
   OrderDto,
   CreateOrderPayload,
+  CancelOrderPayload,
 } from "@veyora/types";
 
 export const checkoutApi = {
@@ -22,5 +23,9 @@ export const checkoutApi = {
 
   listOrders(): Promise<OrderDto[]> {
     return apiClient.get<OrderDto[]>("/orders");
+  },
+
+  cancelOrder(orderId: string, payload?: CancelOrderPayload): Promise<OrderDto> {
+    return apiClient.post<OrderDto>(`/orders/${orderId}/cancel`, payload || {});
   },
 };

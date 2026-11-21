@@ -27,6 +27,24 @@ export interface IOrderAddress {
   phone?: string;
 }
 
+export interface IOrderStatusHistory {
+  fromStatus?: OrderStatus;
+  toStatus: OrderStatus;
+  changedBy?: string;
+  role?: string;
+  reason?: string;
+  timestamp: Date;
+}
+
+export interface IOrderTracking {
+  carrier?: string;
+  trackingNumber?: string;
+  trackingUrl?: string;
+  estimatedDeliveryDate?: string;
+  shippedAt?: Date;
+  deliveredAt?: Date;
+}
+
 export interface IOrder extends Document {
   _id: Types.ObjectId;
   orderNumber: string;
@@ -47,6 +65,10 @@ export interface IOrder extends Document {
   status: OrderStatus;
   idempotencyKey?: string | null;
   customerNote?: string | null;
+  statusHistory: IOrderStatusHistory[];
+  tracking?: IOrderTracking;
+  cancelReason?: string | null;
+  cancelledAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -79,6 +101,30 @@ const orderAddressSchema = new Schema<IOrderAddress>(
     postalCode: { type: String, required: true, trim: true },
     country: { type: String, required: true, trim: true },
     phone: { type: String, trim: true, default: "" },
+  },
+  { _id: false }
+);
+
+const orderStatusHistorySchema = new Schema<IOrderStatusHistory>(
+  {
+    fromStatus: { type: String, default: null },
+    toStatus: { type: String, required: true },
+    changedBy: { type: String, default: null },
+    role: { type: String, default: null },
+    reason: { type: String, default: null },
+    timestamp: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
+const orderTrackingSchema = new Schema<IOrderTracking>(
+  {
+    carrier: { type: String, default: null, trim: true },
+    trackingNumber: { type: String, default: null, trim: true },
+    trackingUrl: { type: String, default: null, trim: true },
+    estimatedDeliveryDate: { type: String, default: null, trim: true },
+    shippedAt: { type: Date, default: null },
+    deliveredAt: { type: Date, default: null },
   },
   { _id: false }
 );
@@ -166,9 +212,35 @@ const orderSchema = new Schema<IOrder>(
     },
     status: {
       type: String,
-      enum: ["pending", "processing", "shipped", "delivered", "cancelled", "refunded"],
+      enum: [
+        "pending",
+        "confirmed",
+        "processing",
+        "shipped",
+        "delivered",
+        "cancelled",
+        "refund_pending",
+        "refunded",
+      ],
       default: "pending",
       index: true,
+    },
+    statusHistory: {
+      type: [orderStatusHistorySchema],
+      default: [],
+    },
+    tracking: {
+      type: orderTrackingSchema,
+      default: () => ({}),
+    },
+    cancelReason: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    cancelledAt: {
+      type: Date,
+      default: null,
     },
     idempotencyKey: {
       type: String,
@@ -189,5 +261,6 @@ const orderSchema = new Schema<IOrder>(
 
 orderSchema.index({ createdAt: -1 });
 orderSchema.index({ customerEmail: 1, createdAt: -1 });
+orderSchema.index({ status: 1, createdAt: -1 });
 
 export const Order = mongoose.model<IOrder>("Order", orderSchema);

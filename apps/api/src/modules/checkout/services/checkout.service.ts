@@ -12,8 +12,11 @@ import {
   CreateAddressPayload,
   UpdateAddressPayload,
   OrderDto,
+  OrderStatus,
   CheckoutValidationDto,
   ShippingMethodOption,
+  AdminOrderListQuery,
+  PaginatedOrdersDto,
 } from "@veyora/types";
 import { CreateOrderCheckoutInput } from "@veyora/validators";
 import { BadRequestError, ConflictError, NotFoundError } from "@veyora/utils";
@@ -22,6 +25,20 @@ const FREE_SHIPPING_THRESHOLD = 150;
 const STANDARD_SHIPPING_FEE = 15;
 const EXPRESS_SHIPPING_FEE = 25;
 const ESTIMATED_TAX_RATE = 0.08;
+
+/**
+ * Strict Order Lifecycle State Machine
+ */
+export const VALID_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  pending: ["confirmed", "cancelled"],
+  confirmed: ["processing", "cancelled"],
+  processing: ["shipped", "cancelled"],
+  shipped: ["delivered", "refund_pending"],
+  delivered: ["refund_pending"],
+  refund_pending: ["refunded", "delivered"],
+  cancelled: [], // Terminal
+  refunded: [],  // Terminal
+};
 
 export class CheckoutService {
   private toAddressDto(doc: IAddress): AddressDto {
@@ -101,6 +118,26 @@ export class CheckoutService {
       status: doc.status,
       idempotencyKey: doc.idempotencyKey || undefined,
       customerNote: doc.customerNote || undefined,
+      statusHistory: (doc.statusHistory || []).map((h) => ({
+        fromStatus: h.fromStatus,
+        toStatus: h.toStatus,
+        changedBy: h.changedBy || undefined,
+        role: h.role || undefined,
+        reason: h.reason || undefined,
+        timestamp: h.timestamp instanceof Date ? h.timestamp.toISOString() : String(h.timestamp),
+      })),
+      tracking: doc.tracking
+        ? {
+            carrier: doc.tracking.carrier || undefined,
+            trackingNumber: doc.tracking.trackingNumber || undefined,
+            trackingUrl: doc.tracking.trackingUrl || undefined,
+            estimatedDeliveryDate: doc.tracking.estimatedDeliveryDate || undefined,
+            shippedAt: doc.tracking.shippedAt ? doc.tracking.shippedAt.toISOString() : undefined,
+            deliveredAt: doc.tracking.deliveredAt ? doc.tracking.deliveredAt.toISOString() : undefined,
+          }
+        : undefined,
+      cancelReason: doc.cancelReason || undefined,
+      cancelledAt: doc.cancelledAt ? doc.cancelledAt.toISOString() : undefined,
       createdAt: doc.createdAt.toISOString(),
       updatedAt: doc.updatedAt.toISOString(),
     };
@@ -129,34 +166,42 @@ export class CheckoutService {
     guestId: string | undefined,
     payload: CreateAddressPayload
   ): Promise<AddressDto> {
-    if (!userId && !guestId) {
-      throw new BadRequestError("User identification or guest session is required to save an address.");
-    }
+    const isUser = Boolean(userId && mongoose.Types.ObjectId.isValid(userId));
 
-    // If marked as default, unmark any previous default addresses
     if (payload.isDefault) {
       const filter: Record<string, any> = {};
-      if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      if (isUser) {
         filter.userId = new Types.ObjectId(userId);
       } else {
         filter.guestId = guestId;
       }
       await Address.updateMany(filter, { $set: { isDefault: false } });
+    } else {
+      const filter: Record<string, any> = {};
+      if (isUser) {
+        filter.userId = new Types.ObjectId(userId);
+      } else {
+        filter.guestId = guestId;
+      }
+      const count = await Address.countDocuments(filter);
+      if (count === 0) {
+        payload.isDefault = true;
+      }
     }
 
     const address = new Address({
-      userId: userId && mongoose.Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : null,
-      guestId: guestId || null,
-      firstName: payload.firstName,
-      lastName: payload.lastName,
-      street: payload.street,
-      apartment: payload.apartment || "",
-      city: payload.city,
-      state: payload.state,
-      postalCode: payload.postalCode,
-      country: payload.country || "India",
-      phone: payload.phone || "",
-      isDefault: payload.isDefault ?? false,
+      userId: isUser ? new Types.ObjectId(userId) : null,
+      guestId: !isUser && guestId ? guestId : null,
+      firstName: payload.firstName.trim(),
+      lastName: payload.lastName.trim(),
+      street: payload.street.trim(),
+      apartment: payload.apartment?.trim() || null,
+      city: payload.city.trim(),
+      state: payload.state.trim(),
+      postalCode: payload.postalCode.trim(),
+      country: payload.country.trim(),
+      phone: payload.phone?.trim() || null,
+      isDefault: Boolean(payload.isDefault),
     });
 
     await address.save();
@@ -178,14 +223,13 @@ export class CheckoutService {
       throw new NotFoundError("Address not found.");
     }
 
-    // Authorization check
     if (userId && address.userId && address.userId.toString() !== userId) {
-      throw new BadRequestError("You are not authorized to update this address.");
+      throw new BadRequestError("You are not authorized to edit this address.");
     } else if (!userId && guestId && address.guestId !== guestId) {
-      throw new BadRequestError("You are not authorized to update this address.");
+      throw new BadRequestError("You are not authorized to edit this address.");
     }
 
-    if (payload.isDefault && !address.isDefault) {
+    if (payload.isDefault) {
       const filter: Record<string, any> = {};
       if (userId && mongoose.Types.ObjectId.isValid(userId)) {
         filter.userId = new Types.ObjectId(userId);
@@ -435,10 +479,9 @@ export class CheckoutService {
       }
     }
 
-    // 5. Final Server Calculation (Never trust client prices or totals)
+    // 5. Calculate Discount, Shipping, Tax, Total
     const discountPercent = cartDoc.discountPercent || 0;
-    const discount =
-      discountPercent > 0 ? Math.round(((subtotal * discountPercent) / 100) * 100) / 100 : 0;
+    const discount = Math.round(((subtotal * discountPercent) / 100) * 100) / 100;
     const discountedSubtotal = Math.max(0, subtotal - discount);
 
     let shippingCost = 0;
@@ -452,40 +495,52 @@ export class CheckoutService {
     const total = Math.round((discountedSubtotal + shippingCost + tax) * 100) / 100;
 
     // 6. Generate Human-Friendly Order Number
-    const orderNumber = `VY-ORD-${Math.floor(100000 + Math.random() * 900000)}`;
+    const randomDigits = Math.floor(100000 + Math.random() * 900000);
+    const orderNumber = `VY-ORD-${randomDigits}`;
 
+    // 7. Resolve Billing Address
     const shippingAddress = {
-      firstName: input.shippingAddress.firstName || input.customerName.split(" ")[0] || "Guest",
-      lastName: input.shippingAddress.lastName || input.customerName.split(" ").slice(1).join(" ") || "Patron",
-      street: input.shippingAddress.street,
-      apartment: input.shippingAddress.apartment || "",
-      city: input.shippingAddress.city,
-      state: input.shippingAddress.state,
-      postalCode: input.shippingAddress.postalCode,
-      country: input.shippingAddress.country || "India",
-      phone: input.shippingAddress.phone || "",
+      firstName: (input.shippingAddress.firstName || input.customerName.split(" ")[0] || "Patron").trim(),
+      lastName: (input.shippingAddress.lastName || input.customerName.split(" ").slice(1).join(" ") || "").trim(),
+      street: input.shippingAddress.street.trim(),
+      apartment: input.shippingAddress.apartment?.trim() || "",
+      city: input.shippingAddress.city.trim(),
+      state: input.shippingAddress.state.trim(),
+      postalCode: input.shippingAddress.postalCode.trim(),
+      country: input.shippingAddress.country.trim(),
+      phone: input.shippingAddress.phone?.trim() || "",
     };
 
     const billingAddress =
       input.sameAsShipping || !input.billingAddress
         ? shippingAddress
         : {
-            firstName: input.billingAddress.firstName || shippingAddress.firstName,
-            lastName: input.billingAddress.lastName || shippingAddress.lastName,
-            street: input.billingAddress.street,
-            apartment: input.billingAddress.apartment || "",
-            city: input.billingAddress.city,
-            state: input.billingAddress.state,
-            postalCode: input.billingAddress.postalCode,
-            country: input.billingAddress.country || "India",
-            phone: input.billingAddress.phone || "",
+            firstName: (input.billingAddress.firstName || shippingAddress.firstName).trim(),
+            lastName: (input.billingAddress.lastName || shippingAddress.lastName).trim(),
+            street: input.billingAddress.street.trim(),
+            apartment: input.billingAddress.apartment?.trim() || "",
+            city: input.billingAddress.city.trim(),
+            state: input.billingAddress.state.trim(),
+            postalCode: input.billingAddress.postalCode.trim(),
+            country: input.billingAddress.country.trim(),
+            phone: input.billingAddress.phone?.trim() || "",
           };
 
-    // 7. Persist Order in MongoDB
+    const initialHistory = [
+      {
+        fromStatus: undefined,
+        toStatus: "pending" as OrderStatus,
+        changedBy: userId || guestId || "patron",
+        role: "customer",
+        reason: "Order successfully placed via atelier checkout",
+        timestamp: new Date(),
+      },
+    ];
+
     const order = new Order({
       orderNumber,
       userId: userId && mongoose.Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : null,
-      guestId: guestId || null,
+      guestId: !userId && guestId ? guestId : null,
       customerEmail: input.customerEmail.toLowerCase().trim(),
       customerName: input.customerName.trim(),
       items: orderItems,
@@ -493,12 +548,14 @@ export class CheckoutService {
       billingAddress,
       shippingMethod: input.shippingMethod,
       shippingCost,
-      subtotal: Math.round(subtotal * 100) / 100,
+      subtotal,
       discount,
       tax,
       total,
       couponCode: cartDoc.couponCode || null,
-      status: "pending", // Payment integration not in Phase I
+      status: "pending",
+      statusHistory: initialHistory,
+      tracking: {},
       idempotencyKey: input.idempotencyKey ? input.idempotencyKey.trim() : null,
       customerNote: input.customerNote || null,
     });
@@ -512,13 +569,14 @@ export class CheckoutService {
   }
 
   // ==========================================
-  // 4. ORDER QUERIES
+  // 4. ORDER QUERIES & ADMIN MANAGEMENT
   // ==========================================
 
   public async getOrderById(
     orderIdOrNumber: string,
     userId?: string,
-    guestId?: string
+    guestId?: string,
+    isAdmin = false
   ): Promise<OrderDto> {
     const isObjectId = mongoose.Types.ObjectId.isValid(orderIdOrNumber);
     const query: Record<string, any> = isObjectId
@@ -530,11 +588,12 @@ export class CheckoutService {
       throw new NotFoundError("Order not found with specified identifier.");
     }
 
-    // Optional access control if userId or guestId is specified
-    if (userId && order.userId && order.userId.toString() !== userId) {
-      throw new NotFoundError("Order not found.");
-    } else if (!userId && guestId && order.guestId && order.guestId !== guestId) {
-      throw new NotFoundError("Order not found.");
+    if (!isAdmin) {
+      if (userId && order.userId && order.userId.toString() !== userId) {
+        throw new NotFoundError("Order not found.");
+      } else if (!userId && guestId && order.guestId && order.guestId !== guestId) {
+        throw new NotFoundError("Order not found.");
+      }
     }
 
     return this.toOrderDto(order);
@@ -552,6 +611,225 @@ export class CheckoutService {
 
     const orders = await Order.find(query).sort({ createdAt: -1 });
     return orders.map((o) => this.toOrderDto(o));
+  }
+
+  public async adminListOrders(query: AdminOrderListQuery): Promise<PaginatedOrdersDto> {
+    const page = Math.max(1, query.page || 1);
+    const limit = Math.min(100, Math.max(1, query.limit || 20));
+    const skip = (page - 1) * limit;
+
+    const filter: Record<string, any> = {};
+
+    if (query.status) {
+      filter.status = query.status;
+    }
+
+    if (query.search && query.search.trim()) {
+      const searchRegex = new RegExp(query.search.trim(), "i");
+      filter.$or = [
+        { orderNumber: searchRegex },
+        { customerEmail: searchRegex },
+        { customerName: searchRegex },
+      ];
+    }
+
+    if (query.startDate || query.endDate) {
+      filter.createdAt = {};
+      if (query.startDate) filter.createdAt.$gte = new Date(query.startDate);
+      if (query.endDate) filter.createdAt.$lte = new Date(query.endDate);
+    }
+
+    const [orders, total] = await Promise.all([
+      Order.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Order.countDocuments(filter),
+    ]);
+
+    return {
+      items: orders.map((o) => this.toOrderDto(o)),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit) || 1,
+    };
+  }
+
+  // ==========================================
+  // 5. STATUS TRANSITIONS & CANCELLATIONS
+  // ==========================================
+
+  public async updateOrderStatus(
+    orderIdOrNumber: string,
+    newStatus: OrderStatus,
+    adminUser: { id: string; email?: string; role?: string },
+    options?: {
+      reason?: string;
+      carrier?: string;
+      trackingNumber?: string;
+      trackingUrl?: string;
+      estimatedDeliveryDate?: string;
+    }
+  ): Promise<OrderDto> {
+    const isObjectId = mongoose.Types.ObjectId.isValid(orderIdOrNumber);
+    const query: Record<string, any> = isObjectId
+      ? { $or: [{ _id: new Types.ObjectId(orderIdOrNumber) }, { orderNumber: orderIdOrNumber.toUpperCase() }] }
+      : { orderNumber: orderIdOrNumber.toUpperCase() };
+
+    const order = await Order.findOne(query);
+    if (!order) {
+      throw new NotFoundError("Order not found with specified identifier.");
+    }
+
+    const currentStatus = order.status;
+    if (currentStatus === newStatus) {
+      return this.toOrderDto(order);
+    }
+
+    const allowedNext = VALID_STATUS_TRANSITIONS[currentStatus] || [];
+    if (!allowedNext.includes(newStatus)) {
+      throw new BadRequestError(
+        `Invalid status transition from "${currentStatus}" to "${newStatus}". Allowed transitions: [${allowedNext.join(", ")}].`
+      );
+    }
+
+    // Cancellation releases reserved inventory
+    if (newStatus === "cancelled") {
+      await this.releaseOrderStock(order, options?.reason || "Admin cancelled order", adminUser.id);
+      order.cancelReason = options?.reason || "Cancelled by administrator";
+      order.cancelledAt = new Date();
+    }
+
+    // Shipped sets tracking telemetry
+    if (newStatus === "shipped") {
+      if (!order.tracking) {
+        order.tracking = {};
+      }
+      if (options?.carrier) order.tracking.carrier = options.carrier;
+      if (options?.trackingNumber) order.tracking.trackingNumber = options.trackingNumber;
+      if (options?.trackingUrl) order.tracking.trackingUrl = options.trackingUrl;
+      if (options?.estimatedDeliveryDate) order.tracking.estimatedDeliveryDate = options.estimatedDeliveryDate;
+      order.tracking.shippedAt = new Date();
+    }
+
+    // Delivered
+    if (newStatus === "delivered") {
+      if (!order.tracking) order.tracking = {};
+      order.tracking.deliveredAt = new Date();
+    }
+
+    order.status = newStatus;
+    order.statusHistory.push({
+      fromStatus: currentStatus,
+      toStatus: newStatus,
+      changedBy: adminUser.email || adminUser.id,
+      role: adminUser.role || "admin",
+      reason: options?.reason || `Status updated to ${newStatus}`,
+      timestamp: new Date(),
+    });
+
+    await order.save();
+    return this.toOrderDto(order);
+  }
+
+  public async cancelOrder(
+    orderIdOrNumber: string,
+    userId: string | undefined,
+    guestId: string | undefined,
+    reason?: string,
+    isAdmin = false
+  ): Promise<OrderDto> {
+    const isObjectId = mongoose.Types.ObjectId.isValid(orderIdOrNumber);
+    const query: Record<string, any> = isObjectId
+      ? { $or: [{ _id: new Types.ObjectId(orderIdOrNumber) }, { orderNumber: orderIdOrNumber.toUpperCase() }] }
+      : { orderNumber: orderIdOrNumber.toUpperCase() };
+
+    const order = await Order.findOne(query);
+    if (!order) {
+      throw new NotFoundError("Order not found with specified identifier.");
+    }
+
+    // Authorization checks
+    if (!isAdmin) {
+      if (userId && order.userId && order.userId.toString() !== userId) {
+        throw new NotFoundError("Order not found.");
+      } else if (!userId && guestId && order.guestId && order.guestId !== guestId) {
+        throw new NotFoundError("Order not found.");
+      }
+
+      // Customer cancellation business rule: only pending or confirmed can be cancelled
+      if (order.status !== "pending" && order.status !== "confirmed") {
+        throw new BadRequestError(
+          `Order cannot be cancelled in "${order.status}" status. Please contact atelier customer care.`
+        );
+      }
+    } else {
+      const allowedNext = VALID_STATUS_TRANSITIONS[order.status] || [];
+      if (!allowedNext.includes("cancelled")) {
+        throw new BadRequestError(`Cannot cancel order in terminal or unmodifiable "${order.status}" state.`);
+      }
+    }
+
+    const previousStatus = order.status;
+    await this.releaseOrderStock(order, reason || "Order cancelled", userId || guestId || "user");
+
+    order.status = "cancelled";
+    order.cancelReason = reason || (isAdmin ? "Cancelled by administrator" : "Cancelled by patron");
+    order.cancelledAt = new Date();
+    order.statusHistory.push({
+      fromStatus: previousStatus,
+      toStatus: "cancelled",
+      changedBy: userId || guestId || (isAdmin ? "administrator" : "patron"),
+      role: isAdmin ? "admin" : "customer",
+      reason: reason || "Order cancelled",
+      timestamp: new Date(),
+    });
+
+    await order.save();
+    return this.toOrderDto(order);
+  }
+
+  private async releaseOrderStock(order: IOrder, reason: string, performerId: string): Promise<void> {
+    for (const item of order.items) {
+      const invQuery: Record<string, any> = { productId: item.productId };
+      if (item.variantId) {
+        invQuery.variantId = item.variantId;
+      } else {
+        invQuery.variantId = null;
+      }
+
+      const inventoryDoc = await Inventory.findOne(invQuery);
+      if (inventoryDoc) {
+        const prevReserved = inventoryDoc.reserved;
+        inventoryDoc.reserved = Math.max(0, inventoryDoc.reserved - item.quantity);
+        await inventoryDoc.save();
+
+        await StockMovement.create({
+          inventoryId: inventoryDoc._id,
+          productId: item.productId,
+          variantId: inventoryDoc.variantId || null,
+          sku: item.sku,
+          type: "release",
+          quantity: item.quantity,
+          previousOnHand: inventoryDoc.onHand,
+          newOnHand: inventoryDoc.onHand,
+          previousReserved: prevReserved,
+          newReserved: inventoryDoc.reserved,
+          reason: `Order Cancellation (${order.orderNumber}): ${reason}`,
+          userId: mongoose.Types.ObjectId.isValid(performerId) ? new Types.ObjectId(performerId) : null,
+          userName: order.customerName,
+        });
+      } else {
+        // Fallback: restore product or variant stock if separate inventory record not present
+        const product = await Product.findById(item.productId);
+        if (product) {
+          product.stock += item.quantity;
+          if (item.variantId && product.variants) {
+            const v = product.variants.find((vObj: any) => vObj._id?.toString() === item.variantId?.toString());
+            if (v) v.stock += item.quantity;
+          }
+          await product.save();
+        }
+      }
+    }
   }
 }
 

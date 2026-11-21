@@ -3,10 +3,12 @@ import { paginationQuerySchema } from "../common/pagination.schema";
 
 export const orderStatusSchema = z.enum([
   "pending",
+  "confirmed",
   "processing",
   "shipped",
   "delivered",
   "cancelled",
+  "refund_pending",
   "refunded",
 ]);
 
@@ -19,6 +21,7 @@ export const orderQuerySchema = paginationQuerySchema.extend({
   status: orderStatusSchema.optional(),
   paymentStatus: paymentStatusSchema.optional(),
   customerId: z.string().trim().optional(),
+  search: z.string().trim().optional(),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
 });

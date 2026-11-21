@@ -6,11 +6,31 @@ import { AddressDto, CreateAddressPayload } from "./address";
 
 export type OrderStatus =
   | "pending"
+  | "confirmed"
   | "processing"
   | "shipped"
   | "delivered"
   | "cancelled"
+  | "refund_pending"
   | "refunded";
+
+export interface OrderStatusHistoryItem {
+  fromStatus?: OrderStatus;
+  toStatus: OrderStatus;
+  changedBy?: string;
+  role?: string;
+  reason?: string;
+  timestamp: string;
+}
+
+export interface OrderTrackingInfo {
+  carrier?: string;
+  trackingNumber?: string;
+  trackingUrl?: string;
+  estimatedDeliveryDate?: string;
+  shippedAt?: string;
+  deliveredAt?: string;
+}
 
 export interface OrderItemDto {
   id: string;
@@ -46,6 +66,10 @@ export interface OrderDto {
   status: OrderStatus;
   idempotencyKey?: string;
   customerNote?: string;
+  statusHistory: OrderStatusHistoryItem[];
+  tracking?: OrderTrackingInfo;
+  cancelReason?: string;
+  cancelledAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -59,4 +83,36 @@ export interface CreateOrderPayload {
   shippingMethod: "standard" | "express";
   customerNote?: string;
   idempotencyKey?: string;
+}
+
+export interface UpdateOrderStatusPayload {
+  status: OrderStatus;
+  reason?: string;
+  tracking?: OrderTrackingInfo;
+  trackingNumber?: string;
+  trackingCarrier?: string;
+  trackingUrl?: string;
+  estimatedDeliveryDate?: string;
+  notes?: string;
+}
+
+export interface CancelOrderPayload {
+  reason?: string;
+}
+
+export interface AdminOrderListQuery {
+  page?: number;
+  limit?: number;
+  status?: OrderStatus;
+  search?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface PaginatedOrdersDto {
+  items: OrderDto[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
