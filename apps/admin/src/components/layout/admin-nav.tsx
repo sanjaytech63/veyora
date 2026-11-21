@@ -10,12 +10,12 @@ import {
   Boxes,
   FolderTree,
   Tags,
-  Layers,
+  Sparkles,
+  ShoppingBag,
+  Users,
+  TicketPercent,
+  Star,
   Settings,
-  Shield,
-  Activity,
-  Database,
-  BarChart3,
 } from "lucide-react";
 
 export interface NavItem {
@@ -26,17 +26,17 @@ export interface NavItem {
 }
 
 export const adminNavItems: NavItem[] = [
-  { title: "Overview", href: "/", icon: LayoutDashboard },
-  { title: "Products", href: "/products", icon: Package, badge: "Phase E" },
-  { title: "Inventory", href: "/inventory", icon: Boxes, badge: "Phase F" },
-  { title: "Categories", href: "/categories", icon: FolderTree },
-  { title: "Brands", href: "/brands", icon: Tags },
-  { title: "UI Components", href: "/#components", icon: Layers, badge: "Phase B" },
-  { title: "Data Table", href: "/#data-table", icon: Database },
-  { title: "Observability", href: "/#system", icon: Activity },
-  { title: "Analytics Skeleton", href: "/#analytics", icon: BarChart3 },
-  { title: "Security & Roles", href: "/#security", icon: Shield },
-  { title: "Configuration", href: "/#settings", icon: Settings },
+  { title: "Dashboard", href: "/", icon: LayoutDashboard },
+  { title: "Products & Apparel", href: "/products", icon: Package },
+  { title: "Fashion Categories", href: "/categories", icon: FolderTree },
+  { title: "Curated Collections", href: "/collections", icon: Sparkles },
+  { title: "Inventory & Stock", href: "/inventory", icon: Boxes },
+  { title: "Orders & Shipments", href: "/orders", icon: ShoppingBag },
+  { title: "Customers", href: "/customers", icon: Users },
+  { title: "Coupons & Discounts", href: "/coupons", icon: TicketPercent },
+  { title: "Customer Reviews", href: "/reviews", icon: Star },
+  { title: "Fashion Ateliers", href: "/brands", icon: Tags },
+  { title: "Settings", href: "/settings", icon: Settings },
 ];
 
 export function AdminNav({ collapsed = false }: { collapsed?: boolean }) {
@@ -46,21 +46,21 @@ export function AdminNav({ collapsed = false }: { collapsed?: boolean }) {
     <nav className="grid items-start gap-1 px-2 text-sm font-medium">
       {adminNavItems.map((item) => {
         const Icon = item.icon;
-        const isActive = pathname === item.href;
+        const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
 
         return (
           <Link
             key={item.href}
             href={item.href}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-foreground hover:bg-accent",
-              isActive && "bg-accent text-accent-foreground font-semibold",
+              "flex items-center gap-3 rounded-xl px-3 py-2.5 text-muted-foreground transition-all hover:text-foreground hover:bg-accent/60",
+              isActive && "bg-primary text-primary-foreground font-semibold hover:bg-primary hover:text-primary-foreground",
               collapsed && "justify-center px-2"
             )}
             title={collapsed ? item.title : undefined}
           >
             <Icon className="h-4 w-4 shrink-0" />
-            {!collapsed && <span>{item.title}</span>}
+            {!collapsed && <span className="text-xs">{item.title}</span>}
             {!collapsed && item.badge && (
               <span className="ml-auto flex h-5 items-center justify-center rounded-full bg-primary/10 px-2 text-[10px] font-medium text-primary">
                 {item.badge}

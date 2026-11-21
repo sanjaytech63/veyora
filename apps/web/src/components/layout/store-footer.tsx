@@ -15,8 +15,8 @@ export function StoreFooter() {
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    toast.success("Subscribed to Veyora Atelier Gazette", {
-      description: "You will receive preview invitations to upcoming releases.",
+    toast.success("Subscribed to Veyora Haute Couture Previews", {
+      description: "You will receive exclusive invitations to upcoming festive drops and seasonal edits.",
     });
     setEmail("");
   };
@@ -35,13 +35,13 @@ export function StoreFooter() {
             </Link>
 
             <p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
-              Minimalist, precision-engineered hardware and bespoke carry. Crafted from aircraft-grade aluminum, virgin merino, and planar acoustics.
+              Contemporary Indian couture and modern ready-to-wear. Crafted from handwoven Chanderi silks, pure mulmul cotton, and heritage Banarasi brocades.
             </p>
 
-            {/* Atelier Gazette Newsletter */}
+            {/* Haute Couture Newsletter */}
             <div className="space-y-2 pt-1">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Atelier Gazette &amp; Early Releases
+                Atelier Gazette &amp; Private Drop Invites
               </span>
               <form onSubmit={handleSubscribe} className="flex max-w-sm gap-2">
                 <Input
@@ -52,7 +52,7 @@ export function StoreFooter() {
                   className="rounded-xl text-xs h-9 bg-background"
                   required
                 />
-                <Button type="submit" size="sm" className="rounded-xl px-4 text-xs h-9">
+                <Button type="submit" size="sm" className="rounded-xl px-4 text-xs h-9 font-semibold">
                   <span>Join</span>
                   <ArrowRight className="h-3 w-3 ml-1" />
                 </Button>
@@ -60,44 +60,49 @@ export function StoreFooter() {
             </div>
           </div>
 
-          {/* Quick Links Column 1 */}
+          {/* Quick Links Column 1: Fashion Categories */}
           <div className="lg:col-span-2 lg:col-start-6 space-y-4">
             <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
-              Catalog &amp; Series
+              Fashion Categories
             </h4>
             <ul className="space-y-2.5 text-xs text-muted-foreground">
               <li>
                 <Link href="/shop" className="hover:text-foreground transition-colors">
-                  Shop All Releases
+                  Shop All Garments
                 </Link>
               </li>
               <li>
-                <Link href="/category/audio" className="hover:text-foreground transition-colors">
-                  Acoustic Audio
+                <Link href="/category/kurtis" className="hover:text-foreground transition-colors">
+                  Kurtis &amp; Kurti Sets
                 </Link>
               </li>
               <li>
-                <Link href="/category/workspace" className="hover:text-foreground transition-colors">
-                  Workspace Systems
+                <Link href="/category/ethnic-wear" className="hover:text-foreground transition-colors">
+                  Festive Lehengas &amp; Ghagras
                 </Link>
               </li>
               <li>
-                <Link href="/category/power" className="hover:text-foreground transition-colors">
-                  Power &amp; Charging
+                <Link href="/category/sarees" className="hover:text-foreground transition-colors">
+                  Banarasi &amp; Silk Sarees
                 </Link>
               </li>
               <li>
-                <Link href="/category/carry" className="hover:text-foreground transition-colors">
-                  Bespoke Carry
+                <Link href="/category/co-ords" className="hover:text-foreground transition-colors">
+                  Linen Co-ords &amp; Loungewear
+                </Link>
+              </li>
+              <li>
+                <Link href="/category/accessories" className="hover:text-foreground transition-colors">
+                  Embroidered Dupattas
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Quick Links Column 2 */}
+          {/* Quick Links Column 2: Client Services */}
           <div className="lg:col-span-2 space-y-4">
             <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
-              Client Services
+              Client Concierge
             </h4>
             <ul className="space-y-2.5 text-xs text-muted-foreground">
               <li>
@@ -107,7 +112,7 @@ export function StoreFooter() {
               </li>
               <li>
                 <Link href="/cart" className="hover:text-foreground transition-colors">
-                  Review Shopping Bag
+                  Shopping Bag
                 </Link>
               </li>
               <li>
@@ -116,10 +121,17 @@ export function StoreFooter() {
                 </Link>
               </li>
               <li>
-                <span className="text-muted-foreground/80">Complimentary 30-Day Returns</span>
+                <Link href="/new-arrivals" className="hover:text-foreground transition-colors">
+                  New Arrivals
+                </Link>
               </li>
               <li>
-                <span className="text-muted-foreground/80">2-Year Atelier Warranty</span>
+                <Link href="/collections" className="hover:text-foreground transition-colors">
+                  Curated Collections
+                </Link>
+              </li>
+              <li>
+                <span className="text-muted-foreground/80">Complimentary Size &amp; Fit Guide</span>
               </li>
             </ul>
           </div>
@@ -127,7 +139,7 @@ export function StoreFooter() {
           {/* Platform Console Column */}
           <div className="lg:col-span-3 space-y-4">
             <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
-              Platform &amp; Infrastructure
+              Brand Operations
             </h4>
             <ul className="space-y-2.5 text-xs text-muted-foreground">
               <li>
@@ -137,7 +149,7 @@ export function StoreFooter() {
                   rel="noreferrer"
                   className="hover:text-foreground transition-colors inline-flex items-center gap-1.5"
                 >
-                  <span>Atelier Admin Console</span>
+                  <span>Atelier Merchant Portal</span>
                   <span className="text-[10px] font-mono">↗</span>
                 </a>
               </li>
@@ -148,7 +160,7 @@ export function StoreFooter() {
                   rel="noreferrer"
                   className="hover:text-foreground transition-colors inline-flex items-center gap-1.5"
                 >
-                  <span>API Telemetry Status</span>
+                  <span>Service Telemetry</span>
                   <span className="text-[10px] font-mono">↗</span>
                 </a>
               </li>
@@ -161,12 +173,12 @@ export function StoreFooter() {
 
         <div className="border-t border-border/60 pt-8 flex flex-col md:flex-row items-center justify-between text-[11px] text-muted-foreground gap-4">
           <p>
-            &copy; {new Date().getFullYear()} {SERVICES.NAME} Atelier. Precision Instruments for Modern Living.
+            &copy; {new Date().getFullYear()} {SERVICES.NAME} Fashion Atelier. Contemporary Indian Couture &amp; Modern Apparel.
           </p>
           <div className="flex items-center gap-6">
             <span>Privacy Policy</span>
             <span>Terms of Service</span>
-            <span>Carbon Neutral Certified</span>
+            <span>Artisan Ethics Certified</span>
           </div>
         </div>
       </Container>

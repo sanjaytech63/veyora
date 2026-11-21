@@ -131,7 +131,7 @@ export default function CheckoutPage() {
             Please add items to your shopping bag before proceeding to checkout.
           </p>
           <Button asChild className="rounded-full px-6 text-xs font-semibold">
-            <Link href="/shop">Explore Atelier Hardware</Link>
+            <Link href="/shop">Explore Haute Couture</Link>
           </Button>
         </Container>
       </div>
@@ -488,7 +488,7 @@ export default function CheckoutPage() {
 
                 <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground pt-2">
                   <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                  <span>Backed by Veyora 2-Year Atelier Guarantee</span>
+                  <span>Backed by Veyora 100% Pure Fabric Quality Assurance</span>
                 </div>
               </div>
             </div>

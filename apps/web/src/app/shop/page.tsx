@@ -94,10 +94,10 @@ export default function ShopPage() {
             Storefront Catalog
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
-            Explore Hardware & Atelier Instruments
+            Explore Clothing &amp; Haute Couture
           </h1>
           <p className="text-sm text-muted-foreground max-w-2xl">
-            Browse our complete collection of verified industrial electronics, acoustic headphones, and precision peripherals.
+            Browse our complete collection of Indian and contemporary fashion, handcrafted kurtis, festive lehengas, everyday essentials, and modern silhouettes.
           </p>
         </div>
 
@@ -112,7 +112,7 @@ export default function ShopPage() {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              placeholder="Search by title, specs, or keyword..."
+              placeholder="Search by title, fabric, or style..."
               className="pl-10 pr-9 rounded-xl border-border/60"
             />
             {search && (
@@ -330,7 +330,7 @@ export default function ShopPage() {
             {/* Categories */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
-                Departments
+                Fashion Categories
               </h3>
               <div className="space-y-1">
                 <Button
@@ -373,7 +373,7 @@ export default function ShopPage() {
             {brands.length > 0 && (
               <div className="space-y-4 pt-4 border-t border-border/60">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
-                  Ateliers & Brands
+                  Fashion Houses &amp; Labels
                 </h3>
                 <div className="space-y-1">
                   <Button

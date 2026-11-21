@@ -3,7 +3,7 @@
 import * as React from "react";
 import { ProductAttribute } from "@veyora/types";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ShieldCheck, Truck, Layers } from "lucide-react";
+import { ChevronDown, ShieldCheck, Truck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ProductAccordionProps {
@@ -35,12 +35,12 @@ export function ProductAccordion({
   const items: AccordionItem[] = [
     {
       id: "specs",
-      title: "Technical Specifications & Hardware Details",
-      icon: Layers,
+      title: "Garment Specifications & Fabric Details",
+      icon: Sparkles,
       content: (
         <div className="space-y-3 pt-2 text-xs sm:text-sm">
           <div className="flex justify-between py-1.5 border-b border-border/40 text-muted-foreground">
-            <span>Model SKU</span>
+            <span>Garment SKU</span>
             <span className="font-mono text-foreground font-medium">{sku}</span>
           </div>
           {attributes.map((attr, idx) => (
@@ -55,47 +55,50 @@ export function ProductAccordion({
             </div>
           ))}
           <div className="flex justify-between py-1.5 text-muted-foreground">
-            <span>Certification</span>
-            <span className="text-foreground font-medium">CE, FCC, RoHS, Qi2 Standard</span>
+            <span>Quality Certification</span>
+            <span className="text-foreground font-medium">100% Handloom &amp; Certified Pure Silks</span>
           </div>
         </div>
       ),
     },
     {
       id: "shipping",
-      title: "Express Dispatch & Carbon-Neutral Transport",
+      title: "Express Delivery & Complimentary Size Exchanges",
       icon: Truck,
       content: (
         <div className="space-y-3 pt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
           <p>
-            • Orders placed before 3:00 PM EST ship same-day from our climate-controlled fulfillment hub.
+            • Orders placed before 3:00 PM ship same-day in protective garment covers.
           </p>
           <p>
-            • 100% Carbon-Neutral delivery via verified sustainable transport partners.
+            • Worldwide express delivery via tracked, insured courier partners.
           </p>
           <p>
-            • Tracking link with real-time GPS courier milestone updates provided upon dispatch.
+            • Complimentary doorstep size exchange within 15 days of receiving your order.
           </p>
           <p>
-            • Hassle-free 30-day trial period with complimentary pre-paid return shipping.
+            • Real-time SMS and email tracking milestone updates provided upon dispatch.
           </p>
         </div>
       ),
     },
     {
-      id: "warranty",
-      title: "Materials, Provenance & Lifetime Craftsmanship",
+      id: "care",
+      title: "Artisan Heritage & Care Instructions",
       icon: ShieldCheck,
       content: (
         <div className="space-y-3 pt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
           <p>
-            • Precision-machined from recyclable aircraft-grade aluminum alloys and certified vegetable-tanned full-grain leathers.
+            • Handcrafted by regional master artisans using heritage Indian hand-block printing, Bandhani tie-dye, and traditional zari brocade techniques.
           </p>
           <p>
-            • Designed for repairability: modular construction allows individual component replacement.
+            • For pure silks, Chanderi, and embroidered garments: professional dry clean only to maintain fabric lustre.
           </p>
           <p>
-            • Includes Veyora Atelier 2-Year Comprehensive Limited Hardware Warranty against manufacturing imperfections.
+            • For pure organic mulmul cotton: gentle cold hand wash separately with mild detergent; dry in shade.
+          </p>
+          <p>
+            • Iron on low heat or use a vertical garment steamer.
           </p>
         </div>
       ),

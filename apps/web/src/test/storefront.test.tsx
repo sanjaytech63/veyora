@@ -9,23 +9,23 @@ import { VariantSelector } from "../components/storefront/variant-selector";
 import { ProductDetailsClient } from "../app/products/[slug]/product-details-client";
 import { Product, ProductVariant, Category } from "@veyora/types";
 
-// Standard unit test fixtures
+// Standard fashion unit test fixtures
 const TEST_CATEGORIES: Category[] = [
   {
-    id: "cat-audio-01",
-    name: "Acoustic Audio",
-    slug: "audio",
-    description: "Planar magnetic headphones and precision listening gear.",
+    id: "cat-kurtis-01",
+    name: "Kurtis & Kurti Sets",
+    slug: "kurtis",
+    description: "Handcrafted straight and Anarkali kurtis in pure mulmul and silk.",
     order: 1,
     status: "active",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
   {
-    id: "cat-workspace-02",
-    name: "Workspace Precision",
-    slug: "workspace",
-    description: "Tactile peripherals and modular desk hardware.",
+    id: "cat-ethnic-02",
+    name: "Ethnic & Festive Wear",
+    slug: "ethnic-wear",
+    description: "Traditional Rajasthani Bandhani lehengas and wedding attire.",
     order: 2,
     status: "active",
     createdAt: new Date().toISOString(),
@@ -35,72 +35,72 @@ const TEST_CATEGORIES: Category[] = [
 
 const TEST_PRODUCTS: Product[] = [
   {
-    id: "prod-aura-01",
-    title: "Aura Spatial Wireless Headphones",
-    slug: "aura-spatial-wireless-headphones",
-    description: "Precision planar magnetic wireless headphones with CNC aluminum chassis.",
-    price: 389.0,
-    compareAtPrice: 449.0,
-    costPrice: 180.0,
-    sku: "VY-AUR-01",
+    id: "prod-kurti-01",
+    title: "Chanderi Silk Kurti Set with Organza Dupatta",
+    slug: "chanderi-silk-kurti-set-organza-dupatta",
+    description: "Handwoven Chanderi silk kurti with delicate gota patti hand embroidery.",
+    price: 185.0,
+    compareAtPrice: 240.0,
+    costPrice: 90.0,
+    sku: "VYR-KRT-001",
     barcode: "85001234001",
     stock: 24,
     trackQuantity: true,
     status: "active",
-    categoryId: "cat-audio-01",
+    categoryId: "cat-kurtis-01",
     brandId: "brand-atelier-01",
-    tags: ["featured", "headphones", "wireless", "spatial"],
+    tags: ["featured", "festive", "kurti", "silk"],
     images: [
       {
-        url: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1000",
-        alt: "Aura Spatial Wireless Headphones",
+        url: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1000",
+        alt: "Chanderi Silk Kurti Set",
         isPrimary: true,
       },
     ],
     variants: [
       {
-        id: "var-aura-silver",
-        sku: "VY-AUR-01-SILVER",
-        color: "Anodized Silver",
-        size: "Standard",
-        price: 389.0,
+        id: "var-kurti-crimson-s",
+        sku: "VYR-KRT-001-S-RED",
+        color: "Crimson Red",
+        size: "S",
+        price: 185.0,
         stock: 12,
-        image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1000",
+        image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1000",
       },
       {
-        id: "var-aura-black",
-        sku: "VY-AUR-01-BLACK",
-        color: "Obsidian Black",
-        size: "Standard",
-        price: 389.0,
+        id: "var-kurti-emerald-m",
+        sku: "VYR-KRT-001-M-GRN",
+        color: "Emerald Green",
+        size: "M",
+        price: 185.0,
         stock: 12,
-        image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1000",
+        image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1000",
       },
     ],
     attributes: [
-      { name: "Transducer", value: "50mm Planar Magnetic" },
-      { name: "Battery Life", value: "48 Hours Continuous Playback" },
+      { name: "Fabric", value: "Handwoven Chanderi Silk" },
+      { name: "Fit", value: "A-Line Silhouette" },
     ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
   {
-    id: "prod-desk-02",
-    title: "Desk Precision Mechanical Pad",
-    slug: "desk-precision-mechanical-pad",
-    description: "High-density natural wool felt desk pad with bevel-stitched edges.",
-    price: 89.0,
-    sku: "VY-DSK-02",
+    id: "prod-lehenga-02",
+    title: "Bandhani Silk Handcrafted Festive Lehenga Choli",
+    slug: "bandhani-silk-festive-lehenga-choli",
+    description: "Traditional Rajasthani Bandhani silk lehenga with zardozi waist detailing.",
+    price: 495.0,
+    sku: "VYR-LHG-002",
     stock: 15,
     trackQuantity: true,
     status: "active",
-    categoryId: "cat-workspace-02",
+    categoryId: "cat-ethnic-02",
     brandId: "brand-atelier-01",
-    tags: ["workspace", "felt"],
+    tags: ["ethnic-wear", "lehenga", "festive"],
     images: [
       {
-        url: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?q=80&w=1000",
-        alt: "Desk Precision Pad",
+        url: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1000",
+        alt: "Bandhani Silk Lehenga Choli",
         isPrimary: true,
       },
     ],
@@ -110,22 +110,22 @@ const TEST_PRODUCTS: Product[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: "prod-dock-03",
-    title: "Modular Charge Dock Qi2",
-    slug: "modular-charge-dock-qi2",
-    description: "Magnetic 3-in-1 wireless fast charging station machined from 6061 alloy.",
-    price: 129.0,
-    sku: "VY-DCK-03",
+    id: "prod-mulmul-03",
+    title: "Pure Mulmul Cotton Hand-Block Print Kurti",
+    slug: "mulmul-cotton-hand-block-print-kurti",
+    description: "Organic mulmul cotton daily kurti with natural vegetable dye Bagru prints.",
+    price: 68.0,
+    sku: "VYR-KRT-004",
     stock: 8,
     trackQuantity: true,
     status: "active",
-    categoryId: "cat-audio-01",
+    categoryId: "cat-kurtis-01",
     brandId: "brand-atelier-01",
-    tags: ["power", "charging"],
+    tags: ["kurti", "cotton", "everyday"],
     images: [
       {
-        url: "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?q=80&w=1000",
-        alt: "Modular Charge Dock",
+        url: "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=1000",
+        alt: "Pure Mulmul Cotton Kurti",
         isPrimary: true,
       },
     ],
@@ -148,19 +148,19 @@ function renderWithQuery(ui: React.ReactElement) {
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
 }
 
-describe("Customer Storefront - Phase G", () => {
+describe("Customer Storefront - Fashion E-Commerce", () => {
   const mockProduct: Product = TEST_PRODUCTS[0]!;
 
   // 1. Product Listing Tests
   describe("Product Listing & Cards", () => {
     it("renders product title, price, and category", () => {
       render(
-        <ProductCard product={mockProduct} categoryName="Acoustic Audio" />
+        <ProductCard product={mockProduct} categoryName="Kurtis & Kurti Sets" />
       );
 
       expect(screen.getByText(mockProduct.title)).toBeInTheDocument();
       expect(screen.getByText(`$${mockProduct.price.toFixed(2)}`)).toBeInTheDocument();
-      expect(screen.getByText("Acoustic Audio")).toBeInTheDocument();
+      expect(screen.getByText("Kurtis & Kurti Sets")).toBeInTheDocument();
     });
 
     it("renders the product grid with multiple items", () => {
@@ -181,12 +181,12 @@ describe("Customer Storefront - Phase G", () => {
       render(
         <ProductGrid
           products={[]}
-          emptyTitle="No matching hardware"
+          emptyTitle="No matching garments"
           onResetFilters={onReset}
         />
       );
 
-      expect(screen.getByText("No matching hardware")).toBeInTheDocument();
+      expect(screen.getByText("No matching garments")).toBeInTheDocument();
       const clearBtn = screen.getByRole("button", { name: /clear filters/i });
       fireEvent.click(clearBtn);
       expect(onReset).toHaveBeenCalled();
@@ -225,8 +225,8 @@ describe("Customer Storefront - Phase G", () => {
         />
       );
 
-      expect(screen.getByText(/color \/ finish/i)).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Standard" })).toBeInTheDocument();
+      expect(screen.getByText(/color/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "S" })).toBeInTheDocument();
     });
 
     it("triggers onSelectVariant callback when user clicks a variant swatch", () => {
@@ -239,8 +239,8 @@ describe("Customer Storefront - Phase G", () => {
         />
       );
 
-      const silverSwatch = screen.getByTitle(/anodized silver/i);
-      fireEvent.click(silverSwatch);
+      const crimsonSwatch = screen.getByTitle(/crimson red/i);
+      fireEvent.click(crimsonSwatch);
       expect(onSelect).toHaveBeenCalled();
     });
   });
@@ -272,7 +272,7 @@ describe("Customer Storefront - Phase G", () => {
       renderWithQuery(<ProductDetailsClient initialProduct={mockProduct} />);
 
       expect(
-        screen.getByText(/technical specifications & hardware details/i)
+        screen.getByText(/garment specifications & fabric details/i)
       ).toBeInTheDocument();
       expect(screen.getByText(mockProduct.variants![0]!.sku)).toBeInTheDocument();
     });
@@ -281,10 +281,10 @@ describe("Customer Storefront - Phase G", () => {
   // 5. Filtering and Search Logic Tests
   describe("Catalog Filtering & Search Logic", () => {
     it("filters products by category correctly", () => {
-      const audioProducts = TEST_PRODUCTS.filter((p) => p.categoryId === "cat-audio-01");
-      expect(audioProducts.length).toBeGreaterThan(0);
-      audioProducts.forEach((p) => {
-        expect(p.categoryId).toBe("cat-audio-01");
+      const kurtiProducts = TEST_PRODUCTS.filter((p) => p.categoryId === "cat-kurtis-01");
+      expect(kurtiProducts.length).toBeGreaterThan(0);
+      kurtiProducts.forEach((p) => {
+        expect(p.categoryId).toBe("cat-kurtis-01");
       });
     });
 
@@ -297,7 +297,7 @@ describe("Customer Storefront - Phase G", () => {
     });
 
     it("filters products by search keyword", () => {
-      const search = "headphones";
+      const search = "chanderi";
       const matches = TEST_PRODUCTS.filter(
         (p) =>
           p.title.toLowerCase().includes(search) ||
@@ -305,7 +305,7 @@ describe("Customer Storefront - Phase G", () => {
           p.tags?.some((t) => t.toLowerCase().includes(search))
       );
       expect(matches.length).toBeGreaterThan(0);
-      expect(matches[0]!.title).toContain("Headphones");
+      expect(matches[0]!.title).toContain("Chanderi");
     });
   });
 });

@@ -11,19 +11,21 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, X, Compass, Headphones, Laptop, Zap, Briefcase } from "lucide-react";
+import { ShoppingBag, X, Sparkles, Shirt, Layers, Crown, Flame, Gem } from "lucide-react";
 import { SERVICES } from "@veyora/config";
 
 export function MobileNav() {
   const { mobileNavOpen, setMobileNavOpen } = useUIStore();
 
   const links = [
-    { label: "Home", href: "/", icon: Compass },
-    { label: "Shop All Products", href: "/shop", icon: ShoppingBag },
-    { label: "Acoustic Audio", href: "/category/audio", icon: Headphones },
-    { label: "Workspace Precision", href: "/category/workspace", icon: Laptop },
-    { label: "Power & Charging", href: "/category/power", icon: Zap },
-    { label: "Bespoke Carry", href: "/category/carry", icon: Briefcase },
+    { label: "Home", href: "/", icon: Sparkles },
+    { label: "Shop All Clothing", href: "/shop", icon: ShoppingBag },
+    { label: "Kurtis & Kurti Sets", href: "/category/kurtis", icon: Shirt },
+    { label: "Ethnic & Festive Wear", href: "/category/ethnic-wear", icon: Crown },
+    { label: "Sarees & Drapes", href: "/category/sarees", icon: Gem },
+    { label: "Co-ords & Loungewear", href: "/category/co-ords", icon: Layers },
+    { label: "New Arrivals", href: "/new-arrivals", icon: Flame },
+    { label: "Curated Collections", href: "/collections", icon: Sparkles },
   ];
 
   return (
@@ -32,7 +34,7 @@ export function MobileNav() {
         <SheetHeader className="flex flex-row items-center justify-between border-b pb-4">
           <SheetTitle className="flex items-center gap-2 text-base font-bold">
             <ShoppingBag className="h-5 w-5 text-primary" />
-            {SERVICES.NAME}
+            <span>{SERVICES.NAME} <span className="text-xs font-normal text-muted-foreground">Fashion</span></span>
           </SheetTitle>
           <SheetClose asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">

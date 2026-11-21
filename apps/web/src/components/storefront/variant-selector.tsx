@@ -3,8 +3,24 @@
 import * as React from "react";
 import { ProductVariant } from "@veyora/types";
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
+import { Check, Ruler } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface VariantSelectorProps {
   variants: ProductVariant[];
@@ -19,6 +35,8 @@ export function VariantSelector({
   onSelectVariant,
   className,
 }: VariantSelectorProps) {
+  const [sizeGuideOpen, setSizeGuideOpen] = React.useState(false);
+
   // Extract distinct colors
   const colors = React.useMemo(() => {
     const list: string[] = [];
@@ -30,7 +48,7 @@ export function VariantSelector({
     return list;
   }, [variants]);
 
-  // Extract distinct sizes / configurations
+  // Extract distinct sizes
   const sizes = React.useMemo(() => {
     const list: string[] = [];
     variants.forEach((v) => {
@@ -44,7 +62,6 @@ export function VariantSelector({
   if (variants.length === 0) return null;
 
   const handleColorChange = (color: string) => {
-    // Find matching variant with current size or fallback to first with this color
     const currentSize = selectedVariant?.size;
     const match =
       variants.find((v) => v.color === color && (!currentSize || v.size === currentSize)) ||
@@ -53,7 +70,6 @@ export function VariantSelector({
   };
 
   const handleSizeChange = (size: string) => {
-    // Find matching variant with current color or fallback to first with this size
     const currentColor = selectedVariant?.color;
     const match =
       variants.find((v) => v.size === size && (!currentColor || v.color === currentColor)) ||
@@ -63,13 +79,24 @@ export function VariantSelector({
 
   const getColorClass = (name: string) => {
     const n = name.toLowerCase();
-    if (n.includes("black") || n.includes("obsidian")) return "bg-zinc-950";
-    if (n.includes("silver") || n.includes("frost")) return "bg-zinc-200 dark:bg-zinc-400";
-    if (n.includes("sand") || n.includes("cognac")) return "bg-amber-700";
-    if (n.includes("white") || n.includes("chalk")) return "bg-zinc-100 border border-border";
-    if (n.includes("slate") || n.includes("gray") || n.includes("grey")) return "bg-slate-600";
-    if (n.includes("blue") || n.includes("navy")) return "bg-blue-900";
-    if (n.includes("green") || n.includes("sage")) return "bg-emerald-800";
+    if (n.includes("red") || n.includes("crimson") || n.includes("ruby") || n.includes("maroon") || n.includes("vermilion"))
+      return "bg-red-700";
+    if (n.includes("green") || n.includes("emerald") || n.includes("sage") || n.includes("olive"))
+      return "bg-emerald-800";
+    if (n.includes("gold") || n.includes("mustard") || n.includes("amber") || n.includes("yellow") || n.includes("turmeric"))
+      return "bg-amber-500";
+    if (n.includes("blue") || n.includes("indigo") || n.includes("royal") || n.includes("navy"))
+      return "bg-indigo-900";
+    if (n.includes("pink") || n.includes("rose") || n.includes("blush") || n.includes("magenta"))
+      return "bg-pink-600";
+    if (n.includes("ivory") || n.includes("pearl") || n.includes("champagne") || n.includes("cream") || n.includes("ecru"))
+      return "bg-amber-100 border border-border";
+    if (n.includes("rust") || n.includes("terracotta") || n.includes("copper") || n.includes("orange"))
+      return "bg-orange-700";
+    if (n.includes("black") || n.includes("midnight") || n.includes("noir"))
+      return "bg-zinc-950";
+    if (n.includes("beige") || n.includes("sand") || n.includes("oatmeal"))
+      return "bg-amber-200/80 border border-border";
     return "bg-primary";
   };
 
@@ -79,9 +106,9 @@ export function VariantSelector({
       {colors.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between text-sm">
-            <span className="font-semibold text-foreground">Color / Finish</span>
+            <span className="font-semibold text-foreground">Color / Palette</span>
             <span className="text-muted-foreground text-xs font-medium">
-              {selectedVariant?.color || "Select Finish"}
+              {selectedVariant?.color || "Select Color"}
             </span>
           </div>
 
@@ -113,7 +140,9 @@ export function VariantSelector({
                     <Check
                       className={cn(
                         "h-4 w-4 drop-shadow-sm",
-                        color.toLowerCase().includes("white") || color.toLowerCase().includes("silver")
+                        color.toLowerCase().includes("white") ||
+                          color.toLowerCase().includes("ivory") ||
+                          color.toLowerCase().includes("cream")
                           ? "text-zinc-900"
                           : "text-white"
                       )}
@@ -131,14 +160,95 @@ export function VariantSelector({
         </div>
       )}
 
-      {/* Size / Configuration Selection */}
+      {/* Size Selection with Fashion Size Guide */}
       {sizes.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between text-sm">
-            <span className="font-semibold text-foreground">Configuration / Size</span>
-            <span className="text-muted-foreground text-xs font-medium">
-              {selectedVariant?.size || "Select Specification"}
-            </span>
+            <span className="font-semibold text-foreground">Garment Size</span>
+
+            {/* Size Guide Modal Dialog */}
+            <Dialog open={sizeGuideOpen} onOpenChange={setSizeGuideOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 text-xs font-semibold text-primary inline-flex items-center gap-1 hover:underline"
+                >
+                  <Ruler className="h-3 w-3" />
+                  <span>Size &amp; Fit Guide</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md rounded-3xl p-6">
+                <DialogHeader>
+                  <DialogTitle className="text-lg font-bold">Apparel Size Chart</DialogTitle>
+                  <DialogDescription className="text-xs text-muted-foreground">
+                    Standard garment body measurements in inches for Kurtis, Dresses, and Ensembles.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="py-2">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="text-xs">
+                        <TableHead className="font-bold">Size</TableHead>
+                        <TableHead>Bust (in)</TableHead>
+                        <TableHead>Waist (in)</TableHead>
+                        <TableHead>Hip (in)</TableHead>
+                        <TableHead>Length (in)</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody className="text-xs">
+                      <TableRow>
+                        <TableCell className="font-bold">XS</TableCell>
+                        <TableCell>32 - 33</TableCell>
+                        <TableCell>26 - 27</TableCell>
+                        <TableCell>36 - 37</TableCell>
+                        <TableCell>44</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-bold">S</TableCell>
+                        <TableCell>34 - 35</TableCell>
+                        <TableCell>28 - 29</TableCell>
+                        <TableCell>38 - 39</TableCell>
+                        <TableCell>45</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-bold">M</TableCell>
+                        <TableCell>36 - 37</TableCell>
+                        <TableCell>30 - 31</TableCell>
+                        <TableCell>40 - 41</TableCell>
+                        <TableCell>45</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-bold">L</TableCell>
+                        <TableCell>38 - 40</TableCell>
+                        <TableCell>32 - 34</TableCell>
+                        <TableCell>42 - 44</TableCell>
+                        <TableCell>46</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-bold">XL</TableCell>
+                        <TableCell>41 - 43</TableCell>
+                        <TableCell>35 - 37</TableCell>
+                        <TableCell>45 - 47</TableCell>
+                        <TableCell>46</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-bold">XXL</TableCell>
+                        <TableCell>44 - 46</TableCell>
+                        <TableCell>38 - 40</TableCell>
+                        <TableCell>48 - 50</TableCell>
+                        <TableCell>47</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <div className="rounded-xl border border-border/60 bg-muted/30 p-3 text-[11px] text-muted-foreground leading-relaxed">
+                  <strong>Fit Advice:</strong> If you are between sizes, we recommend ordering one size up for traditional straight and A-line kurtis.
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
           <div className="flex flex-wrap gap-2.5">

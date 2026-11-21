@@ -19,11 +19,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${category.name} | Veyora Atelier Collection`,
-    description: category.description || `Browse curated ${category.name} instruments and hardware on Veyora.`,
+    title: `${category.name} | Veyora Haute Couture Collection`,
+    description: category.description || `Browse curated ${category.name} designs, Indian attire and apparel on Veyora.`,
     openGraph: {
-      title: `${category.name} | Veyora`,
-      description: category.description || `Browse ${category.name} hardware on Veyora.`,
+      title: `${category.name} | Veyora Fashion`,
+      description: category.description || `Browse ${category.name} fashion apparel on Veyora.`,
       type: "website",
     },
   };

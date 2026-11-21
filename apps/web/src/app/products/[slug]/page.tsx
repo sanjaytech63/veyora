@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description:
         product.seo?.metaDescription ||
         product.description.slice(0, 160) ||
-        "Precision hardware crafted for modern creators by Veyora.",
+        "Handcrafted Indian couture and contemporary fashion apparel by Veyora Atelier.",
       alternates: {
         canonical: `/products/${product.slug}`,
       },
@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   } catch {
     return {
       title: "Product Details | Veyora Atelier",
-      description: "Explore precision hardware crafted by Veyora Atelier.",
+      description: "Explore handcrafted Indian fashion and contemporary apparel by Veyora Atelier.",
     };
   }
 }

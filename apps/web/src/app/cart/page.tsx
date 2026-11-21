@@ -110,7 +110,7 @@ export default function CartPage() {
             <EmptyState
               icon={<ShoppingBag className="h-8 w-8 text-muted-foreground" />}
               title="Your bag is empty"
-              description="You have not added any hardware or accessories to your shopping bag yet."
+              description="You have not added any apparel or accessories to your shopping bag yet."
               action={
                 <Button asChild className="rounded-full px-6 text-xs font-semibold">
                   <Link href="/shop" className="inline-flex items-center gap-2">
@@ -188,7 +188,7 @@ export default function CartPage() {
                         </Link>
                         {(item.color || item.size) && (
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            {item.color && <span>Finish: {item.color}</span>}
+                            {item.color && <span>Color: {item.color}</span>}
                             {item.color && item.size && <span>•</span>}
                             {item.size && <span>Size: {item.size}</span>}
                           </div>

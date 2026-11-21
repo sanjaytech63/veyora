@@ -75,7 +75,7 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
   );
 
   const categoryName = React.useMemo(() => {
-    return categories.find((c) => c.id === product.categoryId)?.name || "Atelier Hardware";
+    return categories.find((c) => c.id === product.categoryId)?.name || "Haute Couture";
   }, [categories, product.categoryId]);
 
   const handleAddToCart = () => {
@@ -324,13 +324,13 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
               </div>
               <div className="p-2 space-y-1">
                 <ShieldCheck className="h-4 w-4 mx-auto text-primary" />
-                <p className="font-semibold text-foreground text-[11px]">2-Year Warranty</p>
-                <p className="text-[10px]">Atelier backed</p>
+                <p className="font-semibold text-foreground text-[11px]">Pure Fabric Quality</p>
+                <p className="text-[10px]">Silk Mark Certified</p>
               </div>
               <div className="p-2 space-y-1">
                 <RotateCcw className="h-4 w-4 mx-auto text-primary" />
-                <p className="font-semibold text-foreground text-[11px]">30-Day Returns</p>
-                <p className="text-[10px]">Risk-free trial</p>
+                <p className="font-semibold text-foreground text-[11px]">15-Day Exchange</p>
+                <p className="text-[10px]">Easy size exchange</p>
               </div>
             </div>
 
@@ -347,7 +347,7 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
           <section className="space-y-8 pt-12 border-t border-border/60">
             <div className="space-y-1">
               <span className="text-xs font-bold uppercase tracking-wider text-primary">
-                Complementary Gear
+                Complete the Ensemble
               </span>
               <h2 className="text-2xl font-extrabold tracking-tight text-foreground">
                 You May Also Admire
