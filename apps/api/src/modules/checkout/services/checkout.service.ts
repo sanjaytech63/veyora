@@ -7,6 +7,7 @@ import { cartService } from "../../cart/services/cart.service";
 import { Product, IProduct } from "../../catalog/models/product.model";
 import { Inventory } from "../../inventory/models/inventory.model";
 import { StockMovement } from "../../inventory/models/stock-movement.model";
+import { couponService } from "../../coupon/services/coupon.service";
 import {
   AddressDto,
   CreateAddressPayload,
@@ -562,7 +563,23 @@ export class CheckoutService {
 
     await order.save();
 
-    // 8. Clear Active Shopping Cart
+    // 8. Record Coupon Usage if coupon applied
+    if (mongoose.connection.readyState === 1 && cartDoc.couponCode) {
+      try {
+        await couponService.recordCouponUsage(cartDoc.couponCode, {
+          orderId: order._id.toString(),
+          orderNumber: order.orderNumber,
+          userId,
+          customerEmail: input.customerEmail,
+          discountAmount: discount,
+          orderTotal: subtotal,
+        });
+      } catch (couponUsageErr) {
+        console.warn(`[Checkout] Failed to record coupon usage for ${cartDoc.couponCode}:`, couponUsageErr);
+      }
+    }
+
+    // 9. Clear Active Shopping Cart
     await cartService.clearCart(userId, guestId);
 
     return this.toOrderDto(order);
@@ -727,6 +744,19 @@ export class CheckoutService {
     });
 
     await order.save();
+
+    // Revert coupon redemption if refunded or cancelled
+    if (mongoose.connection.readyState === 1 && (newStatus === "refunded" || newStatus === "cancelled") && order.couponCode) {
+      try {
+        await couponService.revertCouponUsage(order.couponCode, {
+          orderId: order._id.toString(),
+          customerEmail: order.customerEmail,
+        });
+      } catch (err) {
+        console.warn(`[Checkout] Failed to revert coupon usage for ${order.couponCode}:`, err);
+      }
+    }
+
     return this.toOrderDto(order);
   }
 
@@ -784,6 +814,19 @@ export class CheckoutService {
     });
 
     await order.save();
+
+    // Revert coupon redemption if applicable
+    if (mongoose.connection.readyState === 1 && order.couponCode) {
+      try {
+        await couponService.revertCouponUsage(order.couponCode, {
+          orderId: order._id.toString(),
+          customerEmail: order.customerEmail,
+        });
+      } catch (err) {
+        console.warn(`[Checkout] Failed to revert coupon usage for ${order.couponCode}:`, err);
+      }
+    }
+
     return this.toOrderDto(order);
   }
 
