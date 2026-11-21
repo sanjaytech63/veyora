@@ -7,8 +7,134 @@ import { ProductGrid } from "../components/storefront/product-grid";
 import { StockBadge } from "../components/storefront/stock-badge";
 import { VariantSelector } from "../components/storefront/variant-selector";
 import { ProductDetailsClient } from "../app/products/[slug]/product-details-client";
-import { FALLBACK_PRODUCTS, FALLBACK_CATEGORIES } from "../lib/api/catalog-fallback";
-import { Product, ProductVariant } from "@veyora/types";
+import { Product, ProductVariant, Category } from "@veyora/types";
+
+// Standard unit test fixtures
+const TEST_CATEGORIES: Category[] = [
+  {
+    id: "cat-audio-01",
+    name: "Acoustic Audio",
+    slug: "audio",
+    description: "Planar magnetic headphones and precision listening gear.",
+    order: 1,
+    status: "active",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "cat-workspace-02",
+    name: "Workspace Precision",
+    slug: "workspace",
+    description: "Tactile peripherals and modular desk hardware.",
+    order: 2,
+    status: "active",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
+const TEST_PRODUCTS: Product[] = [
+  {
+    id: "prod-aura-01",
+    title: "Aura Spatial Wireless Headphones",
+    slug: "aura-spatial-wireless-headphones",
+    description: "Precision planar magnetic wireless headphones with CNC aluminum chassis.",
+    price: 389.0,
+    compareAtPrice: 449.0,
+    costPrice: 180.0,
+    sku: "VY-AUR-01",
+    barcode: "85001234001",
+    stock: 24,
+    trackQuantity: true,
+    status: "active",
+    categoryId: "cat-audio-01",
+    brandId: "brand-atelier-01",
+    tags: ["featured", "headphones", "wireless", "spatial"],
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1000",
+        alt: "Aura Spatial Wireless Headphones",
+        isPrimary: true,
+      },
+    ],
+    variants: [
+      {
+        id: "var-aura-silver",
+        sku: "VY-AUR-01-SILVER",
+        color: "Anodized Silver",
+        size: "Standard",
+        price: 389.0,
+        stock: 12,
+        image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1000",
+      },
+      {
+        id: "var-aura-black",
+        sku: "VY-AUR-01-BLACK",
+        color: "Obsidian Black",
+        size: "Standard",
+        price: 389.0,
+        stock: 12,
+        image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1000",
+      },
+    ],
+    attributes: [
+      { name: "Transducer", value: "50mm Planar Magnetic" },
+      { name: "Battery Life", value: "48 Hours Continuous Playback" },
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "prod-desk-02",
+    title: "Desk Precision Mechanical Pad",
+    slug: "desk-precision-mechanical-pad",
+    description: "High-density natural wool felt desk pad with bevel-stitched edges.",
+    price: 89.0,
+    sku: "VY-DSK-02",
+    stock: 15,
+    trackQuantity: true,
+    status: "active",
+    categoryId: "cat-workspace-02",
+    brandId: "brand-atelier-01",
+    tags: ["workspace", "felt"],
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?q=80&w=1000",
+        alt: "Desk Precision Pad",
+        isPrimary: true,
+      },
+    ],
+    variants: [],
+    attributes: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "prod-dock-03",
+    title: "Modular Charge Dock Qi2",
+    slug: "modular-charge-dock-qi2",
+    description: "Magnetic 3-in-1 wireless fast charging station machined from 6061 alloy.",
+    price: 129.0,
+    sku: "VY-DCK-03",
+    stock: 8,
+    trackQuantity: true,
+    status: "active",
+    categoryId: "cat-audio-01",
+    brandId: "brand-atelier-01",
+    tags: ["power", "charging"],
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?q=80&w=1000",
+        alt: "Modular Charge Dock",
+        isPrimary: true,
+      },
+    ],
+    variants: [],
+    attributes: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
 
 // Helper wrapper with QueryClientProvider
 function renderWithQuery(ui: React.ReactElement) {
@@ -23,7 +149,7 @@ function renderWithQuery(ui: React.ReactElement) {
 }
 
 describe("Customer Storefront - Phase G", () => {
-  const mockProduct: Product = FALLBACK_PRODUCTS[0]!;
+  const mockProduct: Product = TEST_PRODUCTS[0]!;
 
   // 1. Product Listing Tests
   describe("Product Listing & Cards", () => {
@@ -40,14 +166,14 @@ describe("Customer Storefront - Phase G", () => {
     it("renders the product grid with multiple items", () => {
       render(
         <ProductGrid
-          products={FALLBACK_PRODUCTS.slice(0, 3)}
-          categories={FALLBACK_CATEGORIES}
+          products={TEST_PRODUCTS.slice(0, 3)}
+          categories={TEST_CATEGORIES}
         />
       );
 
-      expect(screen.getByText(FALLBACK_PRODUCTS[0]!.title)).toBeInTheDocument();
-      expect(screen.getByText(FALLBACK_PRODUCTS[1]!.title)).toBeInTheDocument();
-      expect(screen.getByText(FALLBACK_PRODUCTS[2]!.title)).toBeInTheDocument();
+      expect(screen.getByText(TEST_PRODUCTS[0]!.title)).toBeInTheDocument();
+      expect(screen.getByText(TEST_PRODUCTS[1]!.title)).toBeInTheDocument();
+      expect(screen.getByText(TEST_PRODUCTS[2]!.title)).toBeInTheDocument();
     });
 
     it("renders empty state when no products match", () => {
@@ -155,7 +281,7 @@ describe("Customer Storefront - Phase G", () => {
   // 5. Filtering and Search Logic Tests
   describe("Catalog Filtering & Search Logic", () => {
     it("filters products by category correctly", () => {
-      const audioProducts = FALLBACK_PRODUCTS.filter((p) => p.categoryId === "cat-audio-01");
+      const audioProducts = TEST_PRODUCTS.filter((p) => p.categoryId === "cat-audio-01");
       expect(audioProducts.length).toBeGreaterThan(0);
       audioProducts.forEach((p) => {
         expect(p.categoryId).toBe("cat-audio-01");
@@ -163,7 +289,7 @@ describe("Customer Storefront - Phase G", () => {
     });
 
     it("filters in-stock products correctly", () => {
-      const inStock = FALLBACK_PRODUCTS.filter((p) => p.stock > 0);
+      const inStock = TEST_PRODUCTS.filter((p) => p.stock > 0);
       expect(inStock.length).toBeGreaterThan(0);
       inStock.forEach((p) => {
         expect(p.stock).toBeGreaterThan(0);
@@ -172,7 +298,7 @@ describe("Customer Storefront - Phase G", () => {
 
     it("filters products by search keyword", () => {
       const search = "headphones";
-      const matches = FALLBACK_PRODUCTS.filter(
+      const matches = TEST_PRODUCTS.filter(
         (p) =>
           p.title.toLowerCase().includes(search) ||
           p.description.toLowerCase().includes(search) ||

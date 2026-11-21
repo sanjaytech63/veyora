@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/ui/optimized-image";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ProductGrid } from "@/components/storefront/product-grid";
 import { useCategories, useFeaturedProducts, useProducts } from "@/hooks/use-catalog";
 import { cn } from "@/lib/utils";
@@ -127,8 +128,11 @@ export default function StorefrontHomePage() {
               <div className="group relative mx-auto aspect-[4/4.3] max-w-md lg:max-w-none rounded-[30px] border border-border/80 bg-card/60 p-2.5 shadow-[0_32px_64px_-20px_rgba(0,0,0,0.14)] backdrop-blur-xl dark:shadow-[0_32px_64px_-20px_rgba(0,0,0,0.65)]">
                 <div className="relative h-full w-full overflow-hidden rounded-[22px] bg-zinc-950 ring-1 ring-inset ring-white/10">
                   <OptimizedImage
-                    src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1200&auto=format&fit=crop"
-                    alt="Aura Spatial Wireless Headphones Flagship"
+                    src={
+                      featuredProducts[0]?.images?.[0]?.url ||
+                      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1200&auto=format&fit=crop"
+                    }
+                    alt={featuredProducts[0]?.title || "Veyora Atelier Hardware"}
                     fill
                     priority
                     className="h-full w-full object-cover object-center opacity-95 transition-transform duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
@@ -141,35 +145,43 @@ export default function StorefrontHomePage() {
                   {/* Top Hardware Spec Pill */}
                   <div className="absolute left-4 right-4 top-4 flex items-center justify-between">
                     <span className="rounded-full border border-white/15 bg-black/45 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-zinc-200 backdrop-blur-md">
-                      MODEL // VY-01
+                      {featuredProducts[0]?.sku ? `MODEL // ${featuredProducts[0].sku}` : "RELEASE // 2026"}
                     </span>
                     <span className="rounded-full border border-emerald-400/30 bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-300 backdrop-blur-md">
-                      In Stock
+                      {featuredProducts[0]?.stock && featuredProducts[0].stock > 0 ? "In Stock" : "Atelier Edition"}
                     </span>
                   </div>
 
                   {/* Floating Glassmorphic Product Dock */}
                   <Link
-                    href="/category/audio"
+                    href={featuredProducts[0] ? `/products/${featuredProducts[0].slug}` : "/shop"}
                     className="absolute inset-x-4 bottom-4 block rounded-2xl border border-white/15 bg-zinc-950/70 p-4 text-white shadow-2xl backdrop-blur-xl transition-all duration-300 hover:border-white/30 hover:bg-zinc-950/85"
                   >
                     <div className="flex items-center justify-between gap-4">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-zinc-400">
-                          <span>Flagship Acoustic</span>
+                          <span>{featuredProducts[0] ? "Featured Hardware" : "Curated Atelier"}</span>
                           <span>•</span>
                           <span className="text-amber-400">★ 4.98</span>
                         </div>
-                        <h2 className="text-sm sm:text-base font-semibold tracking-tight text-white">
-                          Aura Spatial Wireless Headphones
+                        <h2 className="text-sm sm:text-base font-semibold tracking-tight text-white line-clamp-1">
+                          {featuredProducts[0]?.title || "Explore Veyora Precision Instruments"}
                         </h2>
                       </div>
 
                       <div className="flex items-center gap-3 shrink-0">
-                        <div className="text-right tabular-nums">
-                          <div className="text-base font-bold text-white">$389</div>
-                          <div className="text-[11px] text-zinc-400 line-through">$449</div>
-                        </div>
+                        {featuredProducts[0] ? (
+                          <div className="text-right tabular-nums">
+                            <div className="text-base font-bold text-white">${featuredProducts[0].price.toFixed(2)}</div>
+                            {featuredProducts[0].compareAtPrice && featuredProducts[0].compareAtPrice > featuredProducts[0].price && (
+                              <div className="text-[11px] text-zinc-400 line-through">${featuredProducts[0].compareAtPrice.toFixed(2)}</div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-right text-xs font-semibold text-zinc-300">
+                            Discover
+                          </div>
+                        )}
                         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-zinc-950 transition-transform duration-300 group-hover:scale-105">
                           <ArrowUpRight className="h-4 w-4" />
                         </div>
@@ -205,49 +217,64 @@ export default function StorefrontHomePage() {
           </div>
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {catsLoading
-              ? Array.from({ length: 4 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-52 rounded-[22px] border border-border/50 bg-muted/40 animate-pulse"
-                  />
-                ))
-              : categories.map((cat, idx) => {
-                  const Icon = categoryIcons[cat.slug] || Compass;
-                  const indexNumber = String(idx + 1).padStart(2, "0");
-                  return (
-                    <Link
-                      key={cat.id}
-                      href={`/category/${cat.slug}`}
-                      className="group relative flex flex-col justify-between overflow-hidden rounded-[22px] border border-border/60 bg-card/80 p-6 transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-foreground/25 hover:bg-card hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.07)]"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border/80 bg-background text-foreground shadow-2xs transition-colors duration-300 group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground">
-                          <Icon className="h-5 w-5" />
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs text-muted-foreground/70">
-                            /{indexNumber}
-                          </span>
-                          <span className="flex h-7 w-7 items-center justify-center rounded-full border border-transparent text-muted-foreground transition-all duration-300 group-hover:border-border group-hover:bg-background group-hover:text-foreground">
-                            <ArrowUpRight className="h-3.5 w-3.5" />
-                          </span>
-                        </div>
+            {catsLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-52 rounded-[22px] border border-border/50 bg-muted/40 animate-pulse"
+                />
+              ))
+            ) : categories.length === 0 ? (
+              <div className="col-span-full rounded-3xl border border-dashed border-border/80 bg-muted/20 py-16 px-4">
+                <EmptyState
+                  icon={<Compass className="h-6 w-6 text-muted-foreground" />}
+                  title="No departments available yet"
+                  description="Categories published through the admin dashboard will appear here."
+                  action={
+                    <Button asChild variant="outline" size="sm" className="rounded-full px-5 text-xs font-semibold">
+                      <Link href="/shop">Browse Storefront</Link>
+                    </Button>
+                  }
+                />
+              </div>
+            ) : (
+              categories.map((cat, idx) => {
+                const Icon = categoryIcons[cat.slug] || Compass;
+                const indexNumber = String(idx + 1).padStart(2, "0");
+                return (
+                  <Link
+                    key={cat.id}
+                    href={`/category/${cat.slug}`}
+                    className="group relative flex flex-col justify-between overflow-hidden rounded-[22px] border border-border/60 bg-card/80 p-6 transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-foreground/25 hover:bg-card hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.07)]"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border/80 bg-background text-foreground shadow-2xs transition-colors duration-300 group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground">
+                        <Icon className="h-5 w-5" />
                       </div>
 
-                      <div className="mt-12 space-y-1.5">
-                        <h3 className="text-lg font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">
-                          {cat.name}
-                        </h3>
-                        <p className="text-xs leading-relaxed text-muted-foreground line-clamp-2">
-                          {cat.description ||
-                            "Precision-engineered instruments and modular accessories."}
-                        </p>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs text-muted-foreground/70">
+                          /{indexNumber}
+                        </span>
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full border border-transparent text-muted-foreground transition-all duration-300 group-hover:border-border group-hover:bg-background group-hover:text-foreground">
+                          <ArrowUpRight className="h-3.5 w-3.5" />
+                        </span>
                       </div>
-                    </Link>
-                  );
-                })}
+                    </div>
+
+                    <div className="mt-12 space-y-1.5">
+                      <h3 className="text-lg font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">
+                        {cat.name}
+                      </h3>
+                      <p className="text-xs leading-relaxed text-muted-foreground line-clamp-2">
+                        {cat.description ||
+                          "Precision-engineered instruments and modular accessories."}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })
+            )}
           </div>
         </Container>
       </section>
@@ -278,6 +305,8 @@ export default function StorefrontHomePage() {
             categories={categories}
             loading={featuredLoading}
             columns={4}
+            emptyTitle="No featured hardware available"
+            emptyDescription="Products marked as featured in the catalog will appear in this highlight."
           />
         </Container>
       </section>
@@ -422,6 +451,8 @@ export default function StorefrontHomePage() {
             products={collectionProductsData?.items || []}
             categories={categories}
             loading={collectionLoading}
+            emptyTitle="No hardware available in this collection"
+            emptyDescription="Products added to this department will be displayed here."
             onResetFilters={
               activeCollectionTab !== "all" ? () => setActiveCollectionTab("all") : undefined
             }
