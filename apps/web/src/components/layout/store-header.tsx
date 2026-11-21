@@ -8,8 +8,8 @@ import { ThemeToggle } from "@/components/common/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { useUIStore } from "@/stores/ui-store";
 import { useAuthStore } from "@/stores/auth-store";
-import { useWishlistStore } from "@/stores/wishlist-store";
-import { useCartStore } from "@/stores/cart-store";
+import { useWishlist } from "@/lib/hooks/use-wishlist";
+import { useCart } from "@/lib/hooks/use-cart";
 import { authApi } from "@/lib/api/auth-api";
 import { SearchModal } from "@/components/storefront/search-modal";
 import {
@@ -35,10 +35,9 @@ import { toast } from "sonner";
 export function StoreHeader() {
   const { setMobileNavOpen, setCartDrawerOpen } = useUIStore();
   const { user, isAuthenticated, clearAuth } = useAuthStore();
-  const wishlistCount = useWishlistStore((state) => state.items.length);
-  const cartCount = useCartStore((state) =>
-    state.items.reduce((acc, item) => acc + item.quantity, 0)
-  );
+  const { itemCount: wishlistCount } = useWishlist();
+  const { totals } = useCart();
+  const cartCount = totals.itemCount;
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
 

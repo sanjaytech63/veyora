@@ -22,6 +22,16 @@ export const catalogKeys = {
   search: (query: string) => ["catalog", "search", query] as const,
 };
 
+export const cartKeys = {
+  all: ["cart"] as const,
+  current: () => ["cart", "current"] as const,
+};
+
+export const wishlistKeys = {
+  all: ["wishlist"] as const,
+  current: () => ["wishlist", "current"] as const,
+};
+
 export function createEntityKeyFactory(entityName: string) {
   return {
     all: [entityName] as const,

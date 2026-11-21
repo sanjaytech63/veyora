@@ -12,10 +12,10 @@ import { StockBadge } from "@/components/storefront/stock-badge";
 import { ProductAccordion } from "@/components/storefront/product-accordion";
 import { ProductGrid } from "@/components/storefront/product-grid";
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/storefront/json-ld";
+import { WishlistButton } from "@/components/storefront/wishlist-button";
 import { useRelatedProducts, useCategories } from "@/hooks/use-catalog";
 import { useUIStore } from "@/stores/ui-store";
-import { useCartStore } from "@/stores/cart-store";
-import { useWishlistStore } from "@/stores/wishlist-store";
+import { useCart } from "@/lib/hooks/use-cart";
 import { toast } from "sonner";
 import {
   ChevronRight,
@@ -27,9 +27,7 @@ import {
   RotateCcw,
   Star,
   Check,
-  Heart,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface ProductDetailsClientProps {
   initialProduct: Product;
@@ -37,12 +35,9 @@ interface ProductDetailsClientProps {
 
 export function ProductDetailsClient({ initialProduct }: ProductDetailsClientProps) {
   const { setCartDrawerOpen } = useUIStore();
-  const { addItem } = useCartStore();
-  const { isInWishlist, toggleWishlist } = useWishlistStore();
+  const { addToCartAsync, isAddingToCart } = useCart();
   const { data: categories = [] } = useCategories();
   const [product] = React.useState<Product>(initialProduct);
-
-  const isFavorited = isInWishlist(product.id);
 
   // Selected variant
   const [selectedVariant, setSelectedVariant] = React.useState<ProductVariant | null>(
@@ -53,7 +48,6 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
 
   // Quantity stepper
   const [quantity, setQuantity] = React.useState(1);
-  const [isAdding, setIsAdding] = React.useState(false);
   const [addedSuccess, setAddedSuccess] = React.useState(false);
 
   // Active pricing and stock
@@ -78,59 +72,25 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
     return categories.find((c) => c.id === product.categoryId)?.name || "Haute Couture";
   }, [categories, product.categoryId]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (currentStock <= 0) {
       toast.error("This item is currently out of stock.");
       return;
     }
 
-    setIsAdding(true);
-
-    addItem(
-      {
-        id: `${product.id}-${selectedVariant?.sku || "default"}`,
+    try {
+      await addToCartAsync({
         productId: product.id,
-        slug: product.slug,
-        title: product.title,
-        price: currentPrice,
-        compareAtPrice: currentCompareAt,
-        image: selectedVariant?.image || product.images?.[0]?.url,
-        color: selectedVariant?.color,
-        size: selectedVariant?.size,
-        sku: currentSku,
-        maxStock: currentStock,
-      },
-      quantity
-    );
-
-    setTimeout(() => {
-      setIsAdding(false);
-      setAddedSuccess(true);
-      toast.success("Added to Bag", {
-        description: `${quantity}x ${product.title}${
-          selectedVariant ? ` (${selectedVariant.color || selectedVariant.size})` : ""
-        }`,
+        quantity,
+        variantId: selectedVariant
+          ? (selectedVariant as unknown as { _id?: string })._id?.toString() || selectedVariant.sku
+          : undefined,
       });
+      setAddedSuccess(true);
       setCartDrawerOpen(true);
       setTimeout(() => setAddedSuccess(false), 2500);
-    }, 200);
-  };
-
-  const handleToggleWishlist = () => {
-    toggleWishlist({
-      id: product.id,
-      slug: product.slug,
-      title: product.title,
-      price: product.price,
-      compareAtPrice: product.compareAtPrice,
-      image: product.images?.[0]?.url,
-      category: categoryName,
-      stock: currentStock,
-    });
-    if (isFavorited) {
-      toast.info("Removed from Wishlist", { description: product.title });
-    } else {
-      toast.success("Saved to Wishlist", { description: product.title });
+    } catch {
+      // Handled by mutation toast
     }
   };
 
@@ -278,7 +238,7 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
                 <Button
                   size="lg"
                   className="flex-1 rounded-2xl font-bold text-sm shadow-md shadow-primary/10 gap-2 h-12"
-                  disabled={currentStock <= 0 || isAdding}
+                  disabled={currentStock <= 0 || isAddingToCart}
                   onClick={handleAddToCart}
                 >
                   {addedSuccess ? (
@@ -297,21 +257,12 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
                 </Button>
 
                 {/* Wishlist Button */}
-                <Button
-                  type="button"
+                <WishlistButton
+                  productId={product.id}
                   variant="outline"
                   size="icon"
-                  onClick={handleToggleWishlist}
-                  className={cn(
-                    "h-12 w-12 rounded-2xl border-border/80 transition-all",
-                    isFavorited && "border-red-500/40 bg-red-500/10 text-red-500 hover:bg-red-500/20"
-                  )}
-                  aria-label={isFavorited ? "Remove from wishlist" : "Save to wishlist"}
-                >
-                  <Heart
-                    className={cn("h-5 w-5 transition-transform", isFavorited && "fill-current scale-110")}
-                  />
-                </Button>
+                  className="h-12 w-12 rounded-2xl border-border/80"
+                />
               </div>
             </div>
 
@@ -377,24 +328,17 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              type="button"
+            <WishlistButton
+              productId={product.id}
               variant="outline"
               size="icon"
-              onClick={handleToggleWishlist}
-              className={cn(
-                "h-10 w-10 rounded-xl border-border/80",
-                isFavorited && "border-red-500/40 bg-red-500/10 text-red-500"
-              )}
-              aria-label="Wishlist"
-            >
-              <Heart className={cn("h-4 w-4", isFavorited && "fill-current")} />
-            </Button>
+              className="h-10 w-10 rounded-xl border-border/80"
+            />
 
             <Button
               size="default"
               className="rounded-xl px-5 font-semibold text-xs h-10 shadow-sm"
-              disabled={currentStock <= 0 || isAdding}
+              disabled={currentStock <= 0 || isAddingToCart}
               onClick={handleAddToCart}
               aria-label="Quick add to cart"
             >

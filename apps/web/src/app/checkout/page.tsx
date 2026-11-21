@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { OptimizedImage } from "@/components/ui/optimized-image";
-import { useCartStore } from "@/stores/cart-store";
+import { useCart } from "@/lib/hooks/use-cart";
 import {
   ShieldCheck,
   Lock,
@@ -21,7 +21,7 @@ import {
 import { toast } from "sonner";
 
 export default function CheckoutPage() {
-  const { items, clearCart, getSubtotal } = useCartStore();
+  const { items, clearCart, totals } = useCart();
   const [mounted, setMounted] = React.useState(false);
   const [shippingMethod, setShippingMethod] = React.useState<"standard" | "express">("standard");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -40,9 +40,9 @@ export default function CheckoutPage() {
     setMounted(true);
   }, []);
 
-  const subtotal = mounted ? getSubtotal() : 0;
+  const subtotal = mounted ? totals.subtotal : 0;
   const shippingFee = shippingMethod === "express" ? 25 : subtotal >= 150 ? 0 : 15;
-  const tax = subtotal * 0.08;
+  const tax = mounted ? totals.estimatedTax : 0;
   const total = subtotal + shippingFee + tax;
 
   const handlePlaceOrder = (e: React.FormEvent) => {

@@ -3,8 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useWishlistStore } from "@/stores/wishlist-store";
-import { useCartStore } from "@/stores/cart-store";
+import { useWishlist } from "@/lib/hooks/use-wishlist";
+import { useCart } from "@/lib/hooks/use-cart";
 import { useUIStore } from "@/stores/ui-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { Button } from "@/components/ui/button";
@@ -15,10 +15,9 @@ export function MobileBottomNav() {
   const pathname = usePathname();
   const { setCartDrawerOpen } = useUIStore();
   const { isAuthenticated } = useAuthStore();
-  const wishlistCount = useWishlistStore((state) => state.items.length);
-  const cartCount = useCartStore((state) =>
-    state.items.reduce((acc, item) => acc + item.quantity, 0)
-  );
+  const { itemCount: wishlistCount } = useWishlist();
+  const { totals } = useCart();
+  const cartCount = totals.itemCount;
 
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => {

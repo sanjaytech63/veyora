@@ -3,28 +3,47 @@
 import * as React from "react";
 import Link from "next/link";
 import { useUIStore } from "@/stores/ui-store";
-import { useCartStore } from "@/stores/cart-store";
+import { useCart } from "@/lib/hooks/use-cart";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { Separator } from "@/components/ui/separator";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
-
-const FREE_SHIPPING_THRESHOLD = 150;
+import {
+  Minus,
+  Plus,
+  Trash2,
+  ShoppingBag,
+  ArrowRight,
+  ShieldCheck,
+  Sparkles,
+  AlertCircle,
+} from "lucide-react";
 
 export function CartDrawer() {
   const { cartDrawerOpen, setCartDrawerOpen } = useUIStore();
-  const { items, removeItem, updateQuantity, getSubtotal, getItemCount } = useCartStore();
+  const {
+    items,
+    totals,
+    isLoading,
+    updateQuantity,
+    removeItem,
+    isUpdatingQuantity,
+    isRemovingItem,
+  } = useCart();
 
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
-  const totalCount = mounted ? getItemCount() : 0;
-  const subtotal = mounted ? getSubtotal() : 0;
-  const amountToFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
-  const freeShippingProgress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
+  const totalCount = mounted ? totals.itemCount : 0;
+  const subtotal = mounted ? totals.subtotal : 0;
+  const amountToFreeShipping = mounted ? totals.amountToFreeShipping : 150;
+  const freeShippingThreshold = totals.freeShippingThreshold || 150;
+  const freeShippingProgress = Math.min(
+    100,
+    ((freeShippingThreshold - amountToFreeShipping) / freeShippingThreshold) * 100
+  );
 
   const handleClose = () => setCartDrawerOpen(false);
 
@@ -75,7 +94,20 @@ export function CartDrawer() {
         </SheetHeader>
 
         {/* Body Content */}
-        {!mounted || items.length === 0 ? (
+        {!mounted || isLoading ? (
+          <div className="flex-1 px-6 py-6 space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex gap-4 animate-pulse">
+                <div className="h-20 w-20 rounded-xl bg-muted/60 shrink-0" />
+                <div className="flex-1 space-y-2 py-1">
+                  <div className="h-4 w-3/4 rounded bg-muted/60" />
+                  <div className="h-3 w-1/2 rounded bg-muted/40" />
+                  <div className="h-4 w-1/4 rounded bg-muted/50" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-border/80 bg-muted/40 text-muted-foreground mb-4">
               <ShoppingBag className="h-8 w-8 stroke-[1.5]" />
@@ -84,14 +116,14 @@ export function CartDrawer() {
               Your bag is currently empty
             </h3>
             <p className="mt-1.5 max-w-xs text-xs text-muted-foreground leading-relaxed">
-              Explore our precision acoustic systems, bespoke workspaces, and modular carry essentials.
+              Explore our handcrafted Indian silks, embroidered bridal ensembles, and contemporary luxury kurtis.
             </p>
             <Button
               asChild
               onClick={handleClose}
               className="mt-6 rounded-full px-6 text-xs font-semibold"
             >
-              <Link href="/shop">Explore New Arrivals</Link>
+              <Link href="/shop">Discover Garments</Link>
             </Button>
           </div>
         ) : (
@@ -131,6 +163,7 @@ export function CartDrawer() {
                         variant="ghost"
                         size="icon"
                         onClick={() => removeItem(item.id)}
+                        disabled={isRemovingItem}
                         className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent -mr-1"
                         aria-label={`Remove ${item.title} from bag`}
                       >
@@ -140,9 +173,16 @@ export function CartDrawer() {
 
                     {(item.color || item.size) && (
                       <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
-                        {item.color && <span>{item.color}</span>}
+                        {item.color && <span>Color: {item.color}</span>}
                         {item.color && item.size && <span>•</span>}
-                        {item.size && <span>{item.size}</span>}
+                        {item.size && <span>Size: {item.size}</span>}
+                      </div>
+                    )}
+
+                    {!item.isAvailable && (
+                      <div className="mt-1 flex items-center gap-1 text-[11px] text-rose-500 font-medium">
+                        <AlertCircle className="h-3 w-3" />
+                        <span>Unavailable or out of stock</span>
                       </div>
                     )}
                   </div>
@@ -155,6 +195,7 @@ export function CartDrawer() {
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 rounded-md p-0"
+                        disabled={isUpdatingQuantity}
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
                         aria-label="Decrease quantity"
                       >
@@ -168,8 +209,8 @@ export function CartDrawer() {
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 rounded-md p-0"
+                        disabled={isUpdatingQuantity || (item.maxStock !== undefined && item.quantity >= item.maxStock)}
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        disabled={item.maxStock !== undefined && item.quantity >= item.maxStock}
                         aria-label="Increase quantity"
                       >
                         <Plus className="h-3 w-3" />
@@ -201,19 +242,25 @@ export function CartDrawer() {
                 <span>Subtotal</span>
                 <span className="text-foreground font-semibold tabular-nums">${subtotal.toFixed(2)}</span>
               </div>
+              {totals.discount > 0 && (
+                <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-medium">
+                  <span>Privilege Discount</span>
+                  <span className="tabular-nums">-${totals.discount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-muted-foreground">
                 <span>Shipping</span>
                 <span>
-                  {amountToFreeShipping === 0 ? (
-                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Free</span>
+                  {totals.shipping === 0 ? (
+                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Free Express</span>
                   ) : (
-                    "Calculated at checkout"
+                    `$${totals.shipping.toFixed(2)}`
                   )}
                 </span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>Taxes</span>
-                <span>Calculated at checkout</span>
+                <span>Estimated Tax (8%)</span>
+                <span className="tabular-nums">${totals.estimatedTax.toFixed(2)}</span>
               </div>
             </div>
 
@@ -221,7 +268,7 @@ export function CartDrawer() {
 
             <div className="flex items-center justify-between text-sm font-bold text-foreground">
               <span>Estimated Total</span>
-              <span className="text-base tabular-nums">${subtotal.toFixed(2)}</span>
+              <span className="text-base tabular-nums">${totals.total.toFixed(2)}</span>
             </div>
 
             <div className="flex flex-col gap-2 pt-1">

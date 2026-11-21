@@ -92,6 +92,17 @@ export class ApiClient {
       }
     }
 
+    if (typeof window !== "undefined") {
+      let guestId = window.localStorage.getItem("veyora_guest_id");
+      if (!guestId) {
+        guestId = window.crypto?.randomUUID ? window.crypto.randomUUID() : `guest-${Date.now()}`;
+        window.localStorage.setItem("veyora_guest_id", guestId);
+      }
+      if (!headers.has("x-guest-id")) {
+        headers.set("x-guest-id", guestId);
+      }
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 

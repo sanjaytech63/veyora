@@ -5,11 +5,10 @@ import Link from "next/link";
 import { Product } from "@veyora/types";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { StockBadge } from "./stock-badge";
+import { WishlistButton } from "./wishlist-button";
 import { Button } from "@/components/ui/button";
-import { useWishlistStore } from "@/stores/wishlist-store";
 import { cn } from "@/lib/utils";
-import { ArrowUpRight, Heart, Star, Sparkles } from "lucide-react";
-import { toast } from "sonner";
+import { ArrowUpRight, Star, Sparkles } from "lucide-react";
 
 interface ProductCardProps {
   product: Product;
@@ -27,9 +26,6 @@ export function ProductCard({
   const defaultImage = product.images?.[0]?.url || "";
   const [activeImage, setActiveImage] = React.useState<string>(defaultImage);
   const [activeColor, setActiveColor] = React.useState<string | null>(null);
-
-  const { isInWishlist, toggleWishlist } = useWishlistStore();
-  const isFavorited = isInWishlist(product.id);
 
   React.useEffect(() => {
     setActiveImage(product.images?.[0]?.url || "");
@@ -88,26 +84,6 @@ export function ProductCard({
     return "bg-primary";
   };
 
-  const handleToggleWishlist = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleWishlist({
-      id: product.id,
-      slug: product.slug,
-      title: product.title,
-      price: product.price,
-      compareAtPrice: product.compareAtPrice,
-      image: product.images?.[0]?.url,
-      category: categoryName,
-      stock: product.stock,
-    });
-    if (isFavorited) {
-      toast.info("Removed from Wishlist", { description: product.title });
-    } else {
-      toast.success("Saved to Wishlist", { description: product.title });
-    }
-  };
-
   return (
     <article
       className={cn(
@@ -157,21 +133,10 @@ export function ProductCard({
           </div>
 
           {/* Wishlist Heart Button */}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={handleToggleWishlist}
-            aria-label={isFavorited ? "Remove from wishlist" : "Add to wishlist"}
-            className={cn(
-              "absolute right-3 top-3 z-10 h-8 w-8 rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-black/60",
-              isFavorited && "border-red-500/50 bg-red-500/20 text-red-500"
-            )}
-          >
-            <Heart
-              className={cn("h-4 w-4 transition-colors", isFavorited && "fill-current text-red-500")}
-            />
-          </Button>
+          <WishlistButton
+            productId={product.id}
+            className="absolute right-3 top-3 z-10 h-8 w-8 rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-black/60"
+          />
 
           {/* Quick View Floating Pill (Hover on Desktop) */}
           <div className="absolute inset-x-3 bottom-3 z-10 hidden translate-y-2 opacity-0 transition-all duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100 sm:block">

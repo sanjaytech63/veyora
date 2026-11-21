@@ -154,7 +154,7 @@ describe("Customer Storefront - Fashion E-Commerce", () => {
   // 1. Product Listing Tests
   describe("Product Listing & Cards", () => {
     it("renders product title, price, and category", () => {
-      render(
+      renderWithQuery(
         <ProductCard product={mockProduct} categoryName="Kurtis & Kurti Sets" />
       );
 
@@ -164,7 +164,7 @@ describe("Customer Storefront - Fashion E-Commerce", () => {
     });
 
     it("renders the product grid with multiple items", () => {
-      render(
+      renderWithQuery(
         <ProductGrid
           products={TEST_PRODUCTS.slice(0, 3)}
           categories={TEST_CATEGORIES}

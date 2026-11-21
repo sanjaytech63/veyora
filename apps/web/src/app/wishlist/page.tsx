@@ -6,15 +6,23 @@ import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useWishlistStore } from "@/stores/wishlist-store";
-import { useCartStore } from "@/stores/cart-store";
+import { useWishlist } from "@/lib/hooks/use-wishlist";
+import { useCart } from "@/lib/hooks/use-cart";
 import { useUIStore } from "@/stores/ui-store";
 import { Heart, ShoppingBag, Trash2, ArrowRight } from "lucide-react";
-import { toast } from "sonner";
 
 export default function WishlistPage() {
-  const { items, removeItem, clearWishlist } = useWishlistStore();
-  const { addItem } = useCartStore();
+  const {
+    items,
+    itemCount,
+    isLoading,
+    removeItem,
+    clearWishlist,
+    isRemovingFromWishlist,
+    isClearingWishlist,
+  } = useWishlist();
+
+  const { addToCart, isAddingToCart } = useCart();
   const { setCartDrawerOpen } = useUIStore();
   const [mounted, setMounted] = React.useState(false);
 
@@ -23,22 +31,15 @@ export default function WishlistPage() {
   }, []);
 
   const handleMoveToBag = (item: (typeof items)[0]) => {
-    addItem({
-      id: `${item.id}-default`,
-      productId: item.id,
-      slug: item.slug,
-      title: item.title,
-      price: item.price,
-      compareAtPrice: item.compareAtPrice,
-      image: item.image,
-      maxStock: item.stock ?? 99,
+    addToCart({
+      productId: item.productId,
+      quantity: 1,
     });
-    removeItem(item.id);
-    toast.success("Moved to Bag", { description: item.title });
+    removeItem(item.productId);
     setCartDrawerOpen(true);
   };
 
-  if (!mounted) {
+  if (!mounted || isLoading) {
     return (
       <div className="py-16">
         <Container size="xl" className="space-y-6">
@@ -67,9 +68,9 @@ export default function WishlistPage() {
               My Saved Atelier Pieces
             </h1>
             <p className="mt-1 text-xs text-muted-foreground">
-              {items.length === 1
+              {itemCount === 1
                 ? "1 curated piece saved"
-                : `${items.length} curated pieces saved to your local session`}
+                : `${itemCount} curated pieces saved to your personal collection`}
             </p>
           </div>
 
@@ -78,7 +79,8 @@ export default function WishlistPage() {
               type="button"
               variant="outline"
               size="sm"
-              onClick={clearWishlist}
+              disabled={isClearingWishlist}
+              onClick={() => clearWishlist()}
               className="text-xs text-muted-foreground hover:text-destructive rounded-full"
             >
               Clear Entire Wishlist
@@ -91,8 +93,8 @@ export default function WishlistPage() {
           <div className="py-16 rounded-3xl border border-dashed border-border/80 bg-muted/20">
             <EmptyState
               icon={<Heart className="h-8 w-8 text-muted-foreground" />}
-              title="Your wishlist is empty"
-              description="Explore the Veyora catalog and tap the heart icon on any design to curate your personal collection."
+              title="Your personal collection is empty"
+              description="Explore the Veyora catalog and tap the heart icon on any design to curate your personal wardrobe wishlist."
               action={
                 <Button asChild className="rounded-full px-6 text-xs font-semibold">
                   <Link href="/shop" className="inline-flex items-center gap-2">
@@ -135,7 +137,8 @@ export default function WishlistPage() {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={() => removeItem(item.id)}
+                    disabled={isRemovingFromWishlist}
+                    onClick={() => removeItem(item.productId)}
                     className="absolute right-3 top-3 z-10 h-8 w-8 rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md hover:bg-destructive hover:text-white transition-all"
                     aria-label={`Remove ${item.title} from wishlist`}
                   >
@@ -171,6 +174,7 @@ export default function WishlistPage() {
                   <div className="pt-4 border-t border-border/50 mt-4">
                     <Button
                       size="sm"
+                      disabled={isAddingToCart}
                       className="w-full rounded-xl text-xs font-semibold gap-1.5 h-9"
                       onClick={() => handleMoveToBag(item)}
                     >
