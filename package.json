@@ -7,12 +7,15 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev:api",
+    "dev": "concurrently -n \"api,web,admin\" -c \"blue.bold,green.bold,magenta.bold\" \"npm run dev:api\" \"npm run dev:web\" \"npm run dev:admin\"",
+    "dev:all": "concurrently -n \"api,web,admin\" -c \"blue.bold,green.bold,magenta.bold\" \"npm run dev:api\" \"npm run dev:web\" \"npm run dev:admin\"",
+    "dev:full": "concurrently -n \"api,worker,web,admin\" -c \"blue.bold,cyan.bold,green.bold,magenta.bold\" \"npm run dev:api\" \"npm run dev:worker\" \"npm run dev:web\" \"npm run dev:admin\"",
     "dev:web": "npm run dev --workspace=@veyora/web",
     "dev:admin": "npm run dev --workspace=@veyora/admin",
     "dev:api": "npm run dev --workspace=@veyora/api",
     "dev:worker": "npm run dev --workspace=@veyora/worker",
     "dev:turbo": "turbo run dev",
+    "start:all": "concurrently -n \"api,web,admin\" -c \"blue.bold,green.bold,magenta.bold\" \"npm run start --workspace=@veyora/api\" \"npm run start --workspace=@veyora/web\" \"npm run start --workspace=@veyora/admin\"",
     "build:packages": "npm run build --workspace=@veyora/config && npm run build --workspace=@veyora/types && npm run build --workspace=@veyora/validators && npm run build --workspace=@veyora/utils",
     "build:web": "npm run build:packages && npm run build --workspace=@veyora/web",
     "build:admin": "npm run build:packages && npm run build --workspace=@veyora/admin",
@@ -32,6 +35,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "concurrently": "^10.0.7",
     "eslint": "^9.21.0",
     "globals": "^16.0.0",
     "prettier": "^3.5.3",
