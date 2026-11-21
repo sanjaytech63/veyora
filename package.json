@@ -16,6 +16,7 @@
     "dev:worker": "npm run dev --workspace=@veyora/worker",
     "dev:turbo": "turbo run dev",
     "start:all": "concurrently -n \"api,web,admin\" -c \"blue.bold,green.bold,magenta.bold\" \"npm run start --workspace=@veyora/api\" \"npm run start --workspace=@veyora/web\" \"npm run start --workspace=@veyora/admin\"",
+    "db:seed": "npm run seed --workspace=@veyora/api",
     "build:packages": "npm run build --workspace=@veyora/config && npm run build --workspace=@veyora/types && npm run build --workspace=@veyora/validators && npm run build --workspace=@veyora/utils",
     "build:web": "npm run build:packages && npm run build --workspace=@veyora/web",
     "build:admin": "npm run build:packages && npm run build --workspace=@veyora/admin",

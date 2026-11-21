@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "seed": "tsx src/database/seed.ts",
     "build": "tsup src/server.ts --format cjs,esm --clean",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
