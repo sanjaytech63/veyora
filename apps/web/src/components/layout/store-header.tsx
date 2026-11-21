@@ -8,6 +8,8 @@ import { ThemeToggle } from "@/components/common/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { useUIStore } from "@/stores/ui-store";
 import { useAuthStore } from "@/stores/auth-store";
+import { useWishlistStore } from "@/stores/wishlist-store";
+import { useCartStore } from "@/stores/cart-store";
 import { authApi } from "@/lib/api/auth-api";
 import { SearchModal } from "@/components/storefront/search-modal";
 import {
@@ -18,14 +20,31 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ShoppingBag, Menu, Search, ShoppingCart, User as UserIcon, LogOut } from "lucide-react";
+import {
+  ShoppingBag,
+  Menu,
+  Search,
+  ShoppingCart,
+  Heart,
+  User as UserIcon,
+  LogOut,
+} from "lucide-react";
 import { SERVICES } from "@veyora/config";
 import { toast } from "sonner";
 
 export function StoreHeader() {
   const { setMobileNavOpen, setCartDrawerOpen } = useUIStore();
   const { user, isAuthenticated, clearAuth } = useAuthStore();
+  const wishlistCount = useWishlistStore((state) => state.items.length);
+  const cartCount = useCartStore((state) =>
+    state.items.reduce((acc, item) => acc + item.quantity, 0)
+  );
   const [searchOpen, setSearchOpen] = React.useState(false);
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -54,7 +73,7 @@ export function StoreHeader() {
             </Button>
 
             <Link href="/" className="flex items-center gap-2.5 font-bold text-lg tracking-tight">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs">
                 <ShoppingBag className="h-4 w-4" />
               </div>
               <span className="font-extrabold tracking-tight">{SERVICES.NAME}</span>
@@ -63,7 +82,7 @@ export function StoreHeader() {
 
           <StoreNav />
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Search Pill Trigger */}
             <Button
               type="button"
@@ -73,7 +92,7 @@ export function StoreHeader() {
               className="hidden lg:flex items-center gap-3 rounded-full border-border/80 bg-muted/40 px-3.5 py-1.5 text-xs text-muted-foreground hover:border-primary/40 hover:bg-accent/60 transition-colors h-8 font-normal"
             >
               <Search className="h-3.5 w-3.5" />
-              <span className="pr-4">Search hardware, audio, carry...</span>
+              <span className="pr-4">Search catalog, hardware, carry...</span>
               <kbd className="pointer-events-none inline-flex h-4 select-none items-center gap-1 rounded bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
                 ⌘K
               </kbd>
@@ -90,7 +109,25 @@ export function StoreHeader() {
               <Search className="h-4 w-4" />
             </Button>
 
-            {/* Shopping Cart Drawer */}
+            {/* Wishlist Link with Badge */}
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              aria-label="Wishlist"
+              className="relative hidden sm:inline-flex"
+            >
+              <Link href="/wishlist">
+                <Heart className="h-4 w-4" />
+                {mounted && wishlistCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground tabular-nums">
+                    {wishlistCount > 99 ? "99+" : wishlistCount}
+                  </span>
+                )}
+              </Link>
+            </Button>
+
+            {/* Shopping Cart Drawer Trigger */}
             <Button
               variant="ghost"
               size="icon"
@@ -99,9 +136,11 @@ export function StoreHeader() {
               className="relative"
             >
               <ShoppingCart className="h-4 w-4" />
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                0
-              </span>
+              {mounted && cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground tabular-nums">
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              )}
             </Button>
 
             <ThemeToggle />
@@ -130,6 +169,12 @@ export function StoreHeader() {
                     <Link href="/profile" className="cursor-pointer">
                       <UserIcon className="mr-2 h-4 w-4" />
                       Account Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/wishlist" className="cursor-pointer">
+                      <Heart className="mr-2 h-4 w-4" />
+                      My Wishlist
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

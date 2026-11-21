@@ -14,6 +14,8 @@ import { ProductGrid } from "@/components/storefront/product-grid";
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/storefront/json-ld";
 import { useRelatedProducts, useCategories } from "@/hooks/use-catalog";
 import { useUIStore } from "@/stores/ui-store";
+import { useCartStore } from "@/stores/cart-store";
+import { useWishlistStore } from "@/stores/wishlist-store";
 import { toast } from "sonner";
 import {
   ChevronRight,
@@ -25,7 +27,9 @@ import {
   RotateCcw,
   Star,
   Check,
+  Heart,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ProductDetailsClientProps {
   initialProduct: Product;
@@ -33,8 +37,12 @@ interface ProductDetailsClientProps {
 
 export function ProductDetailsClient({ initialProduct }: ProductDetailsClientProps) {
   const { setCartDrawerOpen } = useUIStore();
+  const { addItem } = useCartStore();
+  const { isInWishlist, toggleWishlist } = useWishlistStore();
   const { data: categories = [] } = useCategories();
   const [product] = React.useState<Product>(initialProduct);
+
+  const isFavorited = isInWishlist(product.id);
 
   // Selected variant
   const [selectedVariant, setSelectedVariant] = React.useState<ProductVariant | null>(
@@ -77,6 +85,24 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
     }
 
     setIsAdding(true);
+
+    addItem(
+      {
+        id: `${product.id}-${selectedVariant?.sku || "default"}`,
+        productId: product.id,
+        slug: product.slug,
+        title: product.title,
+        price: currentPrice,
+        compareAtPrice: currentCompareAt,
+        image: selectedVariant?.image || product.images?.[0]?.url,
+        color: selectedVariant?.color,
+        size: selectedVariant?.size,
+        sku: currentSku,
+        maxStock: currentStock,
+      },
+      quantity
+    );
+
     setTimeout(() => {
       setIsAdding(false);
       setAddedSuccess(true);
@@ -87,7 +113,25 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
       });
       setCartDrawerOpen(true);
       setTimeout(() => setAddedSuccess(false), 2500);
-    }, 400);
+    }, 200);
+  };
+
+  const handleToggleWishlist = () => {
+    toggleWishlist({
+      id: product.id,
+      slug: product.slug,
+      title: product.title,
+      price: product.price,
+      compareAtPrice: product.compareAtPrice,
+      image: product.images?.[0]?.url,
+      category: categoryName,
+      stock: currentStock,
+    });
+    if (isFavorited) {
+      toast.info("Removed from Wishlist", { description: product.title });
+    } else {
+      toast.success("Saved to Wishlist", { description: product.title });
+    }
   };
 
   const breadcrumbs = [
@@ -98,7 +142,7 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
   ];
 
   return (
-    <div className="py-8 md:py-12 space-y-16">
+    <div className="py-8 md:py-12 space-y-16 pb-20 md:pb-12">
       {/* JSON-LD Schemas for Rich Snippets */}
       <ProductJsonLd product={product} url={`/products/${product.slug}`} />
       <BreadcrumbJsonLd items={breadcrumbs} />
@@ -202,9 +246,9 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
 
             {/* Quantity Selector & Add to Bag */}
             <div className="space-y-4 pt-2">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 {/* Quantity Stepper */}
-                <div className="flex items-center rounded-2xl border border-border/80 bg-card p-1 shadow-xs">
+                <div className="flex items-center rounded-2xl border border-border/80 bg-card p-1 shadow-2xs">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -215,7 +259,7 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
                   >
                     <Minus className="h-3.5 w-3.5" />
                   </Button>
-                  <span className="w-12 text-center text-sm font-bold text-foreground">
+                  <span className="w-12 text-center text-sm font-bold text-foreground tabular-nums">
                     {quantity}
                   </span>
                   <Button
@@ -250,6 +294,23 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
                       Add to Bag • ${(currentPrice * quantity).toFixed(2)}
                     </>
                   )}
+                </Button>
+
+                {/* Wishlist Button */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleToggleWishlist}
+                  className={cn(
+                    "h-12 w-12 rounded-2xl border-border/80 transition-all",
+                    isFavorited && "border-red-500/40 bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                  )}
+                  aria-label={isFavorited ? "Remove from wishlist" : "Save to wishlist"}
+                >
+                  <Heart
+                    className={cn("h-5 w-5 transition-transform", isFavorited && "fill-current scale-110")}
+                  />
                 </Button>
               </div>
             </div>
@@ -302,6 +363,58 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
           </section>
         )}
       </Container>
+
+      {/* Mobile Sticky Add-to-Bag Action Bar (Mobile eCommerce Clothing Store Figma Reference) */}
+      <div className="md:hidden fixed bottom-[60px] inset-x-0 z-30 border-t border-border/80 bg-background/95 backdrop-blur-xl px-4 py-2.5 shadow-xl">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col">
+            <span className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">
+              Total Price
+            </span>
+            <span className="text-lg font-bold text-foreground tabular-nums">
+              ${(currentPrice * quantity).toFixed(2)}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={handleToggleWishlist}
+              className={cn(
+                "h-10 w-10 rounded-xl border-border/80",
+                isFavorited && "border-red-500/40 bg-red-500/10 text-red-500"
+              )}
+              aria-label="Wishlist"
+            >
+              <Heart className={cn("h-4 w-4", isFavorited && "fill-current")} />
+            </Button>
+
+            <Button
+              size="default"
+              className="rounded-xl px-5 font-semibold text-xs h-10 shadow-sm"
+              disabled={currentStock <= 0 || isAdding}
+              onClick={handleAddToCart}
+              aria-label="Quick add to cart"
+            >
+              {addedSuccess ? (
+                <>
+                  <Check className="h-4 w-4 mr-1.5" />
+                  Added
+                </>
+              ) : currentStock <= 0 ? (
+                "Sold Out"
+              ) : (
+                <>
+                  <ShoppingBag className="h-4 w-4 mr-1.5" />
+                  Add to Cart
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

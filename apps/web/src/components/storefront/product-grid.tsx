@@ -1,10 +1,12 @@
+"use client";
+
 import * as React from "react";
 import { Product, Category } from "@veyora/types";
 import { ProductCard } from "./product-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { PackageSearch } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ProductGridProps {
@@ -22,8 +24,8 @@ export function ProductGrid({
   products,
   categories = [],
   loading = false,
-  emptyTitle = "No products found",
-  emptyDescription = "We couldn't find any items matching your selected criteria.",
+  emptyTitle = "No hardware matches your filter",
+  emptyDescription = "Adjust your active department or reset filters to view the full Veyora catalog.",
   onResetFilters,
   className,
   columns = 4,
@@ -38,26 +40,35 @@ export function ProductGrid({
     columns === 2
       ? "grid-cols-1 sm:grid-cols-2"
       : columns === 3
-      ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-      : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
+        ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+        : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
 
   if (loading) {
     return (
-      <div className={cn("grid gap-6 sm:gap-8", gridColsClass, className)}>
-        {Array.from({ length: 8 }).map((_, i) => (
+      <div className={cn("grid gap-5 sm:gap-6", gridColsClass, className)}>
+        {Array.from({ length: columns === 4 ? 8 : 6 }).map((_, i) => (
           <div
             key={i}
-            className="flex flex-col overflow-hidden rounded-2xl border border-border/40 bg-card p-4 space-y-4"
+            className="flex flex-col overflow-hidden rounded-[22px] border border-border/50 bg-card/60"
           >
-            <Skeleton className="aspect-[4/5] w-full rounded-xl" />
-            <div className="space-y-2">
-              <Skeleton className="h-3 w-20" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
+            <div className="p-2 pb-0">
+              <Skeleton className="aspect-[4/4.6] w-full rounded-[16px]" />
             </div>
-            <div className="pt-2 flex justify-between items-center">
-              <Skeleton className="h-5 w-24" />
-              <Skeleton className="h-4 w-16" />
+            <div className="flex flex-1 flex-col p-4 sm:p-5">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-3 w-16 rounded-full" />
+                <Skeleton className="h-4 w-10 rounded-md" />
+              </div>
+              <Skeleton className="mt-2.5 h-4 w-4/5 rounded-md" />
+              <div className="mt-3.5 flex items-center gap-1.5">
+                <Skeleton className="h-3.5 w-3.5 rounded-full" />
+                <Skeleton className="h-3.5 w-3.5 rounded-full" />
+                <Skeleton className="h-3.5 w-3.5 rounded-full" />
+              </div>
+              <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-3.5">
+                <Skeleton className="h-5 w-20 rounded-md" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </div>
             </div>
           </div>
         ))}
@@ -67,14 +78,19 @@ export function ProductGrid({
 
   if (products.length === 0) {
     return (
-      <div className="py-12">
+      <div className="rounded-3xl border border-dashed border-border/80 bg-muted/20 py-16 px-4">
         <EmptyState
-          icon={<PackageSearch className="h-6 w-6" />}
+          icon={<SlidersHorizontal className="h-5 w-5 text-muted-foreground" />}
           title={emptyTitle}
           description={emptyDescription}
           action={
             onResetFilters ? (
-              <Button onClick={onResetFilters} variant="outline" size="sm">
+              <Button
+                onClick={onResetFilters}
+                variant="outline"
+                size="sm"
+                className="rounded-full px-5 text-xs font-semibold"
+              >
                 Clear Filters
               </Button>
             ) : undefined
@@ -85,12 +101,13 @@ export function ProductGrid({
   }
 
   return (
-    <div className={cn("grid gap-6 sm:gap-8", gridColsClass, className)}>
-      {products.map((product) => (
+    <div className={cn("grid gap-5 sm:gap-6", gridColsClass, className)}>
+      {products.map((product, index) => (
         <ProductCard
           key={product.id}
           product={product}
           categoryName={categoryMap.get(product.categoryId)}
+          priority={index < 4}
         />
       ))}
     </div>
