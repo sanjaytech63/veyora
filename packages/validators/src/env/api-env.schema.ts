@@ -30,7 +30,7 @@ export const apiEnvSchema = z.object({
   OTP_MAX_ATTEMPTS: z.coerce.number().int().positive().default(3),
   MONGODB_URI: z
     .string()
-    .default("mongodb://root:veyora_mongo_dev@127.0.0.1:27017/veyora_dev?authSource=admin"),
+    .default("mongodb://127.0.0.1:27017/veyora_dev"),
   REDIS_HOST: z.string().default("127.0.0.1"),
   REDIS_PORT: z.coerce.number().int().positive().default(6379),
   REDIS_PASSWORD: z.string().optional().default(""),
