@@ -22,3 +22,4 @@ export * from "./notifications";
 export * from "./analytics";
 export * from "./rbac";
 export * from "./search";
+export * from "./profile/profile.schema";

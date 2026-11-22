@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
@@ -66,9 +67,11 @@ export function UserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="gap-2 cursor-pointer">
-          <User className="h-4 w-4" />
-          <span>Profile</span>
+        <DropdownMenuItem asChild className="gap-2 cursor-pointer">
+          <Link href="/profile">
+            <User className="h-4 w-4" />
+            <span>Profile</span>
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuItem className="gap-2 cursor-pointer">
           <Shield className="h-4 w-4" />
