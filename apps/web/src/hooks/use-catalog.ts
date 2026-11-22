@@ -2,7 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { catalogApi, ProductsResponse } from "@/lib/api/catalog-api";
 import { catalogKeys } from "@/lib/api/query-keys";
 import { ProductQueryInput, SearchQueryInput } from "@veyora/validators";
-import { Product, Category, Brand, SearchResponse, SearchSuggestionResponse } from "@veyora/types";
+import {
+  Product,
+  Category,
+  Brand,
+  Collection,
+  SearchResponse,
+  SearchSuggestionResponse,
+} from "@veyora/types";
 
 export function useProducts(params?: Partial<ProductQueryInput>) {
   return useQuery<ProductsResponse>({
@@ -60,6 +67,23 @@ export function useBrands() {
     queryKey: catalogKeys.brands(),
     queryFn: () => catalogApi.getBrands(),
     staleTime: 1000 * 60 * 10,
+  });
+}
+
+export function useCollections() {
+  return useQuery<Collection[]>({
+    queryKey: catalogKeys.collections(),
+    queryFn: () => catalogApi.getCollections(),
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function useCollection(slug: string) {
+  return useQuery<Collection | null>({
+    queryKey: catalogKeys.collection(slug),
+    queryFn: () => catalogApi.getCollectionBySlug(slug),
+    enabled: Boolean(slug),
+    staleTime: 1000 * 60 * 5,
   });
 }
 

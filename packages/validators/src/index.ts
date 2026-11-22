@@ -23,3 +23,4 @@ export * from "./analytics";
 export * from "./rbac";
 export * from "./search";
 export * from "./profile/profile.schema";
+export * from "./system";

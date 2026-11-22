@@ -7,10 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ShoppingBag, ArrowRight } from "lucide-react";
 import { SERVICES } from "@veyora/config";
+import { useCategories } from "@/hooks/use-catalog";
 import { toast } from "sonner";
 
 export function StoreFooter() {
   const [email, setEmail] = React.useState("");
+  const { data: categories = [] } = useCategories();
+
+  const activeCategories = React.useMemo(() => {
+    return categories.filter((c) => c.status === "active");
+  }, [categories]);
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,35 +83,19 @@ export function StoreFooter() {
                   Shop All Garments
                 </Link>
               </li>
+              {activeCategories.slice(0, 5).map((cat) => (
+                <li key={cat.id}>
+                  <Link
+                    href={`/category/${cat.slug}`}
+                    className="hover:text-foreground transition-colors"
+                  >
+                    {cat.name}
+                  </Link>
+                </li>
+              ))}
               <li>
-                <Link href="/category/kurtis" className="hover:text-foreground transition-colors">
-                  Kurtis &amp; Kurti Sets
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/category/ethnic-wear"
-                  className="hover:text-foreground transition-colors"
-                >
-                  Festive Lehengas &amp; Ghagras
-                </Link>
-              </li>
-              <li>
-                <Link href="/category/sarees" className="hover:text-foreground transition-colors">
-                  Banarasi &amp; Silk Sarees
-                </Link>
-              </li>
-              <li>
-                <Link href="/category/co-ords" className="hover:text-foreground transition-colors">
-                  Linen Co-ords &amp; Loungewear
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/category/accessories"
-                  className="hover:text-foreground transition-colors"
-                >
-                  Embroidered Dupattas
+                <Link href="/collections" className="hover:text-foreground transition-colors">
+                  Curated Collections
                 </Link>
               </li>
             </ul>

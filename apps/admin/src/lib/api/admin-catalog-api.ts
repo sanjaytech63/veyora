@@ -1,5 +1,5 @@
 import { apiClient } from "./api-client";
-import { Product, Category, Brand, CatalogStats } from "@veyora/types";
+import { Product, Category, Brand, CatalogStats, Collection } from "@veyora/types";
 import {
   CreateProductInput,
   UpdateProductInput,
@@ -8,6 +8,8 @@ import {
   UpdateCategoryInput,
   CreateBrandInput,
   UpdateBrandInput,
+  CreateCollectionInput,
+  UpdateCollectionInput,
 } from "@veyora/validators";
 
 export const adminCatalogApi = {
@@ -48,6 +50,23 @@ export const adminCatalogApi = {
     apiClient.put<Brand>(`/admin/brands/${id}`, data),
 
   deleteBrand: (id: string) => apiClient.delete<{ message: string }>(`/admin/brands/${id}`),
+
+  // Collections
+  getCollections: (params?: { status?: string }) =>
+    apiClient.get<Collection[]>("/collections", {
+      params: params as Record<string, string | number | boolean | undefined | null>,
+    }),
+
+  getCollection: (idOrSlug: string) => apiClient.get<Collection>(`/collections/${idOrSlug}`),
+
+  createCollection: (data: CreateCollectionInput) =>
+    apiClient.post<Collection>("/admin/collections", data),
+
+  updateCollection: (id: string, data: UpdateCollectionInput) =>
+    apiClient.put<Collection>(`/admin/collections/${id}`, data),
+
+  deleteCollection: (id: string) =>
+    apiClient.delete<{ message: string }>(`/admin/collections/${id}`),
 
   // Catalog Stats
   getStats: () => apiClient.get<CatalogStats>("/admin/catalog/stats"),

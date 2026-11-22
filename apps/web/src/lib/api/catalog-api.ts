@@ -3,6 +3,7 @@ import {
   Product,
   Category,
   Brand,
+  Collection,
   PaginationMeta,
   SearchResponse,
   SearchSuggestionResponse,
@@ -207,5 +208,28 @@ export const catalogApi = {
 
   getBrand: async (idOrSlug: string): Promise<Brand> => {
     return await apiClient.get<Brand>(`/brands/${idOrSlug}`);
+  },
+
+  getCollections: async (params?: { status?: string }): Promise<Collection[]> => {
+    try {
+      const data = await apiClient.get<Collection[]>("/collections", {
+        params: params as Record<string, string | number | boolean | undefined | null>,
+      });
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
+  },
+
+  getCollectionBySlug: async (slug: string): Promise<Collection | null> => {
+    try {
+      const collection = await apiClient.get<Collection>(`/collections/${slug}`);
+      if (collection && (collection.id || (collection as unknown as { _id?: string })._id)) {
+        return collection;
+      }
+      return null;
+    } catch {
+      return null;
+    }
   },
 };

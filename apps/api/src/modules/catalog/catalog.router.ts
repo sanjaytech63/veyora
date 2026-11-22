@@ -2,6 +2,7 @@ import { Router } from "express";
 import { productController } from "./controllers/product.controller";
 import { categoryController } from "./controllers/category.controller";
 import { brandController } from "./controllers/brand.controller";
+import { collectionController } from "./controllers/collection.controller";
 import { validate } from "../../middleware/validate-request";
 import { requireAuth, requireRole, requirePermission } from "../../middleware/auth";
 import {
@@ -12,6 +13,8 @@ import {
   updateCategorySchema,
   createBrandSchema,
   updateBrandSchema,
+  createCollectionSchema,
+  updateCollectionSchema,
 } from "@veyora/validators";
 
 const router = Router();
@@ -28,6 +31,10 @@ router.get("/categories/:idOrSlug", categoryController.getCategory.bind(category
 // Brands
 router.get("/brands", brandController.listBrands.bind(brandController));
 router.get("/brands/:idOrSlug", brandController.getBrand.bind(brandController));
+
+// Collections
+router.get("/collections", collectionController.listCollections.bind(collectionController));
+router.get("/collections/:idOrSlug", collectionController.getCollection.bind(collectionController));
 
 // Products
 router.get(
@@ -102,6 +109,33 @@ router.delete(
   requireRole("admin", "superadmin"),
   requirePermission("categories:delete"),
   brandController.deleteBrand.bind(brandController)
+);
+
+// Admin Collection Management
+router.post(
+  "/admin/collections",
+  requireAuth,
+  requireRole("admin", "superadmin"),
+  requirePermission("categories:write"),
+  validate({ body: createCollectionSchema }),
+  collectionController.createCollection.bind(collectionController)
+);
+
+router.put(
+  "/admin/collections/:id",
+  requireAuth,
+  requireRole("admin", "superadmin"),
+  requirePermission("categories:write"),
+  validate({ body: updateCollectionSchema }),
+  collectionController.updateCollection.bind(collectionController)
+);
+
+router.delete(
+  "/admin/collections/:id",
+  requireAuth,
+  requireRole("admin", "superadmin"),
+  requirePermission("categories:delete"),
+  collectionController.deleteCollection.bind(collectionController)
 );
 
 // Admin Product Management

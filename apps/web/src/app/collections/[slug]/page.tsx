@@ -7,41 +7,48 @@ import { Container } from "@/components/ui/container";
 import { ProductGrid } from "@/components/storefront/product-grid";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/ui/optimized-image";
-import { useCategories, useProducts } from "@/hooks/use-catalog";
-import { FASHION_COLLECTIONS } from "@/lib/constants/collections";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { useCategories, useProducts, useCollection } from "@/hooks/use-catalog";
+import { ArrowLeft, Sparkles, LoaderCircle } from "lucide-react";
 
 export default function SingleCollectionPage() {
   const params = useParams();
   const slug = params?.slug as string;
 
-  const collection = FASHION_COLLECTIONS.find((c) => c.slug === slug);
+  const { data: collection, isLoading: isCollectionLoading } = useCollection(slug);
   const { data: categories = [] } = useCategories();
 
-  // Map collection slug to relevant category or tag search
-  const queryCategorySlug = React.useMemo(() => {
-    if (slug === "festive-edit") return "ethnic-wear";
-    if (slug === "wedding-trousseau") return "sarees";
-    if (slug === "everyday-mulmul") return "kurtis";
-    if (slug === "resort-linen") return "co-ords";
-    return undefined;
-  }, [slug]);
-
-  const targetCategoryId = React.useMemo(() => {
-    if (!queryCategorySlug) return undefined;
-    return categories.find((c) => c.slug === queryCategorySlug)?.id;
-  }, [categories, queryCategorySlug]);
-
-  const { data, isLoading } = useProducts({
-    categoryId: targetCategoryId,
+  const { data: productsData, isLoading: isProductsLoading } = useProducts({
     limit: 16,
   });
 
-  if (!collection) {
+  if (!isCollectionLoading && !collection) {
     notFound();
   }
 
-  const products = data?.items || [];
+  const allProducts = productsData?.items || [];
+  // Filter products by collection's explicit productIds if assigned, or show available products
+  const products = React.useMemo(() => {
+    if (!collection) return [];
+    if (collection.productIds && collection.productIds.length > 0) {
+      return allProducts.filter((p) => collection.productIds?.includes(p.id));
+    }
+    return allProducts;
+  }, [collection, allProducts]);
+
+  if (isCollectionLoading) {
+    return (
+      <div className="py-24 text-center">
+        <Container size="xl" className="space-y-4 flex flex-col items-center">
+          <LoaderCircle className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-xs text-muted-foreground">Loading collection...</p>
+        </Container>
+      </div>
+    );
+  }
+
+  if (!collection) {
+    return null;
+  }
 
   return (
     <div className="py-8 md:py-12 space-y-12">
@@ -59,31 +66,35 @@ export default function SingleCollectionPage() {
             Collections
           </Link>
           <span>/</span>
-          <span className="font-semibold text-foreground">{collection.title}</span>
+          <span className="font-semibold text-foreground">{collection.name}</span>
         </nav>
 
         {/* Collection Hero Stage */}
         <div className="relative overflow-hidden rounded-[32px] border border-border/80 bg-zinc-950 p-8 sm:p-14 text-white shadow-2xl">
-          <OptimizedImage
-            src={collection.image}
-            alt={collection.title}
-            fill
-            priority
-            className="object-cover object-center opacity-40"
-            sizes="100vw"
-          />
+          {collection.image && (
+            <OptimizedImage
+              src={collection.image}
+              alt={collection.name}
+              fill
+              priority
+              className="object-cover object-center opacity-40"
+              sizes="100vw"
+            />
+          )}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/30" />
 
           <div className="relative z-10 max-w-2xl space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-amber-300 backdrop-blur-md">
               <Sparkles className="h-3 w-3" />
-              <span>{collection.season}</span>
+              <span>{collection.season || "Seasonal Lookbook"}</span>
             </div>
             <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
-              {collection.title}
+              {collection.name}
             </h1>
             <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-              {collection.description}
+              {collection.description ||
+                collection.tagline ||
+                "Handcrafted luxury Indian attire and seasonal edits."}
             </p>
           </div>
         </div>
@@ -98,7 +109,7 @@ export default function SingleCollectionPage() {
           </Button>
 
           <span className="text-xs text-muted-foreground">
-            Showing <strong className="text-foreground">{products.length}</strong> curated designs
+            {products.length === 1 ? "1 Garment" : `${products.length} Garments`}
           </span>
         </div>
 
@@ -106,10 +117,10 @@ export default function SingleCollectionPage() {
         <ProductGrid
           products={products}
           categories={categories}
-          loading={isLoading}
+          loading={isProductsLoading}
           columns={4}
-          emptyTitle={`No designs currently in ${collection.title}`}
-          emptyDescription="Garments assigned to this edit will appear here."
+          emptyTitle="No garments in this collection yet"
+          emptyDescription="Garments will appear here once assigned to this collection in the catalog."
         />
       </Container>
     </div>

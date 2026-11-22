@@ -1,10 +1,54 @@
-import { SystemInfoResponse } from "@veyora/types";
+import { SystemInfoResponse, StoreSettings } from "@veyora/types";
+import { UpdateSettingsInput } from "@veyora/validators";
 import { SERVICES } from "@veyora/config";
 import { env } from "../../config/env";
 import { MongoDatabase } from "../../database/mongodb";
 import { RedisService } from "../../database/redis";
+import { Setting } from "./models/setting.model";
 
 export class SystemService {
+  public static async getSettings(): Promise<StoreSettings> {
+    let setting = await Setting.findOne({ key: "global_settings" });
+    if (!setting) {
+      setting = await Setting.create({
+        key: "global_settings",
+        storeName: "Veyora Fashion Atelier",
+        currency: "USD ($)",
+        freeShippingThreshold: 150,
+        enableExpress: true,
+      });
+    }
+
+    return {
+      storeName: setting.storeName,
+      currency: setting.currency,
+      freeShippingThreshold: setting.freeShippingThreshold,
+      enableExpress: setting.enableExpress,
+      updatedAt: setting.updatedAt.toISOString(),
+    };
+  }
+
+  public static async updateSettings(input: UpdateSettingsInput): Promise<StoreSettings> {
+    let setting = await Setting.findOne({ key: "global_settings" });
+    if (!setting) {
+      setting = new Setting({ key: "global_settings" });
+    }
+
+    setting.storeName = input.storeName;
+    setting.currency = input.currency;
+    setting.freeShippingThreshold = input.freeShippingThreshold;
+    setting.enableExpress = input.enableExpress;
+    await setting.save();
+
+    return {
+      storeName: setting.storeName,
+      currency: setting.currency,
+      freeShippingThreshold: setting.freeShippingThreshold,
+      enableExpress: setting.enableExpress,
+      updatedAt: setting.updatedAt.toISOString(),
+    };
+  }
+
   public static getSystemInfo(): SystemInfoResponse {
     return {
       service: "@veyora/api",

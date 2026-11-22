@@ -98,3 +98,20 @@ export interface CatalogStats {
   totalCategories: number;
   totalBrands: number;
 }
+
+export type CollectionStatus = "active" | "draft" | "archived";
+
+export interface Collection {
+  id: string;
+  name: string;
+  slug: string;
+  tagline?: string;
+  description?: string;
+  season?: string;
+  image?: string;
+  status: CollectionStatus;
+  productCount?: number;
+  productIds?: string[];
+  createdAt: string;
+  updatedAt: string;
+}

@@ -44,15 +44,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const SUGGESTED_TERMS = [
-  "Aura Headphones",
-  "Keystroke 75",
-  "Mechanical Keyboard",
-  "Precision Mouse",
-  "Leather Desk Mat",
-  "MagSafe Stand",
-];
-
 export function SearchClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -93,6 +84,10 @@ export function SearchClient() {
   const { data: suggestionData } = useSearchSuggestions(debouncedInput);
   const { data: allCategories = [] } = useCategories();
   const { data: allBrands = [] } = useBrands();
+
+  const popularTerms = React.useMemo(() => {
+    return allCategories.slice(0, 6).map((c) => c.name);
+  }, [allCategories]);
 
   // Execute advanced search
   const {
@@ -604,23 +599,25 @@ export function SearchClient() {
             )}
 
             {/* Popular Suggestions Pills */}
-            <div className="flex flex-wrap items-center justify-center gap-2 pt-3">
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <Sparkles className="h-3 w-3 text-primary" /> Popular:
-              </span>
-              {SUGGESTED_TERMS.map((term) => (
-                <Button
-                  key={term}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleSelectSuggestedTerm(term)}
-                  className="rounded-full border-border/60 bg-muted/30 px-3 h-7 text-xs font-medium text-foreground hover:bg-accent hover:border-primary/40 transition-colors"
-                >
-                  {term}
-                </Button>
-              ))}
-            </div>
+            {popularTerms.length > 0 && (
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-3">
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Sparkles className="h-3 w-3 text-primary" /> Popular:
+                </span>
+                {popularTerms.map((term) => (
+                  <Button
+                    key={term}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleSelectSuggestedTerm(term)}
+                    className="rounded-full border-border/60 bg-muted/30 px-3 h-7 text-xs font-medium text-foreground hover:bg-accent hover:border-primary/40 transition-colors"
+                  >
+                    {term}
+                  </Button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
