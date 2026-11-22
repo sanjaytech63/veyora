@@ -15,7 +15,8 @@ export interface AdminMessageResponse {
 export const adminAuthApi = {
   login: (data: LoginInput) => apiClient.post<AdminAuthResponse>("/auth/admin/login", data),
 
-  refreshToken: () => apiClient.post<AdminAuthResponse>("/auth/refresh"),
+  refreshToken: () =>
+    apiClient.post<AdminAuthResponse>("/auth/refresh", undefined, { skipAuthRefresh: true }),
 
   logout: () => apiClient.post<AdminMessageResponse>("/auth/logout"),
 

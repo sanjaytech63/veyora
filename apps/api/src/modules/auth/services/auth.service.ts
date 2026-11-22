@@ -293,6 +293,40 @@ export class AuthService {
     }
 
     if (session.isRevoked) {
+      // Check for concurrent refresh race condition within a 15-second grace window
+      const gracePeriodMs = 15000;
+      const isWithinGrace =
+        session.updatedAt && Date.now() - session.updatedAt.getTime() < gracePeriodMs;
+
+      if (isWithinGrace) {
+        const activeSession = await Session.findOne({
+          familyId: session.familyId,
+          isRevoked: false,
+          expiresAt: { $gt: new Date() },
+        });
+
+        if (activeSession) {
+          const user = await User.findById(activeSession.userId);
+          if (user && user.isActive) {
+            logger.info(
+              { sessionId: session._id.toString(), familyId: session.familyId },
+              "Concurrent refresh handled within rotation grace period."
+            );
+            const tokens = tokenService.generateTokens(
+              user,
+              activeSession._id.toString(),
+              activeSession.familyId
+            );
+            activeSession.refreshTokenHash = tokenService.hashToken(tokens.refreshToken);
+            await activeSession.save();
+            return {
+              user: this.toAuthUser(user),
+              tokens,
+            };
+          }
+        }
+      }
+
       logger.warn(
         { sessionId: session._id.toString(), familyId: session.familyId },
         "Attempt to use an already revoked session token. Revoking entire token family."

@@ -33,9 +33,15 @@ function AdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get("redirect") || "/";
-  const { setAdminAuth } = useAdminAuthStore();
+  const { setAdminAuth, isAuthenticated, admin } = useAdminAuthStore();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
+
+  React.useEffect(() => {
+    if (isAuthenticated && admin && (admin.role === "admin" || admin.role === "superadmin")) {
+      router.push(redirectPath);
+    }
+  }, [admin, isAuthenticated, redirectPath, router]);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
