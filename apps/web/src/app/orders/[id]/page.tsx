@@ -443,14 +443,22 @@ export default function CustomerOrderDetailPage() {
                   </div>
                 )}
 
-                {order.tracking?.trackingUrl && (
-                  <div className="pt-2">
-                    <Button asChild size="sm" variant="outline" className="w-full rounded-xl text-xs">
-                      <a href={order.tracking.trackingUrl} target="_blank" rel="noopener noreferrer">
-                        <span>Live Courier Tracking Link</span>
-                        <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
-                      </a>
+                {order.tracking?.trackingNumber && (
+                  <div className="pt-2 flex flex-col gap-2">
+                    <Button asChild size="sm" variant="default" className="w-full rounded-xl text-xs">
+                      <Link href={`/tracking`}>
+                        <Truck className="h-3.5 w-3.5 mr-1.5" />
+                        <span>Track Parcel Live</span>
+                      </Link>
                     </Button>
+                    {order.tracking.trackingUrl && (
+                      <Button asChild size="sm" variant="outline" className="w-full rounded-xl text-xs">
+                        <a href={order.tracking.trackingUrl} target="_blank" rel="noopener noreferrer">
+                          <span>External Carrier Portal</span>
+                          <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
+                        </a>
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
