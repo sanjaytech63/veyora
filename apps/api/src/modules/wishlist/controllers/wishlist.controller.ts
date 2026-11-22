@@ -17,11 +17,7 @@ export class WishlistController {
 
   public async addItem(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const wishlist = await wishlistService.addItem(
-        req.user?.id,
-        req.guestId,
-        req.body.productId
-      );
+      const wishlist = await wishlistService.addItem(req.user?.id, req.guestId, req.body.productId);
       res.status(201).json({
         success: true,
         data: wishlist,

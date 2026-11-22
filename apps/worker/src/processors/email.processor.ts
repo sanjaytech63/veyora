@@ -2,7 +2,9 @@ import { Job } from "bullmq";
 import { EmailJobPayload } from "@veyora/types";
 import { logger } from "@veyora/utils";
 
-export async function processEmailJob(job: Job<EmailJobPayload>): Promise<{ success: boolean; messageId: string }> {
+export async function processEmailJob(
+  job: Job<EmailJobPayload>
+): Promise<{ success: boolean; messageId: string }> {
   const startTime = Date.now();
   const { type, recipient, data, idempotencyKey } = job.data;
 
@@ -19,24 +21,36 @@ export async function processEmailJob(job: Job<EmailJobPayload>): Promise<{ succ
     case "order-confirmation": {
       const orderNumber = data["orderNumber"] || "N/A";
       const total = data["total"] || 0;
-      logger.info("EMAIL_DISPATCH", `Order Confirmation sent to ${recipient} for Order #${orderNumber} (₹${total})`);
+      logger.info(
+        "EMAIL_DISPATCH",
+        `Order Confirmation sent to ${recipient} for Order #${orderNumber} (₹${total})`
+      );
       break;
     }
     case "payment-confirmation": {
       const orderNumber = data["orderNumber"] || "N/A";
       const amount = data["amount"] || 0;
-      logger.info("EMAIL_DISPATCH", `Payment Receipt sent to ${recipient} for Order #${orderNumber} (₹${amount})`);
+      logger.info(
+        "EMAIL_DISPATCH",
+        `Payment Receipt sent to ${recipient} for Order #${orderNumber} (₹${amount})`
+      );
       break;
     }
     case "shipping-notification": {
       const trackingNumber = data["trackingNumber"] || "N/A";
       const carrier = data["carrier"] || "Atelier Courier";
-      logger.info("EMAIL_DISPATCH", `Shipment Dispatch notice sent to ${recipient} (AWB: ${trackingNumber} via ${carrier})`);
+      logger.info(
+        "EMAIL_DISPATCH",
+        `Shipment Dispatch notice sent to ${recipient} (AWB: ${trackingNumber} via ${carrier})`
+      );
       break;
     }
     case "order-cancellation": {
       const orderNumber = data["orderNumber"] || "N/A";
-      logger.info("EMAIL_DISPATCH", `Order Cancellation notice sent to ${recipient} for Order #${orderNumber}`);
+      logger.info(
+        "EMAIL_DISPATCH",
+        `Order Cancellation notice sent to ${recipient} for Order #${orderNumber}`
+      );
       break;
     }
     case "password-reset": {
@@ -46,7 +60,10 @@ export async function processEmailJob(job: Job<EmailJobPayload>): Promise<{ succ
     }
     case "otp": {
       // Intentionally omit OTP value from log
-      logger.info("EMAIL_DISPATCH", `One-Time Verification Code securely dispatched to ${recipient}`);
+      logger.info(
+        "EMAIL_DISPATCH",
+        `One-Time Verification Code securely dispatched to ${recipient}`
+      );
       break;
     }
     default:
@@ -56,7 +73,10 @@ export async function processEmailJob(job: Job<EmailJobPayload>): Promise<{ succ
   const durationMs = Date.now() - startTime;
   const messageId = `msg_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
 
-  logger.info("EMAIL_WORKER", `Email job [${job.id}] completed in ${durationMs}ms with ID ${messageId}`);
+  logger.info(
+    "EMAIL_WORKER",
+    `Email job [${job.id}] completed in ${durationMs}ms with ID ${messageId}`
+  );
 
   return { success: true, messageId };
 }

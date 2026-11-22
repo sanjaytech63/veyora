@@ -13,15 +13,11 @@ export interface AdminMessageResponse {
 }
 
 export const adminAuthApi = {
-  login: (data: LoginInput) =>
-    apiClient.post<AdminAuthResponse>("/auth/admin/login", data),
+  login: (data: LoginInput) => apiClient.post<AdminAuthResponse>("/auth/admin/login", data),
 
-  refreshToken: () =>
-    apiClient.post<AdminAuthResponse>("/auth/refresh"),
+  refreshToken: () => apiClient.post<AdminAuthResponse>("/auth/refresh"),
 
-  logout: () =>
-    apiClient.post<AdminMessageResponse>("/auth/logout"),
+  logout: () => apiClient.post<AdminMessageResponse>("/auth/logout"),
 
-  getMe: () =>
-    apiClient.get<AuthUser>("/auth/me"),
+  getMe: () => apiClient.get<AuthUser>("/auth/me"),
 };

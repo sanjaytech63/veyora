@@ -25,10 +25,16 @@ router.post(
 );
 
 // 2. Public Tracking lookup by tracking number, shipment number, or shipment ID
-router.get("/shipping/track/:identifier", shippingController.trackShipment.bind(shippingController));
+router.get(
+  "/shipping/track/:identifier",
+  shippingController.trackShipment.bind(shippingController)
+);
 
 // 3. Order Shipments lookup
-router.get("/shipping/orders/:orderId", shippingController.getOrderShipments.bind(shippingController));
+router.get(
+  "/shipping/orders/:orderId",
+  shippingController.getOrderShipments.bind(shippingController)
+);
 
 // ==========================================
 // ADMINISTRATOR SHIPPING & FULFILLMENT ROUTES

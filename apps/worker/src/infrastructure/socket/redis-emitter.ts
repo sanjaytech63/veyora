@@ -42,13 +42,22 @@ export const workerSocketEmitter = {
     }
   },
 
-  emitOrderUpdate(payload: { orderId: string; orderNumber: string; status: string; userId?: string | null }): void {
+  emitOrderUpdate(payload: {
+    orderId: string;
+    orderNumber: string;
+    status: string;
+    userId?: string | null;
+  }): void {
     try {
       const emitter = getRedisEmitter();
       if (payload.userId) {
-        emitter.to(SOCKET_ROOMS.user(payload.userId)).emit(SOCKET_EVENTS.SERVER_TO_CLIENT.ORDER_UPDATED, payload);
+        emitter
+          .to(SOCKET_ROOMS.user(payload.userId))
+          .emit(SOCKET_EVENTS.SERVER_TO_CLIENT.ORDER_UPDATED, payload);
       }
-      emitter.to(SOCKET_ROOMS.adminOrders).emit(SOCKET_EVENTS.SERVER_TO_CLIENT.ORDER_UPDATED, payload);
+      emitter
+        .to(SOCKET_ROOMS.adminOrders)
+        .emit(SOCKET_EVENTS.SERVER_TO_CLIENT.ORDER_UPDATED, payload);
     } catch (err) {
       logger.error("WORKER_SOCKET", "Failed to emit order update via Redis", {
         error: (err as Error).message,
@@ -56,13 +65,23 @@ export const workerSocketEmitter = {
     }
   },
 
-  emitPaymentUpdate(payload: { paymentId: string; orderId: string; status: string; amount: number; userId?: string | null }): void {
+  emitPaymentUpdate(payload: {
+    paymentId: string;
+    orderId: string;
+    status: string;
+    amount: number;
+    userId?: string | null;
+  }): void {
     try {
       const emitter = getRedisEmitter();
       if (payload.userId) {
-        emitter.to(SOCKET_ROOMS.user(payload.userId)).emit(SOCKET_EVENTS.SERVER_TO_CLIENT.PAYMENT_UPDATED, payload);
+        emitter
+          .to(SOCKET_ROOMS.user(payload.userId))
+          .emit(SOCKET_EVENTS.SERVER_TO_CLIENT.PAYMENT_UPDATED, payload);
       }
-      emitter.to(SOCKET_ROOMS.adminPayments).emit(SOCKET_EVENTS.SERVER_TO_CLIENT.PAYMENT_UPDATED, payload);
+      emitter
+        .to(SOCKET_ROOMS.adminPayments)
+        .emit(SOCKET_EVENTS.SERVER_TO_CLIENT.PAYMENT_UPDATED, payload);
     } catch (err) {
       logger.error("WORKER_SOCKET", "Failed to emit payment update via Redis", {
         error: (err as Error).message,

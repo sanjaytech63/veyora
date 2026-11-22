@@ -30,8 +30,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title: `${category.name} | Veyora Atelier`,
       description:
-        category.description ||
-        `Browse curated ${category.name} apparel on Veyora Atelier.`,
+        category.description || `Browse curated ${category.name} apparel on Veyora Atelier.`,
       url: `/category/${category.slug}`,
       type: "website",
     },

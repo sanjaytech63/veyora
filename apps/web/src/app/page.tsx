@@ -152,7 +152,9 @@ export default function StorefrontHomePage() {
                       {heroProduct?.sku ? `EDITION // ${heroProduct.sku}` : "FESTIVE // 2026"}
                     </span>
                     <span className="rounded-full border border-emerald-400/30 bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-300 backdrop-blur-md">
-                      {heroProduct?.stock && heroProduct.stock > 0 ? "In Stock" : "Handcrafted Atelier"}
+                      {heroProduct?.stock && heroProduct.stock > 0
+                        ? "In Stock"
+                        : "Handcrafted Atelier"}
                     </span>
                   </div>
 
@@ -176,10 +178,15 @@ export default function StorefrontHomePage() {
                       <div className="flex items-center gap-3 shrink-0">
                         {heroProduct ? (
                           <div className="text-right tabular-nums">
-                            <div className="text-base font-bold text-white">${heroProduct.price.toFixed(2)}</div>
-                            {heroProduct.compareAtPrice && heroProduct.compareAtPrice > heroProduct.price && (
-                              <div className="text-[11px] text-zinc-400 line-through">${heroProduct.compareAtPrice.toFixed(2)}</div>
-                            )}
+                            <div className="text-base font-bold text-white">
+                              ${heroProduct.price.toFixed(2)}
+                            </div>
+                            {heroProduct.compareAtPrice &&
+                              heroProduct.compareAtPrice > heroProduct.price && (
+                                <div className="text-[11px] text-zinc-400 line-through">
+                                  ${heroProduct.compareAtPrice.toFixed(2)}
+                                </div>
+                              )}
                           </div>
                         ) : (
                           <div className="text-right text-xs font-semibold text-zinc-300">
@@ -235,7 +242,12 @@ export default function StorefrontHomePage() {
                   title="No fashion categories found"
                   description="Categories published through the admin dashboard will appear here."
                   action={
-                    <Button asChild variant="outline" size="sm" className="rounded-full px-5 text-xs font-semibold">
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full px-5 text-xs font-semibold"
+                    >
                       <Link href="/shop">Browse Storefront</Link>
                     </Button>
                   }
@@ -298,7 +310,8 @@ export default function StorefrontHomePage() {
                 New Arrivals
               </h2>
               <p className="mt-1 text-xs text-muted-foreground">
-                Discover the latest styles and fresh additions to your festive and everyday wardrobe.
+                Discover the latest styles and fresh additions to your festive and everyday
+                wardrobe.
               </p>
             </div>
             <Link
@@ -343,9 +356,9 @@ export default function StorefrontHomePage() {
                 </h2>
 
                 <p className="max-w-2xl text-sm leading-relaxed text-zinc-400 sm:text-base">
-                  Every Veyora ensemble honors heritage Indian craft — from hand-tied Rajasthani Bandhani
-                  and Benarasi zari to certified organic mulmul cotton. Crafted with tailored precision,
-                  ethical artisan wages, and zero compromise on fabric purity.
+                  Every Veyora ensemble honors heritage Indian craft — from hand-tied Rajasthani
+                  Bandhani and Benarasi zari to certified organic mulmul cotton. Crafted with
+                  tailored precision, ethical artisan wages, and zero compromise on fabric purity.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-3.5 pt-2">
@@ -374,13 +387,17 @@ export default function StorefrontHomePage() {
                     <div className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">
                       Weaves
                     </div>
-                    <div className="text-sm font-semibold text-zinc-100">Chanderi &amp; Katan Silk</div>
+                    <div className="text-sm font-semibold text-zinc-100">
+                      Chanderi &amp; Katan Silk
+                    </div>
                   </div>
                   <div className="space-y-1 border-b border-white/10 pb-3">
                     <div className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">
                       Craft
                     </div>
-                    <div className="font-mono text-sm font-semibold text-zinc-100">Hand Gota Patti</div>
+                    <div className="font-mono text-sm font-semibold text-zinc-100">
+                      Hand Gota Patti
+                    </div>
                   </div>
                   <div className="space-y-1 pt-1">
                     <div className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">

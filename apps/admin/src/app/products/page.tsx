@@ -97,8 +97,7 @@ export default function AdminProductsPage() {
         p.title.toLowerCase().includes(search.toLowerCase()) ||
         p.sku.toLowerCase().includes(search.toLowerCase());
       const matchesStatus = statusFilter === "all" || p.status === statusFilter;
-      const matchesCategory =
-        categoryFilter === "all" || p.categoryId === categoryFilter;
+      const matchesCategory = categoryFilter === "all" || p.categoryId === categoryFilter;
       return matchesSearch && matchesStatus && matchesCategory;
     });
   }, [products, search, statusFilter, categoryFilter]);
@@ -267,8 +266,7 @@ export default function AdminProductsPage() {
               ) : (
                 filteredProducts.map((product) => {
                   const primaryImage =
-                    product.images?.find((img) => img.isPrimary)?.url ||
-                    product.images?.[0]?.url;
+                    product.images?.find((img) => img.isPrimary)?.url || product.images?.[0]?.url;
 
                   return (
                     <TableRow key={product.id}>
@@ -297,9 +295,7 @@ export default function AdminProductsPage() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {product.sku}
-                      </TableCell>
+                      <TableCell className="font-mono text-xs">{product.sku}</TableCell>
                       <TableCell className="font-medium">
                         ${product.price.toFixed(2)}
                         {product.compareAtPrice && product.compareAtPrice > product.price && (
@@ -310,19 +306,23 @@ export default function AdminProductsPage() {
                       </TableCell>
                       <TableCell>
                         {product.stock > 0 ? (
-                          <Badge variant="outline" className="text-emerald-600 border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20">
+                          <Badge
+                            variant="outline"
+                            className="text-emerald-600 border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20"
+                          >
                             {product.stock} in stock
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-rose-600 border-rose-200 bg-rose-50 dark:bg-rose-950/20">
+                          <Badge
+                            variant="outline"
+                            className="text-rose-600 border-rose-200 bg-rose-50 dark:bg-rose-950/20"
+                          >
                             Out of stock
                           </Badge>
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="secondary">
-                          {product.variants?.length || 0} variants
-                        </Badge>
+                        <Badge variant="secondary">{product.variants?.length || 0} variants</Badge>
                       </TableCell>
                       <TableCell>
                         <Badge
@@ -330,8 +330,8 @@ export default function AdminProductsPage() {
                             product.status === "active"
                               ? "default"
                               : product.status === "draft"
-                              ? "secondary"
-                              : "outline"
+                                ? "secondary"
+                                : "outline"
                           }
                         >
                           {product.status}

@@ -9,7 +9,9 @@ interface ProductJsonLdProps {
 
 export function ProductJsonLd({ product, url }: ProductJsonLdProps) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://veyora.store";
-  const canonicalUrl = url.startsWith("http") ? url : `${siteUrl}${url.startsWith("/") ? url : `/${url}`}`;
+  const canonicalUrl = url.startsWith("http")
+    ? url
+    : `${siteUrl}${url.startsWith("/") ? url : `/${url}`}`;
 
   const schema: Record<string, any> = {
     "@context": "https://schema.org",
@@ -29,9 +31,7 @@ export function ProductJsonLd({ product, url }: ProductJsonLdProps) {
       priceCurrency: "USD",
       price: product.price,
       availability:
-        product.stock > 0
-          ? "https://schema.org/InStock"
-          : "https://schema.org/OutOfStock",
+        product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       itemCondition: "https://schema.org/NewCondition",
     },
   };
@@ -96,11 +96,7 @@ interface CollectionPageJsonLdProps {
   products?: Product[];
 }
 
-export function CollectionPageJsonLd({
-  category,
-  url,
-  products = [],
-}: CollectionPageJsonLdProps) {
+export function CollectionPageJsonLd({ category, url, products = [] }: CollectionPageJsonLdProps) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://veyora.store";
   const canonicalUrl = url.startsWith("http")
     ? url

@@ -272,13 +272,10 @@ describe("Cart Module Integration & Rigorous Validation", () => {
   // 2. Add Item to Cart & Validations
   describe("POST /api/v1/cart/items", () => {
     it("successfully adds an active garment to the shopping bag", async () => {
-      const res = await request(app)
-        .post("/api/v1/cart/items")
-        .set(guestHeader)
-        .send({
-          productId: activeProduct._id.toString(),
-          quantity: 2,
-        });
+      const res = await request(app).post("/api/v1/cart/items").set(guestHeader).send({
+        productId: activeProduct._id.toString(),
+        quantity: 2,
+      });
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
@@ -292,14 +289,11 @@ describe("Cart Module Integration & Rigorous Validation", () => {
     });
 
     it("rigorously uses server price and ignores spoofed client price", async () => {
-      const res = await request(app)
-        .post("/api/v1/cart/items")
-        .set(guestHeader)
-        .send({
-          productId: activeProduct._id.toString(),
-          quantity: 1,
-          price: 1.0, // Client tries to spoof price to $1
-        });
+      const res = await request(app).post("/api/v1/cart/items").set(guestHeader).send({
+        productId: activeProduct._id.toString(),
+        quantity: 1,
+        price: 1.0, // Client tries to spoof price to $1
+      });
 
       expect(res.status).toBe(201);
       // Unit price must be strictly server price ($100)
@@ -311,14 +305,11 @@ describe("Cart Module Integration & Rigorous Validation", () => {
 
     it("adds garment with specific variant and resolves variant price", async () => {
       const targetVariant = variantProduct.variants[1]!; // Size M, $190
-      const res = await request(app)
-        .post("/api/v1/cart/items")
-        .set(guestHeader)
-        .send({
-          productId: variantProduct._id.toString(),
-          variantId: targetVariant._id.toString(),
-          quantity: 1,
-        });
+      const res = await request(app).post("/api/v1/cart/items").set(guestHeader).send({
+        productId: variantProduct._id.toString(),
+        variantId: targetVariant._id.toString(),
+        quantity: 1,
+      });
 
       expect(res.status).toBe(201);
       expect(res.body.data.items[0].variantId).toBe(targetVariant._id.toString());
@@ -328,65 +319,50 @@ describe("Cart Module Integration & Rigorous Validation", () => {
 
     it("rejects non-existent product with 404", async () => {
       const nonExistentId = new mongoose.Types.ObjectId().toString();
-      const res = await request(app)
-        .post("/api/v1/cart/items")
-        .set(guestHeader)
-        .send({
-          productId: nonExistentId,
-          quantity: 1,
-        });
+      const res = await request(app).post("/api/v1/cart/items").set(guestHeader).send({
+        productId: nonExistentId,
+        quantity: 1,
+      });
 
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);
     });
 
     it("rejects draft/archived product with 404", async () => {
-      const res = await request(app)
-        .post("/api/v1/cart/items")
-        .set(guestHeader)
-        .send({
-          productId: draftProduct._id.toString(),
-          quantity: 1,
-        });
+      const res = await request(app).post("/api/v1/cart/items").set(guestHeader).send({
+        productId: draftProduct._id.toString(),
+        quantity: 1,
+      });
 
       expect(res.status).toBe(404);
     });
 
     it("rejects invalid variant identifier with 400", async () => {
-      const res = await request(app)
-        .post("/api/v1/cart/items")
-        .set(guestHeader)
-        .send({
-          productId: variantProduct._id.toString(),
-          variantId: "non-existent-variant-sku",
-          quantity: 1,
-        });
+      const res = await request(app).post("/api/v1/cart/items").set(guestHeader).send({
+        productId: variantProduct._id.toString(),
+        variantId: "non-existent-variant-sku",
+        quantity: 1,
+      });
 
       expect(res.status).toBe(400);
       expect(res.body.error.message).toMatch(/variant does not exist/i);
     });
 
     it("enforces stock limit: rejects quantity exceeding available inventory with 409", async () => {
-      const res = await request(app)
-        .post("/api/v1/cart/items")
-        .set(guestHeader)
-        .send({
-          productId: activeProduct._id.toString(),
-          quantity: 99, // Stock is only 10
-        });
+      const res = await request(app).post("/api/v1/cart/items").set(guestHeader).send({
+        productId: activeProduct._id.toString(),
+        quantity: 99, // Stock is only 10
+      });
 
       expect(res.status).toBe(409);
       expect(res.body.error.message).toMatch(/exceeds available stock/i);
     });
 
     it("rejects adding an out of stock garment with 409", async () => {
-      const res = await request(app)
-        .post("/api/v1/cart/items")
-        .set(guestHeader)
-        .send({
-          productId: outOfStockProduct._id.toString(),
-          quantity: 1,
-        });
+      const res = await request(app).post("/api/v1/cart/items").set(guestHeader).send({
+        productId: outOfStockProduct._id.toString(),
+        quantity: 1,
+      });
 
       expect(res.status).toBe(409);
       expect(res.body.error.message).toMatch(/out of stock/i);
@@ -397,13 +373,10 @@ describe("Cart Module Integration & Rigorous Validation", () => {
   describe("PATCH /api/v1/cart/items/:itemId", () => {
     it("updates item quantity and recalculates server totals", async () => {
       // 1. Add item first
-      const addRes = await request(app)
-        .post("/api/v1/cart/items")
-        .set(guestHeader)
-        .send({
-          productId: activeProduct._id.toString(),
-          quantity: 1,
-        });
+      const addRes = await request(app).post("/api/v1/cart/items").set(guestHeader).send({
+        productId: activeProduct._id.toString(),
+        quantity: 1,
+      });
       const itemId = addRes.body.data.items[0].id;
 
       // 2. Update to 4 units
@@ -419,13 +392,10 @@ describe("Cart Module Integration & Rigorous Validation", () => {
     });
 
     it("removes item from cart when quantity is updated to 0", async () => {
-      const addRes = await request(app)
-        .post("/api/v1/cart/items")
-        .set(guestHeader)
-        .send({
-          productId: activeProduct._id.toString(),
-          quantity: 2,
-        });
+      const addRes = await request(app).post("/api/v1/cart/items").set(guestHeader).send({
+        productId: activeProduct._id.toString(),
+        quantity: 2,
+      });
       const itemId = addRes.body.data.items[0].id;
 
       const patchRes = await request(app)
@@ -448,13 +418,10 @@ describe("Cart Module Integration & Rigorous Validation", () => {
     });
 
     it("rejects updating quantity past available inventory limit with 409", async () => {
-      const addRes = await request(app)
-        .post("/api/v1/cart/items")
-        .set(guestHeader)
-        .send({
-          productId: activeProduct._id.toString(),
-          quantity: 2,
-        });
+      const addRes = await request(app).post("/api/v1/cart/items").set(guestHeader).send({
+        productId: activeProduct._id.toString(),
+        quantity: 2,
+      });
       const itemId = addRes.body.data.items[0].id;
 
       const patchRes = await request(app)
@@ -470,31 +437,23 @@ describe("Cart Module Integration & Rigorous Validation", () => {
   // 4. Delete Item & Clear Cart
   describe("DELETE /api/v1/cart/items/:itemId and DELETE /api/v1/cart", () => {
     it("removes single item from cart", async () => {
-      const addRes = await request(app)
-        .post("/api/v1/cart/items")
-        .set(guestHeader)
-        .send({
-          productId: activeProduct._id.toString(),
-          quantity: 1,
-        });
+      const addRes = await request(app).post("/api/v1/cart/items").set(guestHeader).send({
+        productId: activeProduct._id.toString(),
+        quantity: 1,
+      });
       const itemId = addRes.body.data.items[0].id;
 
-      const delRes = await request(app)
-        .delete(`/api/v1/cart/items/${itemId}`)
-        .set(guestHeader);
+      const delRes = await request(app).delete(`/api/v1/cart/items/${itemId}`).set(guestHeader);
 
       expect(delRes.status).toBe(200);
       expect(delRes.body.data.items).toHaveLength(0);
     });
 
     it("clears entire cart and resets coupon", async () => {
-      await request(app)
-        .post("/api/v1/cart/items")
-        .set(guestHeader)
-        .send({
-          productId: activeProduct._id.toString(),
-          quantity: 2,
-        });
+      await request(app).post("/api/v1/cart/items").set(guestHeader).send({
+        productId: activeProduct._id.toString(),
+        quantity: 2,
+      });
 
       const clearRes = await request(app).delete("/api/v1/cart").set(guestHeader);
 
@@ -508,13 +467,10 @@ describe("Cart Module Integration & Rigorous Validation", () => {
   describe("POST /api/v1/cart/coupon & Totals", () => {
     it("applies valid promo code ATELIER10 and calculates 10% discount", async () => {
       // 1. Add item with $100 subtotal
-      await request(app)
-        .post("/api/v1/cart/items")
-        .set(guestHeader)
-        .send({
-          productId: activeProduct._id.toString(),
-          quantity: 1,
-        });
+      await request(app).post("/api/v1/cart/items").set(guestHeader).send({
+        productId: activeProduct._id.toString(),
+        quantity: 1,
+      });
 
       // 2. Apply coupon
       const couponRes = await request(app)
@@ -541,17 +497,11 @@ describe("Cart Module Integration & Rigorous Validation", () => {
     });
 
     it("removes coupon and resets discount", async () => {
-      await request(app)
-        .post("/api/v1/cart/items")
-        .set(guestHeader)
-        .send({
-          productId: activeProduct._id.toString(),
-          quantity: 1,
-        });
-      await request(app)
-        .post("/api/v1/cart/coupon")
-        .set(guestHeader)
-        .send({ code: "ATELIER10" });
+      await request(app).post("/api/v1/cart/items").set(guestHeader).send({
+        productId: activeProduct._id.toString(),
+        quantity: 1,
+      });
+      await request(app).post("/api/v1/cart/coupon").set(guestHeader).send({ code: "ATELIER10" });
 
       const removeRes = await request(app).delete("/api/v1/cart/coupon").set(guestHeader);
       expect(removeRes.status).toBe(200);

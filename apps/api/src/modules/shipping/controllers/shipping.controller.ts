@@ -90,11 +90,7 @@ export class ShippingController {
   /**
    * POST /admin/shipments (Fulfill Order)
    */
-  public async adminCreateShipment(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
+  public async adminCreateShipment(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const actor = req.user
         ? { id: req.user.id, email: req.user.email, role: req.user.role }
@@ -113,11 +109,7 @@ export class ShippingController {
   /**
    * PATCH /admin/shipments/:id/tracking
    */
-  public async adminUpdateTracking(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
+  public async adminUpdateTracking(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
       const actor = req.user

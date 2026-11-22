@@ -33,7 +33,9 @@ export class RazorpayPaymentProvider implements IPaymentProvider {
         key_secret: this.keySecret,
       });
     } catch (err) {
-      logger.warn("RAZORPAY", "Could not initialize Razorpay SDK instance. Fallback active.", { err });
+      logger.warn("RAZORPAY", "Could not initialize Razorpay SDK instance. Fallback active.", {
+        err,
+      });
     }
   }
 
@@ -55,7 +57,11 @@ export class RazorpayPaymentProvider implements IPaymentProvider {
         };
       }
     } catch (err) {
-      logger.error("RAZORPAY", "Razorpay API error creating order; falling back to simulated order for test/dev.", { err });
+      logger.error(
+        "RAZORPAY",
+        "Razorpay API error creating order; falling back to simulated order for test/dev.",
+        { err }
+      );
     }
 
     // Deterministic mock generation for offline/test environments
@@ -148,7 +154,9 @@ export class RazorpayPaymentProvider implements IPaymentProvider {
         };
       }
     } catch (err) {
-      logger.error("RAZORPAY", "Razorpay API error processing refund; simulating gateway refund.", { err });
+      logger.error("RAZORPAY", "Razorpay API error processing refund; simulating gateway refund.", {
+        err,
+      });
     }
 
     // Offline / Test mock refund

@@ -5,12 +5,7 @@ import { DashboardDateFilter } from "../components/dashboard/dashboard-date-filt
 
 describe("Admin Dashboard Reporting Filters & Date Range Controls", () => {
   it("displays current period selection button label", () => {
-    render(
-      <DashboardDateFilter
-        period="30d"
-        onPeriodChange={vi.fn()}
-      />
-    );
+    render(<DashboardDateFilter period="30d" onPeriodChange={vi.fn()} />);
 
     expect(screen.getByText("Last 30 Days")).toBeInTheDocument();
   });

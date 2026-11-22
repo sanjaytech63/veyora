@@ -79,38 +79,53 @@ test.describe("E2E — Product Catalog Browsing & Search Relevance", () => {
     await expect(page.getByText("$185.00")).toBeVisible();
   });
 
-  test("renders product details page with variant swatches and specifications", async ({ page }) => {
-    await page.route("**/api/v1/products/chanderi-silk-kurti-set-organza-dupatta", async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          success: true,
-          data: {
-            id: "prod-kurti-01",
-            title: "Chanderi Silk Kurti Set with Organza Dupatta",
-            slug: "chanderi-silk-kurti-set-organza-dupatta",
-            description: "Handcrafted pure Chanderi silk kurti with delicate gota patti hand embroidery.",
-            price: 185.0,
-            stock: 24,
-            status: "active",
-            images: [
-              {
-                url: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1000",
-                isPrimary: true,
-              },
-            ],
-            variants: [
-              { id: "var-1", color: "Crimson Red", size: "S", price: 185.0, stock: 12, sku: "VYR-KRT-01" },
-            ],
-          },
-        }),
-      });
-    });
+  test("renders product details page with variant swatches and specifications", async ({
+    page,
+  }) => {
+    await page.route(
+      "**/api/v1/products/chanderi-silk-kurti-set-organza-dupatta",
+      async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            success: true,
+            data: {
+              id: "prod-kurti-01",
+              title: "Chanderi Silk Kurti Set with Organza Dupatta",
+              slug: "chanderi-silk-kurti-set-organza-dupatta",
+              description:
+                "Handcrafted pure Chanderi silk kurti with delicate gota patti hand embroidery.",
+              price: 185.0,
+              stock: 24,
+              status: "active",
+              images: [
+                {
+                  url: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1000",
+                  isPrimary: true,
+                },
+              ],
+              variants: [
+                {
+                  id: "var-1",
+                  color: "Crimson Red",
+                  size: "S",
+                  price: 185.0,
+                  stock: 12,
+                  sku: "VYR-KRT-01",
+                },
+              ],
+            },
+          }),
+        });
+      }
+    );
 
     await page.goto("/products/chanderi-silk-kurti-set-organza-dupatta");
 
-    await expect(page.getByRole("heading", { name: "Chanderi Silk Kurti Set with Organza Dupatta" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Chanderi Silk Kurti Set with Organza Dupatta" })
+    ).toBeVisible();
     await expect(page.getByText(/handcrafted pure chanderi silk kurti/i)).toBeVisible();
     await expect(page.getByRole("button", { name: /add to bag/i })).toBeVisible();
   });

@@ -36,10 +36,7 @@ vi.mock("../modules/auth/models/session.model", () => ({
   Session: {
     findById: vi.fn((id: any) => {
       const idStr = id?.toString ? id.toString() : String(id);
-      if (
-        idStr === mockAdminSessionId.toString() ||
-        idStr === mockCustomerSessionId.toString()
-      ) {
+      if (idStr === mockAdminSessionId.toString() || idStr === mockCustomerSessionId.toString()) {
         return Promise.resolve({
           _id: new mongoose.Types.ObjectId(idStr),
           isRevoked: false,
@@ -119,7 +116,9 @@ vi.mock("../modules/checkout/models/order.model", () => ({
             const idStrs = filter.userId.$in.map((id: any) => id.toString());
             results = results.filter((o) => o.userId && idStrs.includes(o.userId.toString()));
           } else {
-            results = results.filter((o) => o.userId && o.userId.toString() === filter.userId.toString());
+            results = results.filter(
+              (o) => o.userId && o.userId.toString() === filter.userId.toString()
+            );
           }
         }
         return results;
@@ -128,7 +127,9 @@ vi.mock("../modules/checkout/models/order.model", () => ({
     countDocuments: vi.fn((filter: any) => {
       let results = [...mockOrders];
       if (filter.userId) {
-        results = results.filter((o) => o.userId && o.userId.toString() === filter.userId.toString());
+        results = results.filter(
+          (o) => o.userId && o.userId.toString() === filter.userId.toString()
+        );
       }
       return Promise.resolve(results.length);
     }),
@@ -142,7 +143,9 @@ vi.mock("../modules/checkout/models/address.model", () => ({
       mockQuery(() => {
         let results = [...mockAddresses];
         if (filter.userId) {
-          results = results.filter((a) => a.userId && a.userId.toString() === filter.userId.toString());
+          results = results.filter(
+            (a) => a.userId && a.userId.toString() === filter.userId.toString()
+          );
         }
         return results;
       })
@@ -383,7 +386,9 @@ describe("Phase M — Veyora Customer Management Tests", () => {
       expect(res.body.data.items).toHaveLength(2);
       expect(res.body.data.total).toBe(2);
 
-      const aishwarya = res.body.data.items.find((c: any) => c.email === "aishwarya.sharma@veyora.com");
+      const aishwarya = res.body.data.items.find(
+        (c: any) => c.email === "aishwarya.sharma@veyora.com"
+      );
       expect(aishwarya).toBeDefined();
       expect(aishwarya.ordersCount).toBe(2);
       expect(aishwarya.totalSpent).toBe(864); // 540 + 324

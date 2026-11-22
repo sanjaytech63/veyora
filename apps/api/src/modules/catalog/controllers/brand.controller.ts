@@ -5,7 +5,8 @@ import { BrandStatus } from "@veyora/types";
 export class BrandController {
   async listBrands(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const status = typeof req.query.status === "string" ? (req.query.status as BrandStatus) : undefined;
+      const status =
+        typeof req.query.status === "string" ? (req.query.status as BrandStatus) : undefined;
       const brands = await brandService.getBrands(status ? { status } : undefined);
 
       res.status(200).json({

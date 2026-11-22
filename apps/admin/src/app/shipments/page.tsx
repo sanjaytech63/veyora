@@ -142,7 +142,11 @@ export default function AdminShipmentsPage() {
   const [newDescription, setNewDescription] = React.useState("");
 
   // Fetch Shipments
-  const { data: shipmentsData, isLoading, refetch } = useQuery({
+  const {
+    data: shipmentsData,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["admin-shipments", page, search, carrierFilter, statusFilter],
     queryFn: () =>
       adminShippingApi.listShipments({
@@ -164,7 +168,9 @@ export default function AdminShipmentsPage() {
   const createShipmentMutation = useMutation({
     mutationFn: (payload: CreateShipmentPayload) => adminShippingApi.createShipment(payload),
     onSuccess: (shipment) => {
-      toast.success(`Shipment #${shipment.shipmentNumber} manifested! AWB: ${shipment.trackingNumber}`);
+      toast.success(
+        `Shipment #${shipment.shipmentNumber} manifested! AWB: ${shipment.trackingNumber}`
+      );
       queryClient.invalidateQueries({ queryKey: ["admin-shipments"] });
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
       setIsCreateOpen(false);
@@ -244,9 +250,12 @@ export default function AdminShipmentsPage() {
         {/* Top Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-serif font-semibold tracking-tight">Shipments & Fulfillment</h1>
+            <h1 className="text-2xl font-serif font-semibold tracking-tight">
+              Shipments & Fulfillment
+            </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Fulfill couture orders, manage carrier manifests, and track parcels across Indian and global logistics hubs.
+              Fulfill couture orders, manage carrier manifests, and track parcels across Indian and
+              global logistics hubs.
             </p>
           </div>
           <Button
@@ -513,9 +522,7 @@ export default function AdminShipmentsPage() {
                   <span>Shipment {selectedShipment.shipmentNumber}</span>
                   <Badge
                     variant="outline"
-                    className={
-                      SHIPMENT_STATUS_CONFIG[selectedShipment.status]?.badgeClass || ""
-                    }
+                    className={SHIPMENT_STATUS_CONFIG[selectedShipment.status]?.badgeClass || ""}
                   >
                     {SHIPMENT_STATUS_CONFIG[selectedShipment.status]?.label ||
                       selectedShipment.status}
@@ -565,15 +572,20 @@ export default function AdminShipmentsPage() {
                     Delivery Destination
                   </h4>
                   <p className="text-muted-foreground">
-                    {selectedShipment.shippingAddress.firstName} {selectedShipment.shippingAddress.lastName}
+                    {selectedShipment.shippingAddress.firstName}{" "}
+                    {selectedShipment.shippingAddress.lastName}
                     <br />
                     {selectedShipment.shippingAddress.street}
-                    {selectedShipment.shippingAddress.apartment && `, ${selectedShipment.shippingAddress.apartment}`}
+                    {selectedShipment.shippingAddress.apartment &&
+                      `, ${selectedShipment.shippingAddress.apartment}`}
                     <br />
-                    {selectedShipment.shippingAddress.city}, {selectedShipment.shippingAddress.state} - {selectedShipment.shippingAddress.postalCode}
+                    {selectedShipment.shippingAddress.city},{" "}
+                    {selectedShipment.shippingAddress.state} -{" "}
+                    {selectedShipment.shippingAddress.postalCode}
                     <br />
                     {selectedShipment.shippingAddress.country}
-                    {selectedShipment.shippingAddress.phone && ` • Phone: ${selectedShipment.shippingAddress.phone}`}
+                    {selectedShipment.shippingAddress.phone &&
+                      ` • Phone: ${selectedShipment.shippingAddress.phone}`}
                   </p>
                 </div>
 
@@ -588,7 +600,9 @@ export default function AdminShipmentsPage() {
                       <div key={idx} className="p-2.5 flex items-center justify-between text-xs">
                         <div>
                           <p className="font-medium text-foreground">{item.title}</p>
-                          <p className="text-[11px] text-muted-foreground font-mono">SKU: {item.sku}</p>
+                          <p className="text-[11px] text-muted-foreground font-mono">
+                            SKU: {item.sku}
+                          </p>
                         </div>
                         <div className="text-right">
                           <span className="font-medium">Qty: {item.quantity}</span>
@@ -636,7 +650,10 @@ export default function AdminShipmentsPage() {
                 <Separator />
 
                 {/* Advance Tracking Status Form */}
-                <form onSubmit={handleTrackingSubmit} className="space-y-3 bg-muted/20 p-4 rounded-xl border">
+                <form
+                  onSubmit={handleTrackingSubmit}
+                  className="space-y-3 bg-muted/20 p-4 rounded-xl border"
+                >
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">
                     Update Shipment Status
                   </h4>
@@ -706,18 +723,18 @@ export default function AdminShipmentsPage() {
           <DialogHeader>
             <DialogTitle className="font-serif text-xl">Fulfill Order</DialogTitle>
             <DialogDescription>
-              Generate an Airway Bill (AWB) and dispatch an atelier package through your connected courier network.
+              Generate an Airway Bill (AWB) and dispatch an atelier package through your connected
+              courier network.
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleCreateSubmit} className="space-y-4 pt-2">
             <div>
               <Label className="text-xs font-medium">Select Unfulfilled Order</Label>
-              {unfulfilledOrdersData && unfulfilledOrdersData.items && unfulfilledOrdersData.items.length > 0 ? (
-                <Select
-                  value={orderIdInput}
-                  onValueChange={(val) => setOrderIdInput(val)}
-                >
+              {unfulfilledOrdersData &&
+              unfulfilledOrdersData.items &&
+              unfulfilledOrdersData.items.length > 0 ? (
+                <Select value={orderIdInput} onValueChange={(val) => setOrderIdInput(val)}>
                   <SelectTrigger className="mt-1 text-xs">
                     <SelectValue placeholder="Select an order awaiting fulfillment" />
                   </SelectTrigger>
@@ -743,10 +760,7 @@ export default function AdminShipmentsPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs font-medium">Carrier</Label>
-                <Select
-                  value={selectedCarrier}
-                  onValueChange={(val) => setSelectedCarrier(val)}
-                >
+                <Select value={selectedCarrier} onValueChange={(val) => setSelectedCarrier(val)}>
                   <SelectTrigger className="mt-1 text-xs">
                     <SelectValue />
                   </SelectTrigger>

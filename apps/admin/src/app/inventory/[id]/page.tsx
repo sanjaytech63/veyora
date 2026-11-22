@@ -155,10 +155,15 @@ export default function InventoryDetailPage() {
 
   if (!item) {
     return (
-      <PageContainer title="Inventory Item Not Found" description="The requested item could not be found.">
+      <PageContainer
+        title="Inventory Item Not Found"
+        description="The requested item could not be found."
+      >
         <div className="p-12 text-center space-y-4">
           <Boxes className="h-12 w-12 text-muted-foreground mx-auto" />
-          <p className="text-muted-foreground">No inventory record found for &quot;{skuOrId}&quot;.</p>
+          <p className="text-muted-foreground">
+            No inventory record found for &quot;{skuOrId}&quot;.
+          </p>
           <Button asChild>
             <Link href="/inventory">Return to Inventory</Link>
           </Button>
@@ -244,22 +249,22 @@ export default function InventoryDetailPage() {
                   item.status === "in_stock"
                     ? "default"
                     : item.status === "low_stock"
-                    ? "secondary"
-                    : "destructive"
+                      ? "secondary"
+                      : "destructive"
                 }
                 className={
                   item.status === "in_stock"
                     ? "bg-emerald-600 text-white"
                     : item.status === "low_stock"
-                    ? "bg-amber-500 text-white"
-                    : ""
+                      ? "bg-amber-500 text-white"
+                      : ""
                 }
               >
                 {item.status === "in_stock"
                   ? "In Stock"
                   : item.status === "low_stock"
-                  ? "Low Stock"
-                  : "Out of Stock"}
+                    ? "Low Stock"
+                    : "Out of Stock"}
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -277,7 +282,8 @@ export default function InventoryDetailPage() {
             Alert Threshold Configuration
           </CardTitle>
           <CardDescription>
-            When available units reach or drop below this threshold, the item is flagged as Low Stock in reports and admin dashboards.
+            When available units reach or drop below this threshold, the item is flagged as Low
+            Stock in reports and admin dashboards.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -305,10 +311,16 @@ export default function InventoryDetailPage() {
               Stock Movement Audit Ledger
             </CardTitle>
             <CardDescription>
-              Complete immutable ledger of all stock adjustments, purchase orders, count reconciliations, and reservations.
+              Complete immutable ledger of all stock adjustments, purchase orders, count
+              reconciliations, and reservations.
             </CardDescription>
           </div>
-          <Button variant="ghost" size="sm" onClick={loadData} className="flex items-center gap-1.5 text-xs">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={loadData}
+            className="flex items-center gap-1.5 text-xs"
+          >
             <RefreshCw className="h-3.5 w-3.5" />
             Refresh Ledger
           </Button>
@@ -352,8 +364,8 @@ export default function InventoryDetailPage() {
                             isPositive
                               ? "text-emerald-600 inline-flex items-center"
                               : m.quantity < 0
-                              ? "text-rose-600 inline-flex items-center"
-                              : "text-muted-foreground"
+                                ? "text-rose-600 inline-flex items-center"
+                                : "text-muted-foreground"
                           }
                         >
                           {isPositive ? (
@@ -400,9 +412,7 @@ export default function InventoryDetailPage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Adjust Stock for {item.sku}</DialogTitle>
-            <DialogDescription>
-              Record an audit movement for {item.productTitle}.
-            </DialogDescription>
+            <DialogDescription>Record an audit movement for {item.productTitle}.</DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleAdjustSubmit} className="space-y-4">
@@ -418,7 +428,9 @@ export default function InventoryDetailPage() {
                 <SelectContent>
                   <SelectItem value="increase">Restock / Add Stock (+ Units)</SelectItem>
                   <SelectItem value="decrease">Write-off / Damage / Remove (- Units)</SelectItem>
-                  <SelectItem value="correction">Physical Count Correction (Set Absolute Total)</SelectItem>
+                  <SelectItem value="correction">
+                    Physical Count Correction (Set Absolute Total)
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

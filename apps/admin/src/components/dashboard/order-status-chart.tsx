@@ -1,13 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-} from "recharts";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { OrderStatusDistribution } from "@veyora/types";
 
 interface OrderStatusChartProps {
@@ -84,7 +78,8 @@ export function OrderStatusChart({ data, isLoading }: OrderStatusChartProps) {
                         </span>
                       </div>
                       <div className="mt-1 text-xs text-muted-foreground">
-                        <span className="font-semibold text-foreground">{p.count} orders</span> ({p.percentage}%)
+                        <span className="font-semibold text-foreground">{p.count} orders</span> (
+                        {p.percentage}%)
                       </div>
                     </div>
                   );
@@ -107,7 +102,9 @@ export function OrderStatusChart({ data, isLoading }: OrderStatusChartProps) {
               className="h-2 w-2 rounded-full"
               style={{ backgroundColor: STATUS_COLOR_MAP[item.status] || "#94a3b8" }}
             />
-            <span className="capitalize text-muted-foreground">{item.status.replace("_", " ")}</span>
+            <span className="capitalize text-muted-foreground">
+              {item.status.replace("_", " ")}
+            </span>
             <span className="font-semibold text-foreground">({item.count})</span>
           </div>
         ))}

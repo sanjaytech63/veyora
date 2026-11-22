@@ -9,6 +9,7 @@ build/
 .next/
 out/
 .turbo/
+*.tsbuildinfo
 
 # Logs
 npm-debug.log*
@@ -35,3 +36,10 @@ Thumbs.db
 # Test and Coverage
 coverage/
 .nyc_output/
+playwright-report/
+test-results/
+
+# Git and tooling
+.git/
+.husky/
+package-lock.json

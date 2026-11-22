@@ -65,22 +65,44 @@ export function ProductCard({
 
   const getSwatchClass = (name: string) => {
     const n = name.toLowerCase();
-    if (n.includes("red") || n.includes("crimson") || n.includes("ruby") || n.includes("maroon") || n.includes("vermilion"))
+    if (
+      n.includes("red") ||
+      n.includes("crimson") ||
+      n.includes("ruby") ||
+      n.includes("maroon") ||
+      n.includes("vermilion")
+    )
       return "bg-red-700";
     if (n.includes("green") || n.includes("emerald") || n.includes("sage") || n.includes("olive"))
       return "bg-emerald-800";
-    if (n.includes("gold") || n.includes("mustard") || n.includes("amber") || n.includes("yellow") || n.includes("turmeric"))
+    if (
+      n.includes("gold") ||
+      n.includes("mustard") ||
+      n.includes("amber") ||
+      n.includes("yellow") ||
+      n.includes("turmeric")
+    )
       return "bg-amber-500";
     if (n.includes("blue") || n.includes("indigo") || n.includes("royal") || n.includes("navy"))
       return "bg-indigo-900";
     if (n.includes("pink") || n.includes("rose") || n.includes("blush") || n.includes("magenta"))
       return "bg-pink-600";
-    if (n.includes("ivory") || n.includes("pearl") || n.includes("champagne") || n.includes("cream") || n.includes("ecru"))
+    if (
+      n.includes("ivory") ||
+      n.includes("pearl") ||
+      n.includes("champagne") ||
+      n.includes("cream") ||
+      n.includes("ecru")
+    )
       return "bg-amber-100 border border-border";
-    if (n.includes("rust") || n.includes("terracotta") || n.includes("copper") || n.includes("orange"))
+    if (
+      n.includes("rust") ||
+      n.includes("terracotta") ||
+      n.includes("copper") ||
+      n.includes("orange")
+    )
       return "bg-orange-700";
-    if (n.includes("black") || n.includes("midnight") || n.includes("noir"))
-      return "bg-zinc-950";
+    if (n.includes("black") || n.includes("midnight") || n.includes("noir")) return "bg-zinc-950";
     return "bg-primary";
   };
 

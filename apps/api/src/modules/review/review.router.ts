@@ -26,10 +26,7 @@ router.get(
   reviewController.getProductRatingSummary.bind(reviewController)
 );
 
-router.post(
-  "/reviews/:id/helpful",
-  reviewController.markHelpful.bind(reviewController)
-);
+router.post("/reviews/:id/helpful", reviewController.markHelpful.bind(reviewController));
 
 // ==========================================
 // Customer Authenticated Endpoints

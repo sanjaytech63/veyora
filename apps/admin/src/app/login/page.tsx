@@ -164,7 +164,9 @@ function AdminLoginForm() {
 
 export default function AdminLoginPage() {
   return (
-    <React.Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}>
+    <React.Suspense
+      fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}
+    >
       <AdminLoginForm />
     </React.Suspense>
   );

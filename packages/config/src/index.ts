@@ -29,12 +29,12 @@ export const DEFAULT_MONGO_CONFIG = {
  * BullMQ Centralized Queue Names
  */
 export const QUEUES = {
-  SYSTEM: "veyora:system",
-  EMAIL: "veyora:email",
-  NOTIFICATIONS: "veyora:notifications",
-  ORDERS: "veyora:orders",
-  PAYMENTS: "veyora:payments",
-  EVENTS: "veyora:events",
+  SYSTEM: "veyora-system",
+  EMAIL: "veyora-email",
+  NOTIFICATIONS: "veyora-notifications",
+  ORDERS: "veyora-orders",
+  PAYMENTS: "veyora-payments",
+  EVENTS: "veyora-events",
 } as const;
 
 export type QueueNameValue = (typeof QUEUES)[keyof typeof QUEUES];

@@ -39,7 +39,11 @@ export class CatalogCacheService {
   /**
    * Cache arbitrary data with TTL
    */
-  async set(key: string, data: unknown, ttlSeconds = CatalogCacheService.DEFAULT_TTL): Promise<void> {
+  async set(
+    key: string,
+    data: unknown,
+    ttlSeconds = CatalogCacheService.DEFAULT_TTL
+  ): Promise<void> {
     const client = this.getClient();
     if (!client || !RedisService.connected) return;
 

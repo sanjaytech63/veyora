@@ -138,7 +138,9 @@ export default function BrandsPage() {
       toast.success("Brand deleted.");
       loadBrands();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Cannot delete brand associated with active products.");
+      toast.error(
+        err instanceof Error ? err.message : "Cannot delete brand associated with active products."
+      );
     }
   };
 
@@ -348,7 +350,10 @@ export default function BrandsPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Status</label>
-              <Select value={status} onValueChange={(val) => setStatus(val as "active" | "inactive")}>
+              <Select
+                value={status}
+                onValueChange={(val) => setStatus(val as "active" | "inactive")}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>

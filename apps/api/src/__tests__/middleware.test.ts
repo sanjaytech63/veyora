@@ -4,11 +4,7 @@ import express from "express";
 import { createApp } from "../app";
 import { errorHandler } from "../middleware/error-handler";
 import { validateRequest } from "../middleware/validate-request";
-import {
-  idParamSchema,
-  paginationQuerySchema,
-  registerSchema,
-} from "@veyora/validators";
+import { idParamSchema, paginationQuerySchema, registerSchema } from "@veyora/validators";
 import { z } from "zod";
 
 describe("API Middleware Suite", () => {

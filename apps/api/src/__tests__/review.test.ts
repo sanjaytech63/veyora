@@ -130,8 +130,12 @@ vi.mock("../modules/checkout/models/order.model", () => ({
         results = results.filter((o) => o.customerId.toString() === filter.customerId.toString());
       }
       if (filter["items.productId"]) {
-        results = results.filter((o) =>
-          o.items && o.items.some((item: any) => item.productId.toString() === filter["items.productId"].toString())
+        results = results.filter(
+          (o) =>
+            o.items &&
+            o.items.some(
+              (item: any) => item.productId.toString() === filter["items.productId"].toString()
+            )
         );
       }
       if (filter.status && filter.status.$in) {
@@ -219,7 +223,12 @@ vi.mock("../modules/review/models/review.model", () => {
         const product = mockProducts.find((p) => p._id.toString() === r.productId.toString());
         return {
           ...r,
-          userId: user || { _id: r.userId, firstName: "Verified", lastName: "Buyer", email: "user@veyora.com" },
+          userId: user || {
+            _id: r.userId,
+            firstName: "Verified",
+            lastName: "Buyer",
+            email: "user@veyora.com",
+          },
           productId: product || { _id: r.productId, title: "Test Garment", slug: "test-garment" },
         };
       });
@@ -248,7 +257,9 @@ vi.mock("../modules/review/models/review.model", () => {
     const matchStage = pipeline.find((p) => p.$match);
     if (matchStage) {
       if (matchStage.$match.productId) {
-        results = results.filter((r) => r.productId.toString() === matchStage.$match.productId.toString());
+        results = results.filter(
+          (r) => r.productId.toString() === matchStage.$match.productId.toString()
+        );
       }
       if (matchStage.$match.status) {
         results = results.filter((r) => r.status === matchStage.$match.status);
@@ -555,13 +566,11 @@ describe("Phase N — Veyora Product Reviews Integration Tests", () => {
     });
 
     it("should reject review submission from unauthenticated visitor with 401 Unauthorized", async () => {
-      const res = await request(app)
-        .post(`/api/v1/products/${productId1}/reviews`)
-        .send({
-          rating: 5,
-          title: "Unauthenticated review",
-          comment: "Visitor trying to submit without bearer token.",
-        });
+      const res = await request(app).post(`/api/v1/products/${productId1}/reviews`).send({
+        rating: 5,
+        title: "Unauthenticated review",
+        comment: "Visitor trying to submit without bearer token.",
+      });
 
       expect(res.status).toBe(401);
       expect(res.body.code).toBe("UNAUTHORIZED");
@@ -604,9 +613,7 @@ describe("Phase N — Veyora Product Reviews Integration Tests", () => {
     });
 
     it("should only display approved reviews on the storefront, omitting pending/rejected", async () => {
-      const res = await request(app)
-        .get(`/api/v1/products/${productId1}/reviews`)
-        .send();
+      const res = await request(app).get(`/api/v1/products/${productId1}/reviews`).send();
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -616,9 +623,7 @@ describe("Phase N — Veyora Product Reviews Integration Tests", () => {
     });
 
     it("should return the product rating summary with star breakdown", async () => {
-      const res = await request(app)
-        .get(`/api/v1/products/${productId1}/reviews/summary`)
-        .send();
+      const res = await request(app).get(`/api/v1/products/${productId1}/reviews/summary`).send();
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -629,9 +634,7 @@ describe("Phase N — Veyora Product Reviews Integration Tests", () => {
 
     it("should increment helpful counter on POST /api/v1/reviews/:id/helpful", async () => {
       const reviewId = mockReviews[0]._id;
-      const res = await request(app)
-        .post(`/api/v1/reviews/${reviewId}/helpful`)
-        .send();
+      const res = await request(app).post(`/api/v1/reviews/${reviewId}/helpful`).send();
 
       expect(res.status).toBe(200);
       expect(res.body.data.helpfulCount).toBe(4);

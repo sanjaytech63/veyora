@@ -121,7 +121,7 @@ export default function EditProductPage() {
           (prod.images || []).map((img, i) => ({
             url: img.url,
             alt: img.alt || "",
-            isPrimary: img.isPrimary ?? (i === 0),
+            isPrimary: img.isPrimary ?? i === 0,
             order: img.order ?? i,
           }))
         );
@@ -252,7 +252,10 @@ export default function EditProductPage() {
 
   if (!product) {
     return (
-      <PageContainer title="Product Not Found" description="The requested product could not be located.">
+      <PageContainer
+        title="Product Not Found"
+        description="The requested product could not be located."
+      >
         <div className="p-8 text-center space-y-4">
           <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
           <p className="text-muted-foreground">Product with ID {productId} does not exist.</p>
@@ -277,9 +280,7 @@ export default function EditProductPage() {
             </Link>
           </Button>
           <Badge
-            variant={
-              status === "active" ? "default" : status === "draft" ? "secondary" : "outline"
-            }
+            variant={status === "active" ? "default" : status === "draft" ? "secondary" : "outline"}
           >
             {status}
           </Badge>
@@ -297,19 +298,12 @@ export default function EditProductPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Product Title *</label>
-                <Input
-                  required
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                />
+                <Input required value={title} onChange={(e) => setTitle(e.target.value)} />
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Slug (URL Path)</label>
-                <Input
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
-                />
+                <Input value={slug} onChange={(e) => setSlug(e.target.value)} />
               </div>
             </div>
 
@@ -343,7 +337,9 @@ export default function EditProductPage() {
                   min="0"
                   required
                   value={price}
-                  onChange={(e) => setPrice(e.target.value === "" ? "" : parseFloat(e.target.value))}
+                  onChange={(e) =>
+                    setPrice(e.target.value === "" ? "" : parseFloat(e.target.value))
+                  }
                 />
               </div>
 
@@ -385,11 +381,7 @@ export default function EditProductPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">SKU *</label>
-                <Input
-                  required
-                  value={sku}
-                  onChange={(e) => setSku(e.target.value)}
-                />
+                <Input required value={sku} onChange={(e) => setSku(e.target.value)} />
               </div>
 
               <div className="space-y-2">
@@ -404,10 +396,7 @@ export default function EditProductPage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Barcode / EAN</label>
-                <Input
-                  value={barcode}
-                  onChange={(e) => setBarcode(e.target.value)}
-                />
+                <Input value={barcode} onChange={(e) => setBarcode(e.target.value)} />
               </div>
 
               <div className="flex items-center gap-2 pt-2">
@@ -452,7 +441,10 @@ export default function EditProductPage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Brand (Optional)</label>
-                <Select value={brandId || "none"} onValueChange={(val) => setBrandId(val === "none" ? "" : val)}>
+                <Select
+                  value={brandId || "none"}
+                  onValueChange={(val) => setBrandId(val === "none" ? "" : val)}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select brand" />
                   </SelectTrigger>
@@ -487,10 +479,7 @@ export default function EditProductPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Tags (Comma-separated)</label>
-              <Input
-                value={tagsInput}
-                onChange={(e) => setTagsInput(e.target.value)}
-              />
+              <Input value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} />
             </div>
           </CardContent>
         </Card>
@@ -600,7 +589,10 @@ export default function EditProductPage() {
             ) : (
               <div className="space-y-3">
                 {variants.map((v, i) => (
-                  <div key={i} className="flex flex-wrap items-center gap-2 p-3 border rounded-lg bg-muted/20">
+                  <div
+                    key={i}
+                    className="flex flex-wrap items-center gap-2 p-3 border rounded-lg bg-muted/20"
+                  >
                     <Input
                       placeholder="Variant SKU"
                       value={v.sku}
@@ -687,10 +679,7 @@ export default function EditProductPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Meta Title</label>
-              <Input
-                value={seoTitle}
-                onChange={(e) => setSeoTitle(e.target.value)}
-              />
+              <Input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Meta Description</label>

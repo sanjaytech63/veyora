@@ -151,7 +151,9 @@ export default function CategoriesPage() {
       toast.success("Category deleted.");
       loadCategories();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Cannot delete category with children or products.");
+      toast.error(
+        err instanceof Error ? err.message : "Cannot delete category with children or products."
+      );
     }
   };
 
@@ -312,7 +314,10 @@ export default function CategoriesPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Parent Category</label>
-              <Select value={parentId || "none"} onValueChange={(val) => setParentId(val === "none" ? "" : val)}>
+              <Select
+                value={parentId || "none"}
+                onValueChange={(val) => setParentId(val === "none" ? "" : val)}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select parent category" />
                 </SelectTrigger>
@@ -350,7 +355,10 @@ export default function CategoriesPage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Status</label>
-                <Select value={status} onValueChange={(val) => setStatus(val as "active" | "inactive")}>
+                <Select
+                  value={status}
+                  onValueChange={(val) => setStatus(val as "active" | "inactive")}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>

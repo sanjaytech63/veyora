@@ -79,22 +79,44 @@ export function VariantSelector({
 
   const getColorClass = (name: string) => {
     const n = name.toLowerCase();
-    if (n.includes("red") || n.includes("crimson") || n.includes("ruby") || n.includes("maroon") || n.includes("vermilion"))
+    if (
+      n.includes("red") ||
+      n.includes("crimson") ||
+      n.includes("ruby") ||
+      n.includes("maroon") ||
+      n.includes("vermilion")
+    )
       return "bg-red-700";
     if (n.includes("green") || n.includes("emerald") || n.includes("sage") || n.includes("olive"))
       return "bg-emerald-800";
-    if (n.includes("gold") || n.includes("mustard") || n.includes("amber") || n.includes("yellow") || n.includes("turmeric"))
+    if (
+      n.includes("gold") ||
+      n.includes("mustard") ||
+      n.includes("amber") ||
+      n.includes("yellow") ||
+      n.includes("turmeric")
+    )
       return "bg-amber-500";
     if (n.includes("blue") || n.includes("indigo") || n.includes("royal") || n.includes("navy"))
       return "bg-indigo-900";
     if (n.includes("pink") || n.includes("rose") || n.includes("blush") || n.includes("magenta"))
       return "bg-pink-600";
-    if (n.includes("ivory") || n.includes("pearl") || n.includes("champagne") || n.includes("cream") || n.includes("ecru"))
+    if (
+      n.includes("ivory") ||
+      n.includes("pearl") ||
+      n.includes("champagne") ||
+      n.includes("cream") ||
+      n.includes("ecru")
+    )
       return "bg-amber-100 border border-border";
-    if (n.includes("rust") || n.includes("terracotta") || n.includes("copper") || n.includes("orange"))
+    if (
+      n.includes("rust") ||
+      n.includes("terracotta") ||
+      n.includes("copper") ||
+      n.includes("orange")
+    )
       return "bg-orange-700";
-    if (n.includes("black") || n.includes("midnight") || n.includes("noir"))
-      return "bg-zinc-950";
+    if (n.includes("black") || n.includes("midnight") || n.includes("noir")) return "bg-zinc-950";
     if (n.includes("beige") || n.includes("sand") || n.includes("oatmeal"))
       return "bg-amber-200/80 border border-border";
     return "bg-primary";
@@ -245,7 +267,8 @@ export function VariantSelector({
                 </div>
 
                 <div className="rounded-xl border border-border/60 bg-muted/30 p-3 text-[11px] text-muted-foreground leading-relaxed">
-                  <strong>Fit Advice:</strong> If you are between sizes, we recommend ordering one size up for traditional straight and A-line kurtis.
+                  <strong>Fit Advice:</strong> If you are between sizes, we recommend ordering one
+                  size up for traditional straight and A-line kurtis.
                 </div>
               </DialogContent>
             </Dialog>
@@ -255,7 +278,8 @@ export function VariantSelector({
             {sizes.map((size) => {
               const isSelected = selectedVariant?.size === size;
               const matchingVar = variants.find(
-                (v) => v.size === size && (!selectedVariant?.color || v.color === selectedVariant.color)
+                (v) =>
+                  v.size === size && (!selectedVariant?.color || v.color === selectedVariant.color)
               );
               const isOutOfStock = matchingVar ? matchingVar.stock <= 0 : false;
 
@@ -269,9 +293,7 @@ export function VariantSelector({
                   disabled={isOutOfStock}
                   className={cn(
                     "rounded-xl px-4 py-2 text-xs font-semibold tracking-tight transition-all",
-                    isSelected
-                      ? "shadow-xs"
-                      : "hover:border-foreground/40 hover:bg-accent/40",
+                    isSelected ? "shadow-xs" : "hover:border-foreground/40 hover:bg-accent/40",
                     isOutOfStock &&
                       "cursor-not-allowed border-dashed bg-muted/20 text-muted-foreground line-through opacity-50"
                   )}

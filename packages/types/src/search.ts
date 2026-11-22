@@ -2,12 +2,7 @@ import { Product } from "./catalog";
 import { PaginationMeta } from "./common";
 
 export type SearchSortOption =
-  | "relevance"
-  | "price_asc"
-  | "price_desc"
-  | "newest"
-  | "rating"
-  | "popular";
+  "relevance" | "price_asc" | "price_desc" | "newest" | "rating" | "popular";
 
 export interface SearchFacetCategory {
   id: string;

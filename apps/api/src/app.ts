@@ -44,14 +44,13 @@ export function createApp(): Application {
   app.use(
     helmet({
       contentSecurityPolicy: env.NODE_ENV === "production" ? undefined : false,
+      crossOriginResourcePolicy: { policy: "cross-origin" },
     })
   );
 
-  // 4. CORS Whitelist
+  // 4. CORS Configuration
   const configuredOrigins =
-    env.CORS_ORIGIN === "*"
-      ? ["*"]
-      : env.CORS_ORIGIN.split(",").map((o) => o.trim());
+    env.CORS_ORIGIN === "*" ? ["*"] : env.CORS_ORIGIN.split(",").map((o) => o.trim());
 
   app.use(
     cors({
@@ -63,10 +62,14 @@ export function createApp(): Application {
         if (configuredOrigins.includes("*") || configuredOrigins.includes(origin)) {
           return callback(null, true);
         }
-        // In development, automatically allow any port on localhost or 127.0.0.1
+        // In development, automatically allow any port on localhost, 127.0.0.1, or ngrok tunnels
         if (env.NODE_ENV !== "production") {
-          const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
-          if (isLocalhost) {
+          const isLocalhostOrTunnel =
+            /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) ||
+            origin.endsWith(".ngrok-free.dev") ||
+            origin.endsWith(".ngrok.io") ||
+            origin.endsWith(".ngrok-free.app");
+          if (isLocalhostOrTunnel) {
             return callback(null, true);
           }
         }
@@ -74,16 +77,6 @@ export function createApp(): Application {
       },
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-      allowedHeaders: [
-        "Content-Type",
-        "Authorization",
-        "X-Request-Id",
-        "X-Guest-Id",
-        "x-guest-id",
-        "Accept",
-        "Origin",
-        "X-Requested-With",
-      ],
       exposedHeaders: ["X-Request-Id", "RateLimit-Limit", "RateLimit-Remaining", "RateLimit-Reset"],
     })
   );

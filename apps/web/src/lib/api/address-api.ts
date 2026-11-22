@@ -1,9 +1,5 @@
 import { apiClient } from "./api-client";
-import {
-  AddressDto,
-  CreateAddressPayload,
-  UpdateAddressPayload,
-} from "@veyora/types";
+import { AddressDto, CreateAddressPayload, UpdateAddressPayload } from "@veyora/types";
 
 export const addressApi = {
   listAddresses(): Promise<AddressDto[]> {

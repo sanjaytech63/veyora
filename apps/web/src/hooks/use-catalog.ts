@@ -2,13 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { catalogApi, ProductsResponse } from "@/lib/api/catalog-api";
 import { catalogKeys } from "@/lib/api/query-keys";
 import { ProductQueryInput, SearchQueryInput } from "@veyora/validators";
-import {
-  Product,
-  Category,
-  Brand,
-  SearchResponse,
-  SearchSuggestionResponse,
-} from "@veyora/types";
+import { Product, Category, Brand, SearchResponse, SearchSuggestionResponse } from "@veyora/types";
 
 export function useProducts(params?: Partial<ProductQueryInput>) {
   return useQuery<ProductsResponse>({

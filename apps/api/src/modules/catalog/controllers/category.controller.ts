@@ -5,7 +5,8 @@ import { CategoryStatus } from "@veyora/types";
 export class CategoryController {
   async listCategories(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const status = typeof req.query.status === "string" ? (req.query.status as CategoryStatus) : undefined;
+      const status =
+        typeof req.query.status === "string" ? (req.query.status as CategoryStatus) : undefined;
       const categories = await categoryService.getCategories(status ? { status } : undefined);
 
       res.status(200).json({

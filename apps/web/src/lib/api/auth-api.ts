@@ -1,8 +1,5 @@
 import { apiClient } from "./api-client";
-import {
-  AuthUser,
-  SessionInfo,
-} from "@veyora/types";
+import { AuthUser, SessionInfo } from "@veyora/types";
 import {
   RegisterInput,
   LoginInput,
@@ -30,23 +27,18 @@ export interface MessageResponse {
 }
 
 export const authApi = {
-  register: (data: RegisterInput) =>
-    apiClient.post<RegisterResponse>("/auth/register", data),
+  register: (data: RegisterInput) => apiClient.post<RegisterResponse>("/auth/register", data),
 
   verifyEmail: (data: VerifyOtpInput) =>
     apiClient.post<AuthTokensResponse>("/auth/verify-email", data),
 
-  resendOtp: (data: ResendOtpInput) =>
-    apiClient.post<MessageResponse>("/auth/resend-otp", data),
+  resendOtp: (data: ResendOtpInput) => apiClient.post<MessageResponse>("/auth/resend-otp", data),
 
-  login: (data: LoginInput) =>
-    apiClient.post<AuthTokensResponse>("/auth/login", data),
+  login: (data: LoginInput) => apiClient.post<AuthTokensResponse>("/auth/login", data),
 
-  refreshToken: () =>
-    apiClient.post<AuthTokensResponse>("/auth/refresh"),
+  refreshToken: () => apiClient.post<AuthTokensResponse>("/auth/refresh"),
 
-  logout: () =>
-    apiClient.post<MessageResponse>("/auth/logout"),
+  logout: () => apiClient.post<MessageResponse>("/auth/logout"),
 
   forgotPassword: (data: ForgotPasswordInput) =>
     apiClient.post<MessageResponse>("/auth/forgot-password", data),
@@ -54,11 +46,9 @@ export const authApi = {
   resetPassword: (data: ResetPasswordInput) =>
     apiClient.post<MessageResponse>("/auth/reset-password", data),
 
-  getMe: () =>
-    apiClient.get<AuthUser>("/auth/me"),
+  getMe: () => apiClient.get<AuthUser>("/auth/me"),
 
-  getSessions: () =>
-    apiClient.get<SessionInfo[]>("/auth/sessions"),
+  getSessions: () => apiClient.get<SessionInfo[]>("/auth/sessions"),
 
   revokeSession: (sessionId: string) =>
     apiClient.delete<MessageResponse>(`/auth/sessions/${sessionId}`),

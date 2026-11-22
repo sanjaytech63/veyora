@@ -41,7 +41,7 @@ export const VALID_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   delivered: ["refund_pending"],
   refund_pending: ["refunded", "delivered"],
   cancelled: [], // Terminal
-  refunded: [],  // Terminal
+  refunded: [], // Terminal
 };
 
 export class CheckoutService {
@@ -137,13 +137,23 @@ export class CheckoutService {
             trackingUrl: doc.tracking.trackingUrl || undefined,
             estimatedDeliveryDate: doc.tracking.estimatedDeliveryDate || undefined,
             shippedAt: doc.tracking.shippedAt ? doc.tracking.shippedAt.toISOString() : undefined,
-            deliveredAt: doc.tracking.deliveredAt ? doc.tracking.deliveredAt.toISOString() : undefined,
+            deliveredAt: doc.tracking.deliveredAt
+              ? doc.tracking.deliveredAt.toISOString()
+              : undefined,
           }
         : undefined,
       cancelReason: doc.cancelReason || undefined,
       cancelledAt: doc.cancelledAt ? doc.cancelledAt.toISOString() : undefined,
-      createdAt: doc.createdAt ? (doc.createdAt instanceof Date ? doc.createdAt.toISOString() : new Date(doc.createdAt).toISOString()) : new Date().toISOString(),
-      updatedAt: doc.updatedAt ? (doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : new Date(doc.updatedAt).toISOString()) : new Date().toISOString(),
+      createdAt: doc.createdAt
+        ? doc.createdAt instanceof Date
+          ? doc.createdAt.toISOString()
+          : new Date(doc.createdAt).toISOString()
+        : new Date().toISOString(),
+      updatedAt: doc.updatedAt
+        ? doc.updatedAt instanceof Date
+          ? doc.updatedAt.toISOString()
+          : new Date(doc.updatedAt).toISOString()
+        : new Date().toISOString(),
     };
   }
 
@@ -424,7 +434,9 @@ export class CheckoutService {
 
         if (item.quantity > availableStock) {
           if (availableStock <= 0) {
-            throw new ConflictError(`Garment "${product.title}" (${item.sku}) is currently out of stock.`);
+            throw new ConflictError(
+              `Garment "${product.title}" (${item.sku}) is currently out of stock.`
+            );
           }
           throw new ConflictError(
             `Insufficient stock for "${product.title}" (${item.sku}). Only ${availableStock} units remaining.`
@@ -469,7 +481,8 @@ export class CheckoutService {
             previousReserved: prevReserved,
             newReserved: inventoryDoc.reserved,
             reason: `Customer Order Checkout (${input.customerEmail})`,
-            userId: userId && mongoose.Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : null,
+            userId:
+              userId && mongoose.Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : null,
             userName: input.customerName,
           });
         } else {
@@ -504,8 +517,16 @@ export class CheckoutService {
 
     // 7. Resolve Billing Address
     const shippingAddress = {
-      firstName: (input.shippingAddress.firstName || input.customerName.split(" ")[0] || "Patron").trim(),
-      lastName: (input.shippingAddress.lastName || input.customerName.split(" ").slice(1).join(" ") || "").trim(),
+      firstName: (
+        input.shippingAddress.firstName ||
+        input.customerName.split(" ")[0] ||
+        "Patron"
+      ).trim(),
+      lastName: (
+        input.shippingAddress.lastName ||
+        input.customerName.split(" ").slice(1).join(" ") ||
+        ""
+      ).trim(),
       street: input.shippingAddress.street.trim(),
       apartment: input.shippingAddress.apartment?.trim() || "",
       city: input.shippingAddress.city.trim(),
@@ -578,7 +599,10 @@ export class CheckoutService {
           orderTotal: subtotal,
         });
       } catch (couponUsageErr) {
-        console.warn(`[Checkout] Failed to record coupon usage for ${cartDoc.couponCode}:`, couponUsageErr);
+        console.warn(
+          `[Checkout] Failed to record coupon usage for ${cartDoc.couponCode}:`,
+          couponUsageErr
+        );
       }
     }
 
@@ -639,7 +663,12 @@ export class CheckoutService {
   ): Promise<OrderDto> {
     const isObjectId = mongoose.Types.ObjectId.isValid(orderIdOrNumber);
     const query: Record<string, any> = isObjectId
-      ? { $or: [{ _id: new Types.ObjectId(orderIdOrNumber) }, { orderNumber: orderIdOrNumber.toUpperCase() }] }
+      ? {
+          $or: [
+            { _id: new Types.ObjectId(orderIdOrNumber) },
+            { orderNumber: orderIdOrNumber.toUpperCase() },
+          ],
+        }
       : { orderNumber: orderIdOrNumber.toUpperCase() };
 
     const order = await Order.findOne(query);
@@ -730,7 +759,12 @@ export class CheckoutService {
   ): Promise<OrderDto> {
     const isObjectId = mongoose.Types.ObjectId.isValid(orderIdOrNumber);
     const query: Record<string, any> = isObjectId
-      ? { $or: [{ _id: new Types.ObjectId(orderIdOrNumber) }, { orderNumber: orderIdOrNumber.toUpperCase() }] }
+      ? {
+          $or: [
+            { _id: new Types.ObjectId(orderIdOrNumber) },
+            { orderNumber: orderIdOrNumber.toUpperCase() },
+          ],
+        }
       : { orderNumber: orderIdOrNumber.toUpperCase() };
 
     const order = await Order.findOne(query);
@@ -765,7 +799,8 @@ export class CheckoutService {
       if (options?.carrier) order.tracking.carrier = options.carrier;
       if (options?.trackingNumber) order.tracking.trackingNumber = options.trackingNumber;
       if (options?.trackingUrl) order.tracking.trackingUrl = options.trackingUrl;
-      if (options?.estimatedDeliveryDate) order.tracking.estimatedDeliveryDate = options.estimatedDeliveryDate;
+      if (options?.estimatedDeliveryDate)
+        order.tracking.estimatedDeliveryDate = options.estimatedDeliveryDate;
       order.tracking.shippedAt = new Date();
     }
 
@@ -788,7 +823,11 @@ export class CheckoutService {
     await order.save();
 
     // Revert coupon redemption if refunded or cancelled
-    if (mongoose.connection.readyState === 1 && (newStatus === "refunded" || newStatus === "cancelled") && order.couponCode) {
+    if (
+      mongoose.connection.readyState === 1 &&
+      (newStatus === "refunded" || newStatus === "cancelled") &&
+      order.couponCode
+    ) {
       try {
         await couponService.revertCouponUsage(order.couponCode, {
           orderId: order._id.toString(),
@@ -811,7 +850,12 @@ export class CheckoutService {
   ): Promise<OrderDto> {
     const isObjectId = mongoose.Types.ObjectId.isValid(orderIdOrNumber);
     const query: Record<string, any> = isObjectId
-      ? { $or: [{ _id: new Types.ObjectId(orderIdOrNumber) }, { orderNumber: orderIdOrNumber.toUpperCase() }] }
+      ? {
+          $or: [
+            { _id: new Types.ObjectId(orderIdOrNumber) },
+            { orderNumber: orderIdOrNumber.toUpperCase() },
+          ],
+        }
       : { orderNumber: orderIdOrNumber.toUpperCase() };
 
     const order = await Order.findOne(query);
@@ -836,7 +880,9 @@ export class CheckoutService {
     } else {
       const allowedNext = VALID_STATUS_TRANSITIONS[order.status] || [];
       if (!allowedNext.includes("cancelled")) {
-        throw new BadRequestError(`Cannot cancel order in terminal or unmodifiable "${order.status}" state.`);
+        throw new BadRequestError(
+          `Cannot cancel order in terminal or unmodifiable "${order.status}" state.`
+        );
       }
     }
 
@@ -910,7 +956,11 @@ export class CheckoutService {
     return this.toOrderDto(order);
   }
 
-  private async releaseOrderStock(order: IOrder, reason: string, performerId: string): Promise<void> {
+  private async releaseOrderStock(
+    order: IOrder,
+    reason: string,
+    performerId: string
+  ): Promise<void> {
     for (const item of order.items) {
       const invQuery: Record<string, any> = { productId: item.productId };
       if (item.variantId) {
@@ -937,7 +987,9 @@ export class CheckoutService {
           previousReserved: prevReserved,
           newReserved: inventoryDoc.reserved,
           reason: `Order Cancellation (${order.orderNumber}): ${reason}`,
-          userId: mongoose.Types.ObjectId.isValid(performerId) ? new Types.ObjectId(performerId) : null,
+          userId: mongoose.Types.ObjectId.isValid(performerId)
+            ? new Types.ObjectId(performerId)
+            : null,
           userName: order.customerName,
         });
       } else {
@@ -946,7 +998,9 @@ export class CheckoutService {
         if (product) {
           product.stock += item.quantity;
           if (item.variantId && product.variants) {
-            const v = product.variants.find((vObj: any) => vObj._id?.toString() === item.variantId?.toString());
+            const v = product.variants.find(
+              (vObj: any) => vObj._id?.toString() === item.variantId?.toString()
+            );
             if (v) v.stock += item.quantity;
           }
           await product.save();

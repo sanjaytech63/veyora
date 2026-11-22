@@ -19,7 +19,12 @@ export function StoreNav({ className }: { className?: string }) {
   return (
     <nav className={cn("hidden lg:flex items-center gap-1", className)}>
       {/* 1. Home */}
-      <Button asChild variant="ghost" size="sm" className="h-9 px-3.5 font-semibold text-xs tracking-wider uppercase">
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        className="h-9 px-3.5 font-semibold text-xs tracking-wider uppercase"
+      >
         <Link
           href="/"
           className={cn(
@@ -32,7 +37,12 @@ export function StoreNav({ className }: { className?: string }) {
       </Button>
 
       {/* 2. Shop All */}
-      <Button asChild variant="ghost" size="sm" className="h-9 px-3.5 font-semibold text-xs tracking-wider uppercase">
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        className="h-9 px-3.5 font-semibold text-xs tracking-wider uppercase"
+      >
         <Link
           href="/shop"
           className={cn(
@@ -59,28 +69,43 @@ export function StoreNav({ className }: { className?: string }) {
             <ChevronDown className="h-3 w-3 opacity-60" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-80 p-3 rounded-2xl border border-border/80 bg-card shadow-xl space-y-1">
+        <DropdownMenuContent
+          align="start"
+          className="w-80 p-3 rounded-2xl border border-border/80 bg-card shadow-xl space-y-1"
+        >
           <div className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-primary flex items-center justify-between">
             <span>Kurtis &amp; Salwar Suits</span>
             <Sparkles className="h-3 w-3" />
           </div>
           <DropdownMenuItem asChild>
-            <Link href="/category/kurtis" className="cursor-pointer text-xs font-medium py-2 rounded-xl">
+            <Link
+              href="/category/kurtis"
+              className="cursor-pointer text-xs font-medium py-2 rounded-xl"
+            >
               Straight Cut Daily Kurtis
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/category/kurtis" className="cursor-pointer text-xs font-medium py-2 rounded-xl">
+            <Link
+              href="/category/kurtis"
+              className="cursor-pointer text-xs font-medium py-2 rounded-xl"
+            >
               Anarkali Suits with Dupatta
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/category/kurtis" className="cursor-pointer text-xs font-medium py-2 rounded-xl">
+            <Link
+              href="/category/kurtis"
+              className="cursor-pointer text-xs font-medium py-2 rounded-xl"
+            >
               Pure Mulmul Block Prints
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/category/kurtis" className="cursor-pointer text-xs font-medium py-2 rounded-xl">
+            <Link
+              href="/category/kurtis"
+              className="cursor-pointer text-xs font-medium py-2 rounded-xl"
+            >
               Chanderi Silk Festive Sets
             </Link>
           </DropdownMenuItem>
@@ -104,35 +129,52 @@ export function StoreNav({ className }: { className?: string }) {
             size="sm"
             className={cn(
               "h-9 px-3.5 font-semibold text-xs tracking-wider uppercase gap-1",
-              pathname.includes("/ethnic-wear") || pathname.includes("/sarees") ? "text-primary font-bold" : "text-muted-foreground"
+              pathname.includes("/ethnic-wear") || pathname.includes("/sarees")
+                ? "text-primary font-bold"
+                : "text-muted-foreground"
             )}
           >
             <span>Ethnic &amp; Festive</span>
             <ChevronDown className="h-3 w-3 opacity-60" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-80 p-3 rounded-2xl border border-border/80 bg-card shadow-xl space-y-1">
+        <DropdownMenuContent
+          align="start"
+          className="w-80 p-3 rounded-2xl border border-border/80 bg-card shadow-xl space-y-1"
+        >
           <div className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-primary flex items-center justify-between">
             <span>Traditional Indian Couture</span>
             <Sparkles className="h-3 w-3" />
           </div>
           <DropdownMenuItem asChild>
-            <Link href="/category/ethnic-wear" className="cursor-pointer text-xs font-medium py-2 rounded-xl">
+            <Link
+              href="/category/ethnic-wear"
+              className="cursor-pointer text-xs font-medium py-2 rounded-xl"
+            >
               Bridal &amp; Sangeet Lehengas
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/category/ethnic-wear" className="cursor-pointer text-xs font-medium py-2 rounded-xl">
+            <Link
+              href="/category/ethnic-wear"
+              className="cursor-pointer text-xs font-medium py-2 rounded-xl"
+            >
               Rajasthani Ghagra Choli
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/category/sarees" className="cursor-pointer text-xs font-medium py-2 rounded-xl">
+            <Link
+              href="/category/sarees"
+              className="cursor-pointer text-xs font-medium py-2 rounded-xl"
+            >
               Banarasi Katan Silk Sarees
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/category/accessories" className="cursor-pointer text-xs font-medium py-2 rounded-xl">
+            <Link
+              href="/category/accessories"
+              className="cursor-pointer text-xs font-medium py-2 rounded-xl"
+            >
               Mirror-Work Silk Dupattas
             </Link>
           </DropdownMenuItem>
@@ -149,7 +191,12 @@ export function StoreNav({ className }: { className?: string }) {
       </DropdownMenu>
 
       {/* 5. New Arrivals */}
-      <Button asChild variant="ghost" size="sm" className="h-9 px-3.5 font-semibold text-xs tracking-wider uppercase">
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        className="h-9 px-3.5 font-semibold text-xs tracking-wider uppercase"
+      >
         <Link
           href="/new-arrivals"
           className={cn(
@@ -163,7 +210,12 @@ export function StoreNav({ className }: { className?: string }) {
       </Button>
 
       {/* 6. Collections */}
-      <Button asChild variant="ghost" size="sm" className="h-9 px-3.5 font-semibold text-xs tracking-wider uppercase">
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        className="h-9 px-3.5 font-semibold text-xs tracking-wider uppercase"
+      >
         <Link
           href="/collections"
           className={cn(

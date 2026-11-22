@@ -33,11 +33,7 @@ import { Separator } from "@/components/ui/separator";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { adminOrdersApi } from "@/lib/api/admin-orders-api";
 import { adminPaymentApi } from "@/lib/api/admin-payment-api";
-import {
-  OrderDto,
-  OrderStatus,
-  UpdateOrderStatusPayload,
-} from "@veyora/types";
+import { OrderDto, OrderStatus, UpdateOrderStatusPayload } from "@veyora/types";
 import {
   Search,
   Eye,
@@ -164,13 +160,8 @@ export default function AdminOrdersPage() {
 
   // Mutation: update status
   const updateStatusMutation = useMutation({
-    mutationFn: ({
-      orderId,
-      payload,
-    }: {
-      orderId: string;
-      payload: UpdateOrderStatusPayload;
-    }) => adminOrdersApi.updateOrderStatus(orderId, payload),
+    mutationFn: ({ orderId, payload }: { orderId: string; payload: UpdateOrderStatusPayload }) =>
+      adminOrdersApi.updateOrderStatus(orderId, payload),
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
       toast.success("Order status updated", {
@@ -337,7 +328,10 @@ export default function AdminOrdersPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-12 text-xs text-muted-foreground">
+                  <TableCell
+                    colSpan={7}
+                    className="text-center py-12 text-xs text-muted-foreground"
+                  >
                     <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2 text-primary" />
                     Loading orders telemetry...
                   </TableCell>
@@ -351,7 +345,10 @@ export default function AdminOrdersPage() {
                 </TableRow>
               ) : orders.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-12 text-xs text-muted-foreground">
+                  <TableCell
+                    colSpan={7}
+                    className="text-center py-12 text-xs text-muted-foreground"
+                  >
                     No orders found matching criteria.
                   </TableCell>
                 </TableRow>
@@ -367,16 +364,23 @@ export default function AdminOrdersPage() {
                         {order.orderNumber}
                         <div className="text-[10px] font-normal text-muted-foreground">
                           {new Date(order.createdAt).toLocaleDateString()} at{" "}
-                          {new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          {new Date(order.createdAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </div>
                       </TableCell>
 
                       <TableCell className="text-xs">
                         <div className="font-medium text-foreground">{order.customerName}</div>
-                        <div className="text-[11px] text-muted-foreground">{order.customerEmail}</div>
+                        <div className="text-[11px] text-muted-foreground">
+                          {order.customerEmail}
+                        </div>
                         <div className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
                           <MapPin className="h-2.5 w-2.5" />
-                          <span>{order.shippingAddress.city}, {order.shippingAddress.state}</span>
+                          <span>
+                            {order.shippingAddress.city}, {order.shippingAddress.state}
+                          </span>
                         </div>
                       </TableCell>
 
@@ -391,7 +395,9 @@ export default function AdminOrdersPage() {
 
                       <TableCell className="text-xs">
                         <span className="capitalize font-medium">
-                          {order.shippingMethod === "express" ? "Atelier Express" : "Standard Ground"}
+                          {order.shippingMethod === "express"
+                            ? "Atelier Express"
+                            : "Standard Ground"}
                         </span>
                         {order.tracking?.carrier && (
                           <div className="text-[10px] text-muted-foreground">
@@ -448,7 +454,9 @@ export default function AdminOrdersPage() {
           {/* Pagination Footer */}
           {total > 20 && (
             <div className="flex items-center justify-between p-4 border-t border-border/70 text-xs text-muted-foreground">
-              <span>Showing {orders.length} of {total} orders</span>
+              <span>
+                Showing {orders.length} of {total} orders
+              </span>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
@@ -526,7 +534,8 @@ export default function AdminOrdersPage() {
                         <div>
                           <p className="text-xs font-semibold text-foreground">{item.title}</p>
                           <p className="text-[10px] text-muted-foreground font-mono">
-                            SKU: {item.sku} {item.size && `• Size: ${item.size}`} {item.color && `• Color: ${item.color}`}
+                            SKU: {item.sku} {item.size && `• Size: ${item.size}`}{" "}
+                            {item.color && `• Color: ${item.color}`}
                           </p>
                         </div>
                       </div>
@@ -552,13 +561,17 @@ export default function AdminOrdersPage() {
                     <span>Shipping Destination</span>
                   </h4>
                   <p className="font-medium text-foreground">
-                    {selectedOrder.shippingAddress.firstName} {selectedOrder.shippingAddress.lastName}
+                    {selectedOrder.shippingAddress.firstName}{" "}
+                    {selectedOrder.shippingAddress.lastName}
                   </p>
                   <p className="text-muted-foreground leading-relaxed">
                     {selectedOrder.shippingAddress.street}
-                    {selectedOrder.shippingAddress.apartment && `, ${selectedOrder.shippingAddress.apartment}`}<br />
+                    {selectedOrder.shippingAddress.apartment &&
+                      `, ${selectedOrder.shippingAddress.apartment}`}
+                    <br />
                     {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state}{" "}
-                    {selectedOrder.shippingAddress.postalCode}<br />
+                    {selectedOrder.shippingAddress.postalCode}
+                    <br />
                     {selectedOrder.shippingAddress.country}
                   </p>
                   {selectedOrder.shippingAddress.phone && (
@@ -577,13 +590,17 @@ export default function AdminOrdersPage() {
                     <div className="flex justify-between">
                       <span>Service:</span>
                       <span className="font-medium text-foreground">
-                        {selectedOrder.shippingMethod === "express" ? "Priority Express" : "Standard Ground"}
+                        {selectedOrder.shippingMethod === "express"
+                          ? "Priority Express"
+                          : "Standard Ground"}
                       </span>
                     </div>
                     {selectedOrder.tracking?.carrier && (
                       <div className="flex justify-between">
                         <span>Courier Partner:</span>
-                        <span className="font-semibold text-foreground">{selectedOrder.tracking.carrier}</span>
+                        <span className="font-semibold text-foreground">
+                          {selectedOrder.tracking.carrier}
+                        </span>
                       </div>
                     )}
                     {selectedOrder.tracking?.trackingNumber && (
@@ -613,7 +630,9 @@ export default function AdminOrdersPage() {
               <div className="rounded-2xl border border-border/70 p-4 space-y-2 text-xs bg-muted/20">
                 <div className="flex justify-between text-muted-foreground">
                   <span>Garment Subtotal</span>
-                  <span className="font-medium text-foreground tabular-nums">${selectedOrder.subtotal.toFixed(2)}</span>
+                  <span className="font-medium text-foreground tabular-nums">
+                    ${selectedOrder.subtotal.toFixed(2)}
+                  </span>
                 </div>
                 {selectedOrder.discount > 0 && (
                   <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-medium">
@@ -624,17 +643,23 @@ export default function AdminOrdersPage() {
                 <div className="flex justify-between text-muted-foreground">
                   <span>Courier Dispatch</span>
                   <span className="font-medium text-foreground tabular-nums">
-                    {selectedOrder.shippingCost === 0 ? "Complimentary" : `$${selectedOrder.shippingCost.toFixed(2)}`}
+                    {selectedOrder.shippingCost === 0
+                      ? "Complimentary"
+                      : `$${selectedOrder.shippingCost.toFixed(2)}`}
                   </span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Estimated Tax</span>
-                  <span className="font-medium text-foreground tabular-nums">${selectedOrder.tax.toFixed(2)}</span>
+                  <span className="font-medium text-foreground tabular-nums">
+                    ${selectedOrder.tax.toFixed(2)}
+                  </span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-sm text-foreground pt-1">
                   <span>Total Authorized</span>
-                  <span className="text-base font-mono tabular-nums">${selectedOrder.total.toFixed(2)}</span>
+                  <span className="text-base font-mono tabular-nums">
+                    ${selectedOrder.total.toFixed(2)}
+                  </span>
                 </div>
 
                 {selectedOrder.status !== "pending" &&
@@ -663,7 +688,10 @@ export default function AdminOrdersPage() {
                 <div className="rounded-2xl border border-border/70 p-4 space-y-3 text-xs">
                   {selectedOrder.statusHistory && selectedOrder.statusHistory.length > 0 ? (
                     selectedOrder.statusHistory.map((step, idx) => (
-                      <div key={idx} className="flex items-start gap-3 border-b border-border/40 pb-2.5 last:border-b-0 last:pb-0">
+                      <div
+                        key={idx}
+                        className="flex items-start gap-3 border-b border-border/40 pb-2.5 last:border-b-0 last:pb-0"
+                      >
                         <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">
                           {idx + 1}
                         </div>
@@ -677,7 +705,9 @@ export default function AdminOrdersPage() {
                             </span>
                           </div>
                           {step.reason && (
-                            <p className="text-[11px] text-muted-foreground italic">&ldquo;{step.reason}&rdquo;</p>
+                            <p className="text-[11px] text-muted-foreground italic">
+                              &ldquo;{step.reason}&rdquo;
+                            </p>
                           )}
                           <p className="text-[10px] text-muted-foreground">
                             Actor: {step.changedBy || "System"} ({step.role || "admin"})
@@ -704,7 +734,8 @@ export default function AdminOrdersPage() {
                 <span>Transition Order // {orderToUpdate.orderNumber}</span>
               </DialogTitle>
               <DialogDescription className="text-xs">
-                Current Status: <strong className="uppercase">{orderToUpdate.status}</strong>. Only validated state transitions are permitted.
+                Current Status: <strong className="uppercase">{orderToUpdate.status}</strong>. Only
+                validated state transitions are permitted.
               </DialogDescription>
             </DialogHeader>
 
@@ -713,10 +744,7 @@ export default function AdminOrdersPage() {
                 <Label htmlFor="nextStatus" className="text-xs font-semibold">
                   Select Target State <span className="text-destructive">*</span>
                 </Label>
-                <Select
-                  value={newStatus}
-                  onValueChange={(val) => setNewStatus(val as OrderStatus)}
-                >
+                <Select value={newStatus} onValueChange={(val) => setNewStatus(val as OrderStatus)}>
                   <SelectTrigger id="nextStatus" className="h-10 rounded-xl text-xs">
                     <SelectValue placeholder="Choose allowed transition" />
                   </SelectTrigger>
@@ -795,7 +823,9 @@ export default function AdminOrdersPage() {
                   disabled={updateStatusMutation.isPending || !newStatus}
                   className="rounded-xl text-xs font-semibold"
                 >
-                  {updateStatusMutation.isPending ? "Executing Transition..." : "Commit State Change"}
+                  {updateStatusMutation.isPending
+                    ? "Executing Transition..."
+                    : "Commit State Change"}
                 </Button>
               </div>
             </form>
@@ -821,11 +851,15 @@ export default function AdminOrdersPage() {
               <div className="rounded-2xl border border-border/70 p-3 bg-muted/20 text-xs space-y-1">
                 <div className="flex justify-between text-muted-foreground">
                   <span>Customer:</span>
-                  <span className="font-semibold text-foreground">{orderToRefund.customerName}</span>
+                  <span className="font-semibold text-foreground">
+                    {orderToRefund.customerName}
+                  </span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Total Settled:</span>
-                  <span className="font-bold text-foreground tabular-nums">${orderToRefund.total.toFixed(2)}</span>
+                  <span className="font-bold text-foreground tabular-nums">
+                    ${orderToRefund.total.toFixed(2)}
+                  </span>
                 </div>
               </div>
 
@@ -845,7 +879,8 @@ export default function AdminOrdersPage() {
                   required
                 />
                 <p className="text-[10px] text-muted-foreground">
-                  Leave at ${orderToRefund.total.toFixed(2)} for full settlement refund, or enter a partial amount.
+                  Leave at ${orderToRefund.total.toFixed(2)} for full settlement refund, or enter a
+                  partial amount.
                 </p>
               </div>
 

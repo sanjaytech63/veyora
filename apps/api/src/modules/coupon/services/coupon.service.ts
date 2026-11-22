@@ -53,10 +53,16 @@ export class CouponService {
       analytics: {
         totalDiscountGiven: coupon.analytics?.totalDiscountGiven || 0,
         totalRevenueGenerated: coupon.analytics?.totalRevenueGenerated || 0,
-        lastUsedAt: coupon.analytics?.lastUsedAt ? coupon.analytics.lastUsedAt.toISOString() : undefined,
+        lastUsedAt: coupon.analytics?.lastUsedAt
+          ? coupon.analytics.lastUsedAt.toISOString()
+          : undefined,
       },
-      createdAt: coupon.createdAt ? new Date(coupon.createdAt).toISOString() : new Date().toISOString(),
-      updatedAt: coupon.updatedAt ? new Date(coupon.updatedAt).toISOString() : new Date().toISOString(),
+      createdAt: coupon.createdAt
+        ? new Date(coupon.createdAt).toISOString()
+        : new Date().toISOString(),
+      updatedAt: coupon.updatedAt
+        ? new Date(coupon.updatedAt).toISOString()
+        : new Date().toISOString(),
     };
   }
 
@@ -131,8 +137,10 @@ export class CouponService {
         // Check inclusions
         let isEligible = true;
         if (hasProductRules || hasCategoryRules) {
-          const productMatch = hasProductRules && coupon.applicableProducts.some((p: any) => p.toString() === pId);
-          const categoryMatch = hasCategoryRules && coupon.applicableCategories.some((c: any) => c.toString() === cId);
+          const productMatch =
+            hasProductRules && coupon.applicableProducts.some((p: any) => p.toString() === pId);
+          const categoryMatch =
+            hasCategoryRules && coupon.applicableCategories.some((c: any) => c.toString() === cId);
           isEligible = Boolean(productMatch || categoryMatch);
         }
 
@@ -142,7 +150,9 @@ export class CouponService {
       }
 
       if ((hasProductRules || hasCategoryRules) && eligibleSubtotal <= 0) {
-        throw new BadRequestError(`Coupon "${cleanCode}" is not applicable to any items currently in your bag.`);
+        throw new BadRequestError(
+          `Coupon "${cleanCode}" is not applicable to any items currently in your bag.`
+        );
       }
     } else {
       eligibleSubtotal = cartTotal || 0;
@@ -232,8 +242,10 @@ export class CouponService {
       totalRevenueGenerated: 0,
       lastUsedAt: null,
     };
-    coupon.analytics.totalDiscountGiven = Math.round((coupon.analytics.totalDiscountGiven + usage.discountAmount) * 100) / 100;
-    coupon.analytics.totalRevenueGenerated = Math.round((coupon.analytics.totalRevenueGenerated + usage.orderTotal) * 100) / 100;
+    coupon.analytics.totalDiscountGiven =
+      Math.round((coupon.analytics.totalDiscountGiven + usage.discountAmount) * 100) / 100;
+    coupon.analytics.totalRevenueGenerated =
+      Math.round((coupon.analytics.totalRevenueGenerated + usage.orderTotal) * 100) / 100;
     coupon.analytics.lastUsedAt = new Date();
 
     await coupon.save({ session });
@@ -254,10 +266,14 @@ export class CouponService {
 
     await usageDoc.save({ session });
 
-    logger.info("COUPON", `Coupon "${cleanCode}" successfully redeemed for order ${usage.orderNumber || usage.orderId}`, {
-      discountAmount: usage.discountAmount,
-      totalUsage: coupon.usageCount,
-    });
+    logger.info(
+      "COUPON",
+      `Coupon "${cleanCode}" successfully redeemed for order ${usage.orderNumber || usage.orderId}`,
+      {
+        discountAmount: usage.discountAmount,
+        totalUsage: coupon.usageCount,
+      }
+    );
   }
 
   /**
@@ -281,7 +297,9 @@ export class CouponService {
 
     if (reversal.customerEmail) {
       const patronId = reversal.customerEmail.toLowerCase().trim();
-      const existing = coupon.customerUsage.find((u: any) => u.customerIdOrEmail.toLowerCase() === patronId);
+      const existing = coupon.customerUsage.find(
+        (u: any) => u.customerIdOrEmail.toLowerCase() === patronId
+      );
       if (existing && existing.usageCount > 0) {
         existing.usageCount -= 1;
       }
@@ -322,7 +340,9 @@ export class CouponService {
       usageLimit: payload.usageLimit || null,
       perCustomerLimit: payload.perCustomerLimit || null,
       applicableProducts: (payload.applicableProducts || []).map((id) => new Types.ObjectId(id)),
-      applicableCategories: (payload.applicableCategories || []).map((id) => new Types.ObjectId(id)),
+      applicableCategories: (payload.applicableCategories || []).map(
+        (id) => new Types.ObjectId(id)
+      ),
       excludedProducts: (payload.excludedProducts || []).map((id) => new Types.ObjectId(id)),
       isActive: payload.isActive !== undefined ? payload.isActive : true,
       usageCount: 0,
@@ -361,10 +381,13 @@ export class CouponService {
       coupon.discountType = payload.discountType;
     }
     if (payload.discountValue !== undefined) coupon.discountValue = payload.discountValue;
-    if (payload.minimumOrderAmount !== undefined) coupon.minimumOrderAmount = payload.minimumOrderAmount;
-    if (payload.maxDiscountAmount !== undefined) coupon.maxDiscountAmount = payload.maxDiscountAmount;
+    if (payload.minimumOrderAmount !== undefined)
+      coupon.minimumOrderAmount = payload.minimumOrderAmount;
+    if (payload.maxDiscountAmount !== undefined)
+      coupon.maxDiscountAmount = payload.maxDiscountAmount;
     if (payload.startsAt !== undefined) coupon.startsAt = new Date(payload.startsAt);
-    if (payload.expiresAt !== undefined) coupon.expiresAt = payload.expiresAt ? new Date(payload.expiresAt) : null;
+    if (payload.expiresAt !== undefined)
+      coupon.expiresAt = payload.expiresAt ? new Date(payload.expiresAt) : null;
     if (payload.usageLimit !== undefined) coupon.usageLimit = payload.usageLimit;
     if (payload.perCustomerLimit !== undefined) coupon.perCustomerLimit = payload.perCustomerLimit;
     if (payload.applicableProducts !== undefined) {
@@ -439,12 +462,21 @@ export class CouponService {
         filter.isActive = true;
         filter.$and = [
           { $or: [{ startsAt: { $exists: false } }, { startsAt: { $lte: now } }] },
-          { $or: [{ expiresAt: { $exists: false } }, { expiresAt: null }, { expiresAt: { $gt: now } }] },
+          {
+            $or: [
+              { expiresAt: { $exists: false } },
+              { expiresAt: null },
+              { expiresAt: { $gt: now } },
+            ],
+          },
         ];
       } else if (query.status === "inactive") {
         filter.isActive = false;
       } else if (query.status === "expired") {
-        filter.$or = [{ expiresAt: { $lte: now } }, { $expr: { $gte: ["$usageCount", "$usageLimit"] } }];
+        filter.$or = [
+          { expiresAt: { $lte: now } },
+          { $expr: { $gte: ["$usageCount", "$usageLimit"] } },
+        ];
       }
     }
 
@@ -497,7 +529,9 @@ export class CouponService {
       totalDiscountGiven: coupon.analytics.totalDiscountGiven,
       totalRevenueGenerated: coupon.analytics.totalRevenueGenerated,
       averageOrderValue,
-      lastUsedAt: coupon.analytics.lastUsedAt ? coupon.analytics.lastUsedAt.toISOString() : undefined,
+      lastUsedAt: coupon.analytics.lastUsedAt
+        ? coupon.analytics.lastUsedAt.toISOString()
+        : undefined,
       recentRedemptions: redemptions.map((r: any) => ({
         orderId: r.orderId ? r.orderId.toString() : "",
         orderNumber: r.orderNumber || "N/A",

@@ -28,7 +28,8 @@ export function useOrders() {
     },
     onError: (err: Error) => {
       toast.error("Could not cancel order", {
-        description: err.message || "Please contact atelier support if the order has begun tailoring.",
+        description:
+          err.message || "Please contact atelier support if the order has begun tailoring.",
       });
     },
   });

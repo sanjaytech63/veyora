@@ -3,11 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { cartApi } from "../api/cart-api";
 import { cartKeys } from "../api/query-keys";
-import {
-  CartDto,
-  AddToCartPayload,
-  ApplyCouponPayload,
-} from "@veyora/types";
+import { CartDto, AddToCartPayload, ApplyCouponPayload } from "@veyora/types";
 import { toast } from "sonner";
 
 export function useCart() {

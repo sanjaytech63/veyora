@@ -12,8 +12,7 @@ export const adminReviewApi = {
       params: params as Record<string, string | number | boolean | undefined | null>,
     }),
 
-  getReview: (id: string) =>
-    apiClient.get<ReviewDto>(`/admin/reviews/${id}`),
+  getReview: (id: string) => apiClient.get<ReviewDto>(`/admin/reviews/${id}`),
 
   moderateReview: (id: string, payload: ModerateReviewPayload) =>
     apiClient.patch<ReviewDto>(`/admin/reviews/${id}/status`, payload),

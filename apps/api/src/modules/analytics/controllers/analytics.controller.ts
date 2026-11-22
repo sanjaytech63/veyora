@@ -57,7 +57,11 @@ export class AnalyticsController {
   /**
    * GET /api/v1/admin/analytics/customers
    */
-  public async getCustomersAnalytics(req: Request, res: Response, next: NextFunction): Promise<void> {
+  public async getCustomersAnalytics(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const query = req.query as unknown as AnalyticsDateRangeFilter;
       const data = await analyticsService.getCustomersOverview(query);
@@ -74,7 +78,11 @@ export class AnalyticsController {
   /**
    * GET /api/v1/admin/analytics/products
    */
-  public async getProductsAnalytics(req: Request, res: Response, next: NextFunction): Promise<void> {
+  public async getProductsAnalytics(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const query = req.query as unknown as AnalyticsDateRangeFilter;
       const data = await analyticsService.getProductsOverview(query);
@@ -91,7 +99,11 @@ export class AnalyticsController {
   /**
    * GET /api/v1/admin/analytics/inventory
    */
-  public async getInventoryAnalytics(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  public async getInventoryAnalytics(
+    _req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const data = await analyticsService.getInventoryOverview();
 

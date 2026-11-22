@@ -128,7 +128,8 @@ export default function CustomerOrdersPage() {
             Order History & Tracking
           </h1>
           <p className="text-xs text-muted-foreground max-w-lg">
-            Track fulfillment progress, inspect luxury garment specifications, and oversee order status.
+            Track fulfillment progress, inspect luxury garment specifications, and oversee order
+            status.
           </p>
         </div>
 
@@ -146,20 +147,22 @@ export default function CustomerOrdersPage() {
 
           {/* Status Pills */}
           <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
-            {["all", "pending", "confirmed", "processing", "shipped", "delivered", "cancelled"].map((st) => (
-              <button
-                key={st}
-                type="button"
-                onClick={() => setStatusFilter(st)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all shrink-0 capitalize ${
-                  statusFilter === st
-                    ? "bg-primary text-primary-foreground shadow-xs"
-                    : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-              >
-                {st}
-              </button>
-            ))}
+            {["all", "pending", "confirmed", "processing", "shipped", "delivered", "cancelled"].map(
+              (st) => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => setStatusFilter(st)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all shrink-0 capitalize ${
+                    statusFilter === st
+                      ? "bg-primary text-primary-foreground shadow-xs"
+                      : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  {st}
+                </button>
+              )
+            )}
           </div>
         </div>
 
@@ -167,7 +170,10 @@ export default function CustomerOrdersPage() {
         {isLoading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-40 rounded-3xl bg-muted/40 animate-pulse border border-border/60" />
+              <div
+                key={i}
+                className="h-40 rounded-3xl bg-muted/40 animate-pulse border border-border/60"
+              />
             ))}
           </div>
         ) : filteredOrders.length === 0 ? (
@@ -217,7 +223,8 @@ export default function CustomerOrdersPage() {
                         </Badge>
                       </div>
                       <p className="text-[11px] text-muted-foreground">
-                        Placed on {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                        Placed on{" "}
+                        {new Date(order.createdAt).toLocaleDateString("en-IN", {
                           day: "numeric",
                           month: "short",
                           year: "numeric",
@@ -231,7 +238,12 @@ export default function CustomerOrdersPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Button asChild variant="outline" size="sm" className="rounded-xl text-xs h-9">
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="rounded-xl text-xs h-9"
+                      >
                         <Link href={`/orders/${order.id}`}>
                           <span>View Details & Tracking</span>
                           <ArrowRight className="h-3.5 w-3.5 ml-1" />
@@ -276,7 +288,9 @@ export default function CustomerOrdersPage() {
                             )}
                           </div>
                           <div className="text-xs space-y-0.5 max-w-[140px]">
-                            <p className="font-semibold text-foreground line-clamp-1">{item.title}</p>
+                            <p className="font-semibold text-foreground line-clamp-1">
+                              {item.title}
+                            </p>
                             <p className="text-[10px] text-muted-foreground">
                               Qty: {item.quantity} {item.size && `• ${item.size}`}
                             </p>
@@ -291,12 +305,16 @@ export default function CustomerOrdersPage() {
                         <span className="text-[11px] text-muted-foreground block">Destination</span>
                         <span className="font-medium text-foreground flex items-center justify-end gap-1">
                           <MapPin className="h-3 w-3 text-primary" />
-                          <span>{order.shippingAddress.city}, {order.shippingAddress.state}</span>
+                          <span>
+                            {order.shippingAddress.city}, {order.shippingAddress.state}
+                          </span>
                         </span>
                       </div>
 
                       <div className="text-right">
-                        <span className="text-[11px] text-muted-foreground block">Authorized Total</span>
+                        <span className="text-[11px] text-muted-foreground block">
+                          Authorized Total
+                        </span>
                         <span className="font-mono text-sm font-bold text-foreground tabular-nums">
                           ${order.total.toFixed(2)}
                         </span>
@@ -319,7 +337,8 @@ export default function CustomerOrdersPage() {
                 Cancel Order // {cancelModalOrder.orderNumber}
               </DialogTitle>
               <DialogDescription className="text-xs">
-                Are you sure you wish to cancel this atelier reservation? Reserved garment stock will be immediately released.
+                Are you sure you wish to cancel this atelier reservation? Reserved garment stock
+                will be immediately released.
               </DialogDescription>
             </DialogHeader>
 

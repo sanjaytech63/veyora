@@ -20,9 +20,7 @@ const shimmerSvg = (w: number, h: number) => `
 </svg>`;
 
 const toBase64 = (str: string) =>
-  typeof window === "undefined"
-    ? Buffer.from(str).toString("base64")
-    : window.btoa(str);
+  typeof window === "undefined" ? Buffer.from(str).toString("base64") : window.btoa(str);
 
 export const shimmerPlaceholder = `data:image/svg+xml;base64,${toBase64(shimmerSvg(600, 750))}`;
 
@@ -58,7 +56,11 @@ export function OptimizedImage({
         <Image
           src={fallbackSrc}
           alt={alt || "Image preview"}
-          className={cn("transition-opacity duration-300", loaded ? "opacity-100" : "opacity-0", className)}
+          className={cn(
+            "transition-opacity duration-300",
+            loaded ? "opacity-100" : "opacity-0",
+            className
+          )}
           fill={fill}
           width={!fill ? width || 400 : undefined}
           height={!fill ? height || 400 : undefined}
@@ -85,11 +87,7 @@ export function OptimizedImage({
     <Image
       src={src}
       alt={alt || "Product image"}
-      className={cn(
-        "transition-all duration-300",
-        loaded ? "opacity-100" : "opacity-0",
-        className
-      )}
+      className={cn("transition-all duration-300", loaded ? "opacity-100" : "opacity-0", className)}
       fill={fill}
       width={!fill ? width || 600 : undefined}
       height={!fill ? height || 600 : undefined}
@@ -114,11 +112,7 @@ export function ProductImage({
 }: OptimizedImageProps & { aspectRatio?: string }) {
   return (
     <div
-      className={cn(
-        "relative w-full overflow-hidden bg-muted/30",
-        aspectRatio,
-        containerClassName
-      )}
+      className={cn("relative w-full overflow-hidden bg-muted/30", aspectRatio, containerClassName)}
     >
       <OptimizedImage
         src={src}

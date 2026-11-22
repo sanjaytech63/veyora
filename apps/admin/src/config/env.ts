@@ -8,7 +8,10 @@ function parseEnv(): AdminEnv {
   });
 
   if (!result.success) {
-    console.error("FATAL: Invalid Admin console environment configuration:", result.error.flatten().fieldErrors);
+    console.error(
+      "FATAL: Invalid Admin console environment configuration:",
+      result.error.flatten().fieldErrors
+    );
     throw new Error("Invalid Admin environment configuration.");
   }
 

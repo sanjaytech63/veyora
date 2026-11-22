@@ -163,32 +163,39 @@ vi.mock("../modules/auth/models/session.model", () => ({
         sort: vi.fn().mockResolvedValue(filtered),
       };
     }),
-    updateOne: vi.fn(async (filter: { _id?: unknown; refreshTokenHash?: string; userId?: unknown }, update: { isRevoked?: boolean }) => {
-      let found = false;
-      for (const s of mockSessions) {
-        if (filter.refreshTokenHash && s.refreshTokenHash === filter.refreshTokenHash) {
-          if (update.isRevoked !== undefined) s.isRevoked = update.isRevoked;
-          found = true;
-        } else if (filter._id && s._id.toString() === filter._id.toString()) {
-          if (update.isRevoked !== undefined) s.isRevoked = update.isRevoked;
-          found = true;
+    updateOne: vi.fn(
+      async (
+        filter: { _id?: unknown; refreshTokenHash?: string; userId?: unknown },
+        update: { isRevoked?: boolean }
+      ) => {
+        let found = false;
+        for (const s of mockSessions) {
+          if (filter.refreshTokenHash && s.refreshTokenHash === filter.refreshTokenHash) {
+            if (update.isRevoked !== undefined) s.isRevoked = update.isRevoked;
+            found = true;
+          } else if (filter._id && s._id.toString() === filter._id.toString()) {
+            if (update.isRevoked !== undefined) s.isRevoked = update.isRevoked;
+            found = true;
+          }
         }
+        return { matchedCount: found ? 1 : 0 };
       }
-      return { matchedCount: found ? 1 : 0 };
-    }),
-    updateMany: vi.fn(async (filter: { familyId?: string; userId?: unknown }, update: { isRevoked?: boolean }) => {
-      let count = 0;
-      for (const s of mockSessions) {
-        if (filter.familyId && s.familyId === filter.familyId) {
-          if (update.isRevoked !== undefined) s.isRevoked = update.isRevoked;
-          count++;
-        } else if (filter.userId && s.userId.toString() === filter.userId.toString()) {
-          if (update.isRevoked !== undefined) s.isRevoked = update.isRevoked;
-          count++;
+    ),
+    updateMany: vi.fn(
+      async (filter: { familyId?: string; userId?: unknown }, update: { isRevoked?: boolean }) => {
+        let count = 0;
+        for (const s of mockSessions) {
+          if (filter.familyId && s.familyId === filter.familyId) {
+            if (update.isRevoked !== undefined) s.isRevoked = update.isRevoked;
+            count++;
+          } else if (filter.userId && s.userId.toString() === filter.userId.toString()) {
+            if (update.isRevoked !== undefined) s.isRevoked = update.isRevoked;
+            count++;
+          }
         }
+        return { matchedCount: count, modifiedCount: count };
       }
-      return { matchedCount: count, modifiedCount: count };
-    }),
+    ),
   },
 }));
 
@@ -320,9 +327,9 @@ describe("Authentication & Authorization System", () => {
 
       await otpService.saveOtp(email, otp, "EMAIL_VERIFICATION");
 
-      await expect(
-        otpService.verifyOtp(email, "654321", "EMAIL_VERIFICATION")
-      ).rejects.toThrow(/Invalid OTP code/);
+      await expect(otpService.verifyOtp(email, "654321", "EMAIL_VERIFICATION")).rejects.toThrow(
+        /Invalid OTP code/
+      );
 
       expect(mockOtps[0]?.attempts).toBe(1);
     });
@@ -337,22 +344,20 @@ describe("Authentication & Authorization System", () => {
         mockOtps[0].expiresAt = new Date(Date.now() - 10000);
       }
 
-      await expect(
-        otpService.verifyOtp(email, otp, "EMAIL_VERIFICATION")
-      ).rejects.toThrow(/expired/i);
+      await expect(otpService.verifyOtp(email, otp, "EMAIL_VERIFICATION")).rejects.toThrow(
+        /expired/i
+      );
     });
   });
 
   describe("Customer Registration & Verification Endpoints", () => {
     it("registers a customer successfully (POST /api/v1/auth/register)", async () => {
-      const res = await request(app)
-        .post("/api/v1/auth/register")
-        .send({
-          email: "customer@example.com",
-          password: "SecurePassword123!",
-          firstName: "John",
-          lastName: "Doe",
-        });
+      const res = await request(app).post("/api/v1/auth/register").send({
+        email: "customer@example.com",
+        password: "SecurePassword123!",
+        firstName: "John",
+        lastName: "Doe",
+      });
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
@@ -371,14 +376,12 @@ describe("Authentication & Authorization System", () => {
         })
       );
 
-      const res = await request(app)
-        .post("/api/v1/auth/register")
-        .send({
-          email: "existing@example.com",
-          password: "SecurePassword123!",
-          firstName: "Jane",
-          lastName: "Doe",
-        });
+      const res = await request(app).post("/api/v1/auth/register").send({
+        email: "existing@example.com",
+        password: "SecurePassword123!",
+        firstName: "Jane",
+        lastName: "Doe",
+      });
 
       expect(res.status).toBe(409);
       expect(res.body.success).toBe(false);
@@ -386,14 +389,12 @@ describe("Authentication & Authorization System", () => {
     });
 
     it("returns 422 Validation Error on weak password", async () => {
-      const res = await request(app)
-        .post("/api/v1/auth/register")
-        .send({
-          email: "test@example.com",
-          password: "short",
-          firstName: "John",
-          lastName: "Doe",
-        });
+      const res = await request(app).post("/api/v1/auth/register").send({
+        email: "test@example.com",
+        password: "short",
+        firstName: "John",
+        lastName: "Doe",
+      });
 
       expect(res.status).toBe(422);
       expect(res.body.success).toBe(false);
@@ -413,12 +414,10 @@ describe("Authentication & Authorization System", () => {
       const otp = "654321";
       await otpService.saveOtp(user.email, otp, "EMAIL_VERIFICATION");
 
-      const res = await request(app)
-        .post("/api/v1/auth/verify-email")
-        .send({
-          email: "verify@example.com",
-          otp,
-        });
+      const res = await request(app).post("/api/v1/auth/verify-email").send({
+        email: "verify@example.com",
+        otp,
+      });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -448,12 +447,10 @@ describe("Authentication & Authorization System", () => {
         })
       );
 
-      const res = await request(app)
-        .post("/api/v1/auth/login")
-        .send({
-          email: "customer@example.com",
-          password,
-        });
+      const res = await request(app).post("/api/v1/auth/login").send({
+        email: "customer@example.com",
+        password,
+      });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -471,12 +468,10 @@ describe("Authentication & Authorization System", () => {
         })
       );
 
-      const res = await request(app)
-        .post("/api/v1/auth/login")
-        .send({
-          email: "customer@example.com",
-          password: "WrongPassword999!",
-        });
+      const res = await request(app).post("/api/v1/auth/login").send({
+        email: "customer@example.com",
+        password: "WrongPassword999!",
+      });
 
       expect(res.status).toBe(401);
       expect(res.body.success).toBe(false);
@@ -494,12 +489,10 @@ describe("Authentication & Authorization System", () => {
         })
       );
 
-      const res = await request(app)
-        .post("/api/v1/auth/login")
-        .send({
-          email: "unverified@example.com",
-          password,
-        });
+      const res = await request(app).post("/api/v1/auth/login").send({
+        email: "unverified@example.com",
+        password,
+      });
 
       expect(res.status).toBe(401);
       expect(res.body.error.details?.[0]?.code).toBe("EMAIL_NOT_VERIFIED");
@@ -519,12 +512,10 @@ describe("Authentication & Authorization System", () => {
         })
       );
 
-      const res = await request(app)
-        .post("/api/v1/auth/admin/login")
-        .send({
-          email: "admin@veyora.local",
-          password,
-        });
+      const res = await request(app).post("/api/v1/auth/admin/login").send({
+        email: "admin@veyora.local",
+        password,
+      });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -543,12 +534,10 @@ describe("Authentication & Authorization System", () => {
         })
       );
 
-      const res = await request(app)
-        .post("/api/v1/auth/admin/login")
-        .send({
-          email: "customer@example.com",
-          password,
-        });
+      const res = await request(app).post("/api/v1/auth/admin/login").send({
+        email: "customer@example.com",
+        password,
+      });
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
@@ -572,7 +561,11 @@ describe("Authentication & Authorization System", () => {
       });
       mockSessions.push(oldSession);
 
-      const tokens = tokenService.generateTokens(user as unknown as IUser, oldSession._id.toString(), familyId);
+      const tokens = tokenService.generateTokens(
+        user as unknown as IUser,
+        oldSession._id.toString(),
+        familyId
+      );
       oldSession.refreshTokenHash = tokenService.hashToken(tokens.refreshToken);
 
       const res = await request(app)
@@ -611,7 +604,11 @@ describe("Authentication & Authorization System", () => {
       mockSessions.push(session1, session2);
 
       // Create a token pointing to session1
-      const tokens = tokenService.generateTokens(user as unknown as IUser, session1._id.toString(), familyId);
+      const tokens = tokenService.generateTokens(
+        user as unknown as IUser,
+        session1._id.toString(),
+        familyId
+      );
       session1.refreshTokenHash = tokenService.hashToken(tokens.refreshToken);
 
       // Attacker replays old tokens.refreshToken
@@ -661,13 +658,11 @@ describe("Authentication & Authorization System", () => {
       const otp = "999888";
       await otpService.saveOtp(user.email, otp, "PASSWORD_RESET");
 
-      const res = await request(app)
-        .post("/api/v1/auth/reset-password")
-        .send({
-          email: "user@example.com",
-          otp,
-          newPassword: "BrandNewPassword123!",
-        });
+      const res = await request(app).post("/api/v1/auth/reset-password").send({
+        email: "user@example.com",
+        otp,
+        newPassword: "BrandNewPassword123!",
+      });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -706,7 +701,11 @@ describe("Authentication & Authorization System", () => {
       });
       mockSessions.push(session);
 
-      const tokens = tokenService.generateTokens(user as unknown as IUser, session._id.toString(), "fam");
+      const tokens = tokenService.generateTokens(
+        user as unknown as IUser,
+        session._id.toString(),
+        "fam"
+      );
 
       const res = await request(app)
         .get("/api/v1/auth/me")

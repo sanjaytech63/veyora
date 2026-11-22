@@ -70,23 +70,49 @@ const systemWorker = new Worker<VeyoraJobData>(
 );
 workers.push(systemWorker);
 
-// Attach shared logging listeners to each worker
+// Attach shared structured logging listeners to each worker
 workers.forEach((w) => {
+  w.on("active", (job: Job) => {
+    logger.info({
+      event: "job.processing.started",
+      queue: w.name,
+      jobId: job.id,
+      jobName: job.name,
+      attempt: job.attemptsMade + 1,
+    });
+  });
+
   w.on("completed", (job: Job) => {
-    logger.info("WORKER_JOB", `Job [${job.id}] on queue "${w.name}" completed successfully`);
+    const durationMs = job.processedOn ? Date.now() - job.processedOn : undefined;
+    logger.info({
+      event: "job.processing.completed",
+      queue: w.name,
+      jobId: job.id,
+      jobName: job.name,
+      attempt: job.attemptsMade,
+      durationMs,
+    });
   });
 
   w.on("failed", (job: Job | undefined, err: Error) => {
-    logger.error("WORKER_JOB", `Job [${job?.id ?? "unknown"}] on queue "${w.name}" failed: ${err.message}`, {
-      jobId: job?.id,
+    const durationMs = job?.processedOn ? Date.now() - job.processedOn : undefined;
+    logger.error({
+      event: "job.processing.failed",
       queue: w.name,
-      attemptsMade: job?.attemptsMade,
+      jobId: job?.id,
+      jobName: job?.name,
+      attempt: job?.attemptsMade,
+      durationMs,
       error: err.message,
     });
   });
 
   w.on("error", (err: Error) => {
-    logger.error("WORKER_ERROR", `Worker error on queue "${w.name}"`, { error: err.message });
+    logger.error({
+      event: "worker.runtime.error",
+      queue: w.name,
+      error: err.message,
+    });
   });
 });
 

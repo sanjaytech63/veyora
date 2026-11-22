@@ -138,8 +138,7 @@ vi.mock("../modules/inventory/models/inventory.model", () => ({
           const search = (filter.$or[0]?.sku?.$regex || "").toLowerCase();
           items = items.filter(
             (i) =>
-              i.sku.toLowerCase().includes(search) ||
-              i.productTitle.toLowerCase().includes(search)
+              i.sku.toLowerCase().includes(search) || i.productTitle.toLowerCase().includes(search)
           );
         }
         return items;
@@ -549,4 +548,3 @@ describe("Inventory Module Integration Tests", () => {
     });
   });
 });
-

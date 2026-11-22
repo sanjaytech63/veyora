@@ -12,7 +12,10 @@ export default function CollectionsPage() {
     <div className="py-8 md:py-12 space-y-12">
       <Container size="xl" className="space-y-10">
         {/* Breadcrumb Trail */}
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-muted-foreground">
+        <nav
+          aria-label="Breadcrumb"
+          className="flex items-center gap-2 text-xs text-muted-foreground"
+        >
           <Link href="/" className="hover:text-foreground transition-colors">
             Home
           </Link>
@@ -30,7 +33,8 @@ export default function CollectionsPage() {
             Curated Collections
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-            Thoughtfully curated edits celebrating regional Indian heritage crafts, festive grandeur, and refined daily comfort.
+            Thoughtfully curated edits celebrating regional Indian heritage crafts, festive
+            grandeur, and refined daily comfort.
           </p>
         </div>
 
@@ -66,9 +70,7 @@ export default function CollectionsPage() {
                   <span className="text-[11px] font-bold uppercase tracking-widest text-amber-300">
                     {c.tagline}
                   </span>
-                  <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight">
-                    {c.title}
-                  </h2>
+                  <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight">{c.title}</h2>
                 </div>
               </div>
 

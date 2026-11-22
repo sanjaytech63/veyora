@@ -37,8 +37,8 @@ export function ProductGridSkeleton({
     columns === 2
       ? "grid-cols-1 sm:grid-cols-2"
       : columns === 3
-      ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-      : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
+        ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+        : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
 
   return (
     <div className={cn("grid gap-6 sm:gap-8", gridColsClass, className)}>
@@ -51,7 +51,12 @@ export function ProductGridSkeleton({
 
 export function ProductDetailsSkeleton({ className }: { className?: string }) {
   return (
-    <div className={cn("grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start animate-pulse", className)}>
+    <div
+      className={cn(
+        "grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start animate-pulse",
+        className
+      )}
+    >
       <div className="lg:col-span-7 space-y-4">
         <Skeleton className="aspect-square w-full rounded-3xl" />
         <div className="flex gap-3">

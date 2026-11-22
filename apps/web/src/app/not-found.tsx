@@ -18,7 +18,8 @@ export default function NotFound() {
             Page Not Located
           </h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            The atelier item, department, or resource you requested cannot be found or may have been archived.
+            The atelier item, department, or resource you requested cannot be found or may have been
+            archived.
           </p>
         </div>
         <div className="pt-2 flex items-center justify-center gap-3">

@@ -8,7 +8,10 @@ function parseEnv(): WebEnv {
   });
 
   if (!result.success) {
-    console.error("FATAL: Invalid Web storefront environment configuration:", result.error.flatten().fieldErrors);
+    console.error(
+      "FATAL: Invalid Web storefront environment configuration:",
+      result.error.flatten().fieldErrors
+    );
     throw new Error("Invalid Web environment configuration.");
   }
 

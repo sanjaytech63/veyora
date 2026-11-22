@@ -26,11 +26,7 @@ export class PaymentController {
 
   public async verifyPayment(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const result = await paymentService.verifyPayment(
-        req.user?.id,
-        req.guestId,
-        req.body
-      );
+      const result = await paymentService.verifyPayment(req.user?.id, req.guestId, req.body);
 
       res.status(200).json({
         success: true,
@@ -45,11 +41,7 @@ export class PaymentController {
   public async retryPayment(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { orderId } = req.body;
-      const initDto = await paymentService.retryPayment(
-        orderId,
-        req.user?.id,
-        req.guestId
-      );
+      const initDto = await paymentService.retryPayment(orderId, req.user?.id, req.guestId);
 
       res.status(200).json({
         success: true,
@@ -81,17 +73,16 @@ export class PaymentController {
     }
   }
 
-  public async handleRazorpayWebhook(req: Request, res: Response, next: NextFunction): Promise<void> {
+  public async handleRazorpayWebhook(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const signature = (req.headers["x-razorpay-signature"] as string) || "";
       const rawBody = (req as any).rawBody || JSON.stringify(req.body);
 
-      const result = await paymentService.handleWebhook(
-        "razorpay",
-        rawBody,
-        signature,
-        req.body
-      );
+      const result = await paymentService.handleWebhook("razorpay", rawBody, signature, req.body);
 
       res.status(200).json(result);
     } catch (error) {
@@ -108,12 +99,7 @@ export class PaymentController {
         email: req.user?.email,
       };
 
-      const refundDto = await paymentService.initiateRefund(
-        orderId,
-        amount,
-        reason,
-        adminUser
-      );
+      const refundDto = await paymentService.initiateRefund(orderId, amount, reason, adminUser);
 
       res.status(200).json({
         success: true,

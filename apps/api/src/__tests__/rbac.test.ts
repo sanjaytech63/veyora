@@ -197,7 +197,11 @@ vi.mock("../modules/auth/models/user.model", () => {
   MockUser.countDocuments = vi.fn((filter?: any) => {
     let count = mockUsers.length;
     if (filter?.role === "superadmin") {
-      count = mockUsers.filter((u) => u.role === "superadmin" && (filter.isActive === undefined || u.isActive === filter.isActive)).length;
+      count = mockUsers.filter(
+        (u) =>
+          u.role === "superadmin" &&
+          (filter.isActive === undefined || u.isActive === filter.isActive)
+      ).length;
     } else if (filter?.role?.$in) {
       count = mockUsers.filter((u) => filter.role.$in.includes(u.role)).length;
     }
@@ -383,7 +387,10 @@ describe("Phase R — Veyora Administrative Authorization, Roles & Permissions",
         permissions: [],
       };
 
-      const effective = staffService.computeEffectivePermissions(mockUser, [mockRoleA as any, mockRoleB as any]);
+      const effective = staffService.computeEffectivePermissions(mockUser, [
+        mockRoleA as any,
+        mockRoleB as any,
+      ]);
 
       expect(effective).toContain("products:read");
       expect(effective).toContain("products:write");
@@ -415,7 +422,11 @@ describe("Phase R — Veyora Administrative Authorization, Roles & Permissions",
     });
 
     it("should create a custom role with valid permissions", async () => {
-      const actor = { id: superadminId.toString(), email: "superadmin@veyora.luxury", role: "superadmin" };
+      const actor = {
+        id: superadminId.toString(),
+        email: "superadmin@veyora.luxury",
+        role: "superadmin",
+      };
       const role = await roleService.createRole(actor, {
         name: "social_media_manager",
         displayName: "Social Media & Review Moderator",
@@ -432,8 +443,16 @@ describe("Phase R — Veyora Administrative Authorization, Roles & Permissions",
     });
 
     it("should reject creating role with duplicate name", async () => {
-      const actor = { id: superadminId.toString(), email: "superadmin@veyora.luxury", role: "superadmin" };
-      mockRoles.push({ name: "order_dispatch", isSystem: false, _id: new mongoose.Types.ObjectId() });
+      const actor = {
+        id: superadminId.toString(),
+        email: "superadmin@veyora.luxury",
+        role: "superadmin",
+      };
+      mockRoles.push({
+        name: "order_dispatch",
+        isSystem: false,
+        _id: new mongoose.Types.ObjectId(),
+      });
 
       await expect(
         roleService.createRole(actor, {
@@ -446,7 +465,11 @@ describe("Phase R — Veyora Administrative Authorization, Roles & Permissions",
 
     it("should prevent privilege escalation: non-superadmin cannot create role with unpossessed permissions", async () => {
       // limitedAdmin only has ["products:read", "products:write"]
-      const actor = { id: limitedAdminId.toString(), email: "catalog.editor@veyora.luxury", role: "admin" };
+      const actor = {
+        id: limitedAdminId.toString(),
+        email: "catalog.editor@veyora.luxury",
+        role: "admin",
+      };
 
       mockUsers.push({
         _id: limitedAdminId,
@@ -464,7 +487,11 @@ describe("Phase R — Veyora Administrative Authorization, Roles & Permissions",
     });
 
     it("should prevent deletion of system roles", async () => {
-      const actor = { id: superadminId.toString(), email: "superadmin@veyora.luxury", role: "superadmin" };
+      const actor = {
+        id: superadminId.toString(),
+        email: "superadmin@veyora.luxury",
+        role: "superadmin",
+      };
       const systemRoleId = new mongoose.Types.ObjectId();
       mockRoles.push({
         _id: systemRoleId,
@@ -481,7 +508,11 @@ describe("Phase R — Veyora Administrative Authorization, Roles & Permissions",
 
   describe("4. Staff Management & Least Privilege Enforcement", () => {
     it("should enroll new staff member and hash temporary credentials", async () => {
-      const actor = { id: superadminId.toString(), email: "superadmin@veyora.luxury", role: "superadmin" };
+      const actor = {
+        id: superadminId.toString(),
+        email: "superadmin@veyora.luxury",
+        role: "superadmin",
+      };
       const roleId = new mongoose.Types.ObjectId();
       mockRoles.push({
         _id: roleId,
@@ -520,15 +551,28 @@ describe("Phase R — Veyora Administrative Authorization, Roles & Permissions",
     });
 
     it("should prevent self-deactivation of administrative account", async () => {
-      const actor = { id: fullAdminId.toString(), email: "security.director@veyora.luxury", role: "admin" };
+      const actor = {
+        id: fullAdminId.toString(),
+        email: "security.director@veyora.luxury",
+        role: "admin",
+      };
 
       await expect(
-        staffService.updateStaffStatus(actor, fullAdminId.toString(), false, "Accidental suspension")
+        staffService.updateStaffStatus(
+          actor,
+          fullAdminId.toString(),
+          false,
+          "Accidental suspension"
+        )
       ).rejects.toThrow("Cannot deactivate your own administrative account");
     });
 
     it("should prevent self-deletion of administrative account", async () => {
-      const actor = { id: fullAdminId.toString(), email: "security.director@veyora.luxury", role: "admin" };
+      const actor = {
+        id: fullAdminId.toString(),
+        email: "security.director@veyora.luxury",
+        role: "admin",
+      };
 
       await expect(staffService.deleteStaff(actor, fullAdminId.toString())).rejects.toThrow(
         "Cannot delete your own administrative account"
@@ -536,7 +580,11 @@ describe("Phase R — Veyora Administrative Authorization, Roles & Permissions",
     });
 
     it("should prevent deactivating the only remaining active Superadmin", async () => {
-      const actor = { id: superadminId.toString(), email: "superadmin@veyora.luxury", role: "superadmin" };
+      const actor = {
+        id: superadminId.toString(),
+        email: "superadmin@veyora.luxury",
+        role: "superadmin",
+      };
       const otherSuperadminId = new mongoose.Types.ObjectId();
 
       mockUsers.push({
@@ -619,8 +667,19 @@ describe("Phase R — Veyora Administrative Authorization, Roles & Permissions",
 
   describe("6. Audit Log Records & Querying", () => {
     it("should record security events and return paginated audit logs", async () => {
-      const actor = { id: superadminId.toString(), email: "superadmin@veyora.luxury", role: "superadmin" };
-      await auditLogService.log(actor, "SECURITY_POLICY_CHECK", "security", null, { test: true }, "127.0.0.1");
+      const actor = {
+        id: superadminId.toString(),
+        email: "superadmin@veyora.luxury",
+        role: "superadmin",
+      };
+      await auditLogService.log(
+        actor,
+        "SECURITY_POLICY_CHECK",
+        "security",
+        null,
+        { test: true },
+        "127.0.0.1"
+      );
 
       const res = await auditLogService.queryLogs({ limit: 10 });
       expect(res.logs.length).toBeGreaterThan(0);

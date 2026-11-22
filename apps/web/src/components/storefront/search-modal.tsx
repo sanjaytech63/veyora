@@ -3,12 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/ui/optimized-image";
@@ -160,8 +155,12 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
             </div>
           ) : (
             <div className="py-8 text-center text-muted-foreground space-y-1">
-              <p className="text-sm font-medium text-foreground">No matches found for &ldquo;{query}&rdquo;</p>
-              <p className="text-xs">Try searching for audio, keyboards, or leather desk accessories.</p>
+              <p className="text-sm font-medium text-foreground">
+                No matches found for &ldquo;{query}&rdquo;
+              </p>
+              <p className="text-xs">
+                Try searching for audio, keyboards, or leather desk accessories.
+              </p>
             </div>
           )}
         </div>

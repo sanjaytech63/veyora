@@ -35,10 +35,7 @@ vi.mock("../modules/auth/models/session.model", () => ({
   Session: {
     findById: vi.fn((id: any) => {
       const idStr = id?.toString ? id.toString() : String(id);
-      if (
-        idStr === mockAdminSessionId.toString() ||
-        idStr === mockCustomerSessionId.toString()
-      ) {
+      if (idStr === mockAdminSessionId.toString() || idStr === mockCustomerSessionId.toString()) {
         return Promise.resolve({
           _id: new mongoose.Types.ObjectId(idStr),
           isRevoked: false,
@@ -98,7 +95,8 @@ vi.mock("../modules/coupon/models/coupon.model", () => {
       return (
         mockCoupons.find((c) => {
           if (filter?.code && c.code !== filter.code.toUpperCase()) return false;
-          if (filter?._id && filter._id.$ne && c._id.toString() === filter._id.$ne.toString()) return false;
+          if (filter?._id && filter._id.$ne && c._id.toString() === filter._id.$ne.toString())
+            return false;
           return true;
         }) || null
       );
@@ -119,7 +117,11 @@ vi.mock("../modules/coupon/models/coupon.model", () => {
         if (filter?.$or && Array.isArray(filter.$or)) {
           return filter.$or.some((clause: any) => {
             if (clause.code && clause.code.test && clause.code.test(c.code)) return true;
-            if (clause.description && clause.description.test && clause.description.test(c.description || ""))
+            if (
+              clause.description &&
+              clause.description.test &&
+              clause.description.test(c.description || "")
+            )
               return true;
             return false;
           });
@@ -253,12 +255,10 @@ describe("Phase L — Veyora Coupons & Promotions Integration Tests", () => {
         customerUsage: [],
       });
 
-      const res = await request(app)
-        .post("/api/v1/coupons/validate")
-        .send({
-          code: "ATELIER15",
-          cartTotal: 200,
-        });
+      const res = await request(app).post("/api/v1/coupons/validate").send({
+        code: "ATELIER15",
+        cartTotal: 200,
+      });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -283,12 +283,10 @@ describe("Phase L — Veyora Coupons & Promotions Integration Tests", () => {
       });
 
       // Cart total $200: 50% would be $100, but capped at $40
-      const res = await request(app)
-        .post("/api/v1/coupons/validate")
-        .send({
-          code: "FESTIVE50",
-          cartTotal: 200,
-        });
+      const res = await request(app).post("/api/v1/coupons/validate").send({
+        code: "FESTIVE50",
+        cartTotal: 200,
+      });
 
       expect(res.status).toBe(200);
       expect(res.body.data.discountAmount).toBe(40);
@@ -308,12 +306,10 @@ describe("Phase L — Veyora Coupons & Promotions Integration Tests", () => {
         customerUsage: [],
       });
 
-      const res = await request(app)
-        .post("/api/v1/coupons/validate")
-        .send({
-          code: "FLAT25",
-          cartTotal: 120,
-        });
+      const res = await request(app).post("/api/v1/coupons/validate").send({
+        code: "FLAT25",
+        cartTotal: 120,
+      });
 
       expect(res.status).toBe(200);
       expect(res.body.data.discountType).toBe("fixed");
@@ -338,12 +334,10 @@ describe("Phase L — Veyora Coupons & Promotions Integration Tests", () => {
         customerUsage: [],
       });
 
-      const res = await request(app)
-        .post("/api/v1/coupons/validate")
-        .send({
-          code: "VIP100",
-          cartTotal: 150, // Below $250
-        });
+      const res = await request(app).post("/api/v1/coupons/validate").send({
+        code: "VIP100",
+        cartTotal: 150, // Below $250
+      });
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain("minimum spend of $250.00");
@@ -362,12 +356,10 @@ describe("Phase L — Veyora Coupons & Promotions Integration Tests", () => {
         customerUsage: [],
       });
 
-      const res = await request(app)
-        .post("/api/v1/coupons/validate")
-        .send({
-          code: "VIP100",
-          cartTotal: 300, // Exceeds $250
-        });
+      const res = await request(app).post("/api/v1/coupons/validate").send({
+        code: "VIP100",
+        cartTotal: 300, // Exceeds $250
+      });
 
       expect(res.status).toBe(200);
       expect(res.body.data.discountAmount).toBe(50);
@@ -391,12 +383,10 @@ describe("Phase L — Veyora Coupons & Promotions Integration Tests", () => {
         customerUsage: [],
       });
 
-      const res = await request(app)
-        .post("/api/v1/coupons/validate")
-        .send({
-          code: "SUMMER2025",
-          cartTotal: 100,
-        });
+      const res = await request(app).post("/api/v1/coupons/validate").send({
+        code: "SUMMER2025",
+        cartTotal: 100,
+      });
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain("has expired");
@@ -414,12 +404,10 @@ describe("Phase L — Veyora Coupons & Promotions Integration Tests", () => {
         customerUsage: [],
       });
 
-      const res = await request(app)
-        .post("/api/v1/coupons/validate")
-        .send({
-          code: "NEWYEAR2027",
-          cartTotal: 100,
-        });
+      const res = await request(app).post("/api/v1/coupons/validate").send({
+        code: "NEWYEAR2027",
+        cartTotal: 100,
+      });
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain("not yet active");
@@ -436,12 +424,10 @@ describe("Phase L — Veyora Coupons & Promotions Integration Tests", () => {
         customerUsage: [],
       });
 
-      const res = await request(app)
-        .post("/api/v1/coupons/validate")
-        .send({
-          code: "PAUSED10",
-          cartTotal: 100,
-        });
+      const res = await request(app).post("/api/v1/coupons/validate").send({
+        code: "PAUSED10",
+        cartTotal: 100,
+      });
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain("currently inactive");
@@ -464,12 +450,10 @@ describe("Phase L — Veyora Coupons & Promotions Integration Tests", () => {
         customerUsage: [],
       });
 
-      const res = await request(app)
-        .post("/api/v1/coupons/validate")
-        .send({
-          code: "LIMITED50",
-          cartTotal: 100,
-        });
+      const res = await request(app).post("/api/v1/coupons/validate").send({
+        code: "LIMITED50",
+        cartTotal: 100,
+      });
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain("maximum redemption limit");
@@ -590,12 +574,10 @@ describe("Phase L — Veyora Coupons & Promotions Integration Tests", () => {
   // ==========================================
   describe("6. Invalid Coupon Code Handling", () => {
     it("should return 404 Not Found for non-existent coupon codes", async () => {
-      const res = await request(app)
-        .post("/api/v1/coupons/validate")
-        .send({
-          code: "NONEXISTENT999",
-          cartTotal: 100,
-        });
+      const res = await request(app).post("/api/v1/coupons/validate").send({
+        code: "NONEXISTENT999",
+        cartTotal: 100,
+      });
 
       expect(res.status).toBe(404);
       expect(res.body.message).toContain("is invalid");

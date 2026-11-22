@@ -220,7 +220,9 @@ function VerifyOtpForm() {
 
 export default function VerifyOtpPage() {
   return (
-    <React.Suspense fallback={<div className="flex min-h-[50vh] items-center justify-center">Loading...</div>}>
+    <React.Suspense
+      fallback={<div className="flex min-h-[50vh] items-center justify-center">Loading...</div>}
+    >
       <VerifyOtpForm />
     </React.Suspense>
   );

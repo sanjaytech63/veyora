@@ -14,7 +14,9 @@ export function AnnouncementBar() {
     <div className="relative isolate flex items-center justify-between gap-x-6 overflow-hidden bg-primary px-4 py-2 sm:px-6">
       <div className="flex flex-1 items-center justify-center gap-x-2 text-xs font-medium text-primary-foreground">
         <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-300" />
-        <span>Complimentary Worldwide Express Dispatch on Orders Over $150 • Atelier 2026 Collection</span>
+        <span>
+          Complimentary Worldwide Express Dispatch on Orders Over $150 • Atelier 2026 Collection
+        </span>
       </div>
       <Button
         type="button"

@@ -6,7 +6,10 @@ export class ProductController {
   async listProducts(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const isAdmin = req.user?.role === "admin" || req.user?.role === "superadmin";
-      const result = await productService.getProducts(req.query as unknown as ProductQueryInput, isAdmin);
+      const result = await productService.getProducts(
+        req.query as unknown as ProductQueryInput,
+        isAdmin
+      );
 
       res.status(200).json({
         success: true,

@@ -29,7 +29,9 @@ export function RevenueChart({ data, isLoading }: RevenueChartProps) {
   if (!data || data.length === 0) {
     return (
       <div className="flex h-[320px] w-full items-center justify-center rounded-2xl border border-dashed border-border/80">
-        <span className="text-xs text-muted-foreground">No revenue transactions recorded for selected date range.</span>
+        <span className="text-xs text-muted-foreground">
+          No revenue transactions recorded for selected date range.
+        </span>
       </div>
     );
   }
@@ -47,7 +49,12 @@ export function RevenueChart({ data, isLoading }: RevenueChartProps) {
               <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" className="dark:stroke-neutral-800" />
+          <CartesianGrid
+            strokeDasharray="3 3"
+            vertical={false}
+            stroke="#e5e7eb"
+            className="dark:stroke-neutral-800"
+          />
           <XAxis
             dataKey="date"
             tickLine={false}
@@ -87,7 +94,9 @@ export function RevenueChart({ data, isLoading }: RevenueChartProps) {
                       </div>
                       <div className="flex items-center justify-between gap-4 text-xs text-muted-foreground">
                         <span>AOV:</span>
-                        <span className="font-semibold text-foreground">{formatCurrency(p.aov)}</span>
+                        <span className="font-semibold text-foreground">
+                          {formatCurrency(p.aov)}
+                        </span>
                       </div>
                     </div>
                   </div>

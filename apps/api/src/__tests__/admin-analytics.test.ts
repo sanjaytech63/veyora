@@ -39,10 +39,7 @@ vi.mock("../modules/auth/models/session.model", () => ({
   Session: {
     findById: vi.fn((id: any) => {
       const idStr = id?.toString ? id.toString() : String(id);
-      if (
-        idStr === mockAdminSessionId.toString() ||
-        idStr === mockCustomerSessionId.toString()
-      ) {
+      if (idStr === mockAdminSessionId.toString() || idStr === mockCustomerSessionId.toString()) {
         return Promise.resolve({
           _id: new mongoose.Types.ObjectId(idStr),
           isRevoked: false,
@@ -208,11 +205,15 @@ describe("Phase Q — Veyora Admin Dashboard & Analytics", () => {
     it("should resolve default 30d period when no filter provided", () => {
       const range = analyticsService.resolveDateRange({});
       expect(range.period).toBe("30d");
-      const diffDays = Math.round((range.end.getTime() - range.start.getTime()) / (24 * 3600 * 1000));
+      const diffDays = Math.round(
+        (range.end.getTime() - range.start.getTime()) / (24 * 3600 * 1000)
+      );
       expect(diffDays).toBe(30);
 
       // Prior period should match exact duration
-      const priorDiff = Math.round((range.priorEnd.getTime() - range.priorStart.getTime()) / (24 * 3600 * 1000));
+      const priorDiff = Math.round(
+        (range.priorEnd.getTime() - range.priorStart.getTime()) / (24 * 3600 * 1000)
+      );
       expect(priorDiff).toBe(30);
       expect(range.priorEnd.getTime()).toBe(range.start.getTime());
     });

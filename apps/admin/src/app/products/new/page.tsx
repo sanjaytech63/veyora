@@ -279,7 +279,9 @@ export default function NewProductPage() {
                   required
                   placeholder="99.99"
                   value={price}
-                  onChange={(e) => setPrice(e.target.value === "" ? "" : parseFloat(e.target.value))}
+                  onChange={(e) =>
+                    setPrice(e.target.value === "" ? "" : parseFloat(e.target.value))
+                  }
                 />
               </div>
 
@@ -392,7 +394,10 @@ export default function NewProductPage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Brand (Optional)</label>
-                <Select value={brandId || "none"} onValueChange={(val) => setBrandId(val === "none" ? "" : val)}>
+                <Select
+                  value={brandId || "none"}
+                  onValueChange={(val) => setBrandId(val === "none" ? "" : val)}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select brand" />
                   </SelectTrigger>
@@ -545,7 +550,10 @@ export default function NewProductPage() {
             ) : (
               <div className="space-y-3">
                 {variants.map((v, i) => (
-                  <div key={i} className="flex flex-wrap items-center gap-2 p-3 border rounded-lg bg-muted/20">
+                  <div
+                    key={i}
+                    className="flex flex-wrap items-center gap-2 p-3 border rounded-lg bg-muted/20"
+                  >
                     <Input
                       placeholder="Variant SKU"
                       value={v.sku}

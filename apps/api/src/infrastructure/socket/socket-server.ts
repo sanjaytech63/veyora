@@ -25,8 +25,8 @@ export class SocketServer {
       env.CORS_ORIGIN === "*"
         ? true
         : env.CORS_ORIGIN.includes(",")
-        ? env.CORS_ORIGIN.split(",").map((s) => s.trim())
-        : [env.CORS_ORIGIN, "http://localhost:3000", "http://localhost:3001"];
+          ? env.CORS_ORIGIN.split(",").map((s) => s.trim())
+          : [env.CORS_ORIGIN, "http://localhost:3000", "http://localhost:3001"];
 
     this.io = new Server(httpServer, {
       cors: {

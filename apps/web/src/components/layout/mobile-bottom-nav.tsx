@@ -35,7 +35,10 @@ export function MobileBottomNav() {
       label: "Shop",
       href: "/shop",
       icon: Compass,
-      isActive: pathname === "/shop" || pathname.startsWith("/category") || pathname.startsWith("/products"),
+      isActive:
+        pathname === "/shop" ||
+        pathname.startsWith("/category") ||
+        pathname.startsWith("/products"),
     },
     {
       label: "Wishlist",
@@ -103,7 +106,9 @@ export function MobileBottomNav() {
               size="sm"
               className={cn(
                 "relative flex flex-col items-center justify-center gap-1 h-auto py-1 px-0 hover:bg-transparent focus:outline-none",
-                item.isActive ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+                item.isActive
+                  ? "text-primary font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               <Link href={item.href!}>

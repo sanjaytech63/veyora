@@ -1,11 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  paymentApi,
-  InitiatePaymentRequest,
-  RetryPaymentRequest,
-} from "@/lib/api/payment-api";
+import { paymentApi, InitiatePaymentRequest, RetryPaymentRequest } from "@/lib/api/payment-api";
 import { paymentKeys, orderKeys } from "@/lib/api/query-keys";
 import {
   PaymentOrderInitDto,
@@ -26,11 +22,7 @@ export function usePayment() {
   });
 
   // 2. VERIFY PAYMENT (Cryptographic Server-Side Verification)
-  const verifyMutation = useMutation<
-    PaymentVerificationResultDto,
-    Error,
-    VerifyPaymentPayload
-  >({
+  const verifyMutation = useMutation<PaymentVerificationResultDto, Error, VerifyPaymentPayload>({
     mutationFn: (payload) => paymentApi.verifyPayment(payload),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: paymentKeys.status(data.orderId) });

@@ -3,11 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { addressApi } from "../api/address-api";
 import { addressKeys } from "../api/query-keys";
-import {
-  AddressDto,
-  CreateAddressPayload,
-  UpdateAddressPayload,
-} from "@veyora/types";
+import { AddressDto, CreateAddressPayload, UpdateAddressPayload } from "@veyora/types";
 import { toast } from "sonner";
 
 export function useAddresses() {

@@ -96,7 +96,9 @@ export default function CartPage() {
               Shopping Bag
             </h1>
             <p className="mt-1 text-xs text-muted-foreground">
-              {totalCount === 1 ? "1 luxury garment in your bag" : `${totalCount} luxury garments in your bag`}
+              {totalCount === 1
+                ? "1 luxury garment in your bag"
+                : `${totalCount} luxury garments in your bag`}
             </p>
           </div>
 
@@ -141,7 +143,11 @@ export default function CartPage() {
                     <Sparkles className="h-3.5 w-3.5 text-amber-500" />
                     {amountToFreeShipping > 0 ? (
                       <>
-                        Add <strong className="text-foreground">${amountToFreeShipping.toFixed(2)}</strong> more for free express shipping
+                        Add{" "}
+                        <strong className="text-foreground">
+                          ${amountToFreeShipping.toFixed(2)}
+                        </strong>{" "}
+                        more for free express shipping
                       </>
                     ) : (
                       <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
@@ -150,7 +156,15 @@ export default function CartPage() {
                     )}
                   </span>
                   <span className="font-mono text-[11px] text-muted-foreground">
-                    {Math.min(100, Math.round(((totals.freeShippingThreshold - amountToFreeShipping) / totals.freeShippingThreshold) * 100))}%
+                    {Math.min(
+                      100,
+                      Math.round(
+                        ((totals.freeShippingThreshold - amountToFreeShipping) /
+                          totals.freeShippingThreshold) *
+                          100
+                      )
+                    )}
+                    %
                   </span>
                 </div>
                 <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
@@ -304,7 +318,9 @@ export default function CartPage() {
                     <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 font-medium">
                       <span className="flex items-center gap-1.5">
                         <Tag className="h-3 w-3" />
-                        <span>Privilege ({appliedCoupon} - {discountPercent}%)</span>
+                        <span>
+                          Privilege ({appliedCoupon} - {discountPercent}%)
+                        </span>
                         <button
                           type="button"
                           onClick={() => removeCoupon()}

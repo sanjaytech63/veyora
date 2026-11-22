@@ -18,11 +18,9 @@ export const adminRbacApi = {
     apiClient.get<PermissionDefinition[]>("/admin/permissions"),
 
   // Roles
-  listRoles: (): Promise<RoleDto[]> =>
-    apiClient.get<RoleDto[]>("/admin/roles"),
+  listRoles: (): Promise<RoleDto[]> => apiClient.get<RoleDto[]>("/admin/roles"),
 
-  getRole: (id: string): Promise<RoleDto> =>
-    apiClient.get<RoleDto>(`/admin/roles/${id}`),
+  getRole: (id: string): Promise<RoleDto> => apiClient.get<RoleDto>(`/admin/roles/${id}`),
 
   createRole: (data: CreateRoleInput): Promise<RoleDto> =>
     apiClient.post<RoleDto>("/admin/roles", data),
@@ -34,7 +32,9 @@ export const adminRbacApi = {
     apiClient.delete<{ success: boolean; message: string }>(`/admin/roles/${id}`),
 
   // Staff
-  listStaff: (query?: StaffListQuery): Promise<{
+  listStaff: (
+    query?: StaffListQuery
+  ): Promise<{
     staff: StaffUserDto[];
     total: number;
     page: number;
@@ -68,7 +68,9 @@ export const adminRbacApi = {
     apiClient.delete<{ success: boolean; message: string }>(`/admin/staff/${id}`),
 
   // Audit Logs
-  listAuditLogs: (query?: AuditLogListQuery): Promise<{
+  listAuditLogs: (
+    query?: AuditLogListQuery
+  ): Promise<{
     logs: AuditLogDto[];
     total: number;
     page: number;

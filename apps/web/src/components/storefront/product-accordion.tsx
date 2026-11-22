@@ -19,11 +19,7 @@ interface AccordionItem {
   content: React.ReactNode;
 }
 
-export function ProductAccordion({
-  attributes = [],
-  sku,
-  className,
-}: ProductAccordionProps) {
+export function ProductAccordion({ attributes = [], sku, className }: ProductAccordionProps) {
   const [openItems, setOpenItems] = React.useState<string[]>(["specs"]);
 
   const toggleItem = (id: string) => {
@@ -56,7 +52,9 @@ export function ProductAccordion({
           ))}
           <div className="flex justify-between py-1.5 text-muted-foreground">
             <span>Quality Certification</span>
-            <span className="text-foreground font-medium">100% Handloom &amp; Certified Pure Silks</span>
+            <span className="text-foreground font-medium">
+              100% Handloom &amp; Certified Pure Silks
+            </span>
           </div>
         </div>
       ),
@@ -67,18 +65,10 @@ export function ProductAccordion({
       icon: Truck,
       content: (
         <div className="space-y-3 pt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-          <p>
-            • Orders placed before 3:00 PM ship same-day in protective garment covers.
-          </p>
-          <p>
-            • Worldwide express delivery via tracked, insured courier partners.
-          </p>
-          <p>
-            • Complimentary doorstep size exchange within 15 days of receiving your order.
-          </p>
-          <p>
-            • Real-time SMS and email tracking milestone updates provided upon dispatch.
-          </p>
+          <p>• Orders placed before 3:00 PM ship same-day in protective garment covers.</p>
+          <p>• Worldwide express delivery via tracked, insured courier partners.</p>
+          <p>• Complimentary doorstep size exchange within 15 days of receiving your order.</p>
+          <p>• Real-time SMS and email tracking milestone updates provided upon dispatch.</p>
         </div>
       ),
     },
@@ -89,17 +79,18 @@ export function ProductAccordion({
       content: (
         <div className="space-y-3 pt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
           <p>
-            • Handcrafted by regional master artisans using heritage Indian hand-block printing, Bandhani tie-dye, and traditional zari brocade techniques.
+            • Handcrafted by regional master artisans using heritage Indian hand-block printing,
+            Bandhani tie-dye, and traditional zari brocade techniques.
           </p>
           <p>
-            • For pure silks, Chanderi, and embroidered garments: professional dry clean only to maintain fabric lustre.
+            • For pure silks, Chanderi, and embroidered garments: professional dry clean only to
+            maintain fabric lustre.
           </p>
           <p>
-            • For pure organic mulmul cotton: gentle cold hand wash separately with mild detergent; dry in shade.
+            • For pure organic mulmul cotton: gentle cold hand wash separately with mild detergent;
+            dry in shade.
           </p>
-          <p>
-            • Iron on low heat or use a vertical garment steamer.
-          </p>
+          <p>• Iron on low heat or use a vertical garment steamer.</p>
         </div>
       ),
     },
@@ -130,7 +121,9 @@ export function ProductAccordion({
                 )}
               />
             </Button>
-            {isOpen && <div className="mt-3 pr-2 animate-in fade-in-50 duration-200">{item.content}</div>}
+            {isOpen && (
+              <div className="mt-3 pr-2 animate-in fade-in-50 duration-200">{item.content}</div>
+            )}
           </div>
         );
       })}

@@ -154,9 +154,7 @@ describe("Customer Storefront - Fashion E-Commerce", () => {
   // 1. Product Listing Tests
   describe("Product Listing & Cards", () => {
     it("renders product title, price, and category", () => {
-      renderWithQuery(
-        <ProductCard product={mockProduct} categoryName="Kurtis & Kurti Sets" />
-      );
+      renderWithQuery(<ProductCard product={mockProduct} categoryName="Kurtis & Kurti Sets" />);
 
       expect(screen.getByText(mockProduct.title)).toBeInTheDocument();
       expect(screen.getByText(`$${mockProduct.price.toFixed(2)}`)).toBeInTheDocument();
@@ -165,10 +163,7 @@ describe("Customer Storefront - Fashion E-Commerce", () => {
 
     it("renders the product grid with multiple items", () => {
       renderWithQuery(
-        <ProductGrid
-          products={TEST_PRODUCTS.slice(0, 3)}
-          categories={TEST_CATEGORIES}
-        />
+        <ProductGrid products={TEST_PRODUCTS.slice(0, 3)} categories={TEST_CATEGORIES} />
       );
 
       expect(screen.getByText(TEST_PRODUCTS[0]!.title)).toBeInTheDocument();
@@ -179,11 +174,7 @@ describe("Customer Storefront - Fashion E-Commerce", () => {
     it("renders empty state when no products match", () => {
       const onReset = vi.fn();
       render(
-        <ProductGrid
-          products={[]}
-          emptyTitle="No matching garments"
-          onResetFilters={onReset}
-        />
+        <ProductGrid products={[]} emptyTitle="No matching garments" onResetFilters={onReset} />
       );
 
       expect(screen.getByText("No matching garments")).toBeInTheDocument();
@@ -271,9 +262,7 @@ describe("Customer Storefront - Fashion E-Commerce", () => {
     it("renders specifications accordion with active variant SKU", () => {
       renderWithQuery(<ProductDetailsClient initialProduct={mockProduct} />);
 
-      expect(
-        screen.getByText(/garment specifications & fabric details/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/garment specifications & fabric details/i)).toBeInTheDocument();
       expect(screen.getByText(mockProduct.variants![0]!.sku)).toBeInTheDocument();
     });
   });

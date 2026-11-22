@@ -126,10 +126,9 @@ export default function AdminCustomersPage() {
       });
 
       setCustomers((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
-      toast.success(
-        `Patron account ${updated.isActive ? "activated" : "suspended"}`,
-        { description: `Status for ${updated.fullName} was updated.` }
-      );
+      toast.success(`Patron account ${updated.isActive ? "activated" : "suspended"}`, {
+        description: `Status for ${updated.fullName} was updated.`,
+      });
       setStatusDialogOpen(false);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to update status";
@@ -189,7 +188,8 @@ export default function AdminCustomersPage() {
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              Oversee registered fashion patrons, VIP couture clients, purchase records, and account statuses.
+              Oversee registered fashion patrons, VIP couture clients, purchase records, and account
+              statuses.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -245,7 +245,11 @@ export default function AdminCustomersPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold font-serif">
-                ${cumulativeSpend.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                $
+                {cumulativeSpend.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </div>
               <p className="text-xs text-muted-foreground mt-1">Across all patron orders</p>
             </CardContent>
@@ -259,9 +263,7 @@ export default function AdminCustomersPage() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-serif">
-                ${avgOrderVal.toFixed(2)}
-              </div>
+              <div className="text-2xl font-bold font-serif">${avgOrderVal.toFixed(2)}</div>
               <p className="text-xs text-muted-foreground mt-1">Average order value</p>
             </CardContent>
           </Card>
@@ -414,11 +416,17 @@ export default function AdminCustomersPage() {
                         <DropdownMenuContent align="end" className="w-44">
                           <DropdownMenuLabel className="text-xs">Client Actions</DropdownMenuLabel>
                           <DropdownMenuItem asChild>
-                            <Link href={`/customers/${customer.id}`} className="gap-2 cursor-pointer">
+                            <Link
+                              href={`/customers/${customer.id}`}
+                              className="gap-2 cursor-pointer"
+                            >
                               <Eye className="h-4 w-4" /> View Dossier
                             </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => openNotesDialog(customer)} className="gap-2">
+                          <DropdownMenuItem
+                            onClick={() => openNotesDialog(customer)}
+                            className="gap-2"
+                          >
                             <FileText className="h-4 w-4" /> Edit Notes
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
@@ -562,11 +570,7 @@ export default function AdminCustomersPage() {
             >
               Cancel
             </Button>
-            <Button
-              onClick={handleUpdateNotes}
-              disabled={actionLoading}
-              className="gap-2"
-            >
+            <Button onClick={handleUpdateNotes} disabled={actionLoading} className="gap-2">
               {actionLoading && <RefreshCw className="h-4 w-4 animate-spin" />}
               Save Notes
             </Button>

@@ -14,11 +14,7 @@ const sizeClasses = {
   xl: "h-8 w-8",
 };
 
-export function LoadingSpinner({
-  size = "default",
-  className,
-  ...props
-}: LoadingSpinnerProps) {
+export function LoadingSpinner({ size = "default", className, ...props }: LoadingSpinnerProps) {
   return (
     <LoaderCircle
       className={cn("animate-spin text-primary", sizeClasses[size], className)}

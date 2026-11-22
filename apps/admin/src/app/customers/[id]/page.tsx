@@ -111,10 +111,9 @@ export default function AdminCustomerDetailPage() {
       const refreshedActivities = await adminCustomersApi.getCustomerActivity(customer.id);
       setActivities(refreshedActivities);
 
-      toast.success(
-        `Patron account ${updated.isActive ? "re-activated" : "suspended"}`,
-        { description: `Updated standing for ${updated.fullName}` }
-      );
+      toast.success(`Patron account ${updated.isActive ? "re-activated" : "suspended"}`, {
+        description: `Updated standing for ${updated.fullName}`,
+      });
       setStatusDialogOpen(false);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to update standing";
@@ -180,7 +179,10 @@ export default function AdminCustomerDetailPage() {
       <div className="flex flex-col gap-6 p-4 md:p-8 max-w-7xl mx-auto">
         {/* Breadcrumb & Navigation */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Link href="/customers" className="hover:text-foreground transition-colors flex items-center gap-1">
+          <Link
+            href="/customers"
+            className="hover:text-foreground transition-colors flex items-center gap-1"
+          >
             <ArrowLeft className="h-3.5 w-3.5" /> Patrons
           </Link>
           <ChevronRight className="h-3 w-3" />
@@ -202,13 +204,18 @@ export default function AdminCustomerDetailPage() {
                 <Badge variant="destructive">Suspended</Badge>
               )}
               {customer.totalSpent > 1000 && (
-                <Badge variant="outline" className="border-amber-500/40 text-amber-600 bg-amber-500/5 font-mono text-xs">
+                <Badge
+                  variant="outline"
+                  className="border-amber-500/40 text-amber-600 bg-amber-500/5 font-mono text-xs"
+                >
                   VIP Haute Couture
                 </Badge>
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-1 flex items-center gap-4">
-              <span>Client ID: <span className="font-mono">{customer.id}</span></span>
+              <span>
+                Client ID: <span className="font-mono">{customer.id}</span>
+              </span>
               <span>Joined: {new Date(customer.createdAt).toLocaleDateString()}</span>
             </p>
           </div>
@@ -253,7 +260,11 @@ export default function AdminCustomerDetailPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold font-serif">
-                ${customer.totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                $
+                {customer.totalSpent.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </div>
               <p className="text-xs text-muted-foreground mt-1">Across confirmed garment orders</p>
             </CardContent>
@@ -296,7 +307,9 @@ export default function AdminCustomerDetailPage() {
             </CardHeader>
             <CardContent>
               <div className="text-sm font-semibold mt-1">
-                {customer.lastOrderAt ? new Date(customer.lastOrderAt).toLocaleDateString() : "No orders yet"}
+                {customer.lastOrderAt
+                  ? new Date(customer.lastOrderAt).toLocaleDateString()
+                  : "No orders yet"}
               </div>
               <p className="text-xs text-muted-foreground mt-1">Most recent engagement</p>
             </CardContent>
@@ -310,7 +323,9 @@ export default function AdminCustomerDetailPage() {
             {/* Patron Profile Card */}
             <Card className="border border-border/40">
               <CardHeader className="pb-3 border-b border-border/40">
-                <CardTitle className="text-sm font-serif font-medium">Patron Identity & Security</CardTitle>
+                <CardTitle className="text-sm font-serif font-medium">
+                  Patron Identity & Security
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 pt-4 text-xs">
                 <div className="flex items-center gap-3">
@@ -325,7 +340,9 @@ export default function AdminCustomerDetailPage() {
                   <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
                   <div className="flex flex-col">
                     <span className="text-muted-foreground">Telephone</span>
-                    <span className="font-mono text-foreground">{customer.phone || "Not recorded"}</span>
+                    <span className="font-mono text-foreground">
+                      {customer.phone || "Not recorded"}
+                    </span>
                   </div>
                 </div>
 
@@ -345,7 +362,11 @@ export default function AdminCustomerDetailPage() {
                   )}
                   <div className="flex flex-col">
                     <span className="text-muted-foreground">Email Verification</span>
-                    <span className={customer.isEmailVerified ? "text-emerald-600 font-medium" : "text-amber-600"}>
+                    <span
+                      className={
+                        customer.isEmailVerified ? "text-emerald-600 font-medium" : "text-amber-600"
+                      }
+                    >
                       {customer.isEmailVerified ? "Verified Patron" : "Verification Pending"}
                     </span>
                   </div>
@@ -386,7 +407,10 @@ export default function AdminCustomerDetailPage() {
                           {address.firstName} {address.lastName}
                         </span>
                         {address.isDefault && (
-                          <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary border-0">
+                          <Badge
+                            variant="secondary"
+                            className="text-[10px] bg-primary/10 text-primary border-0"
+                          >
                             Default
                           </Badge>
                         )}
@@ -413,7 +437,9 @@ export default function AdminCustomerDetailPage() {
             {/* Concierge Dossier Notes */}
             <Card className="border border-border/40">
               <CardHeader className="pb-3 border-b border-border/40 flex flex-row items-center justify-between">
-                <CardTitle className="text-sm font-serif font-medium">Concierge Dossier Notes</CardTitle>
+                <CardTitle className="text-sm font-serif font-medium">
+                  Concierge Dossier Notes
+                </CardTitle>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -486,8 +512,8 @@ export default function AdminCustomerDetailPage() {
                                 order.status === "delivered"
                                   ? "border-emerald-500/40 text-emerald-600 bg-emerald-500/5"
                                   : order.status === "cancelled"
-                                  ? "border-destructive/40 text-destructive bg-destructive/5"
-                                  : "border-primary/40 text-primary bg-primary/5"
+                                    ? "border-destructive/40 text-destructive bg-destructive/5"
+                                    : "border-primary/40 text-primary bg-primary/5"
                               }`}
                             >
                               {order.status.replace("_", " ")}
@@ -548,11 +574,11 @@ export default function AdminCustomerDetailPage() {
                             {new Date(act.timestamp).toLocaleString()}
                           </span>
                         </div>
-                        {act.reason && (
-                          <p className="text-muted-foreground">"{act.reason}"</p>
-                        )}
+                        {act.reason && <p className="text-muted-foreground">"{act.reason}"</p>}
                         <p className="text-[11px] text-muted-foreground">
-                          Logged by: <span className="font-medium text-foreground">{act.performedBy}</span> ({act.performerRole})
+                          Logged by:{" "}
+                          <span className="font-medium text-foreground">{act.performedBy}</span> (
+                          {act.performerRole})
                         </p>
                       </div>
                     ))}
@@ -642,11 +668,7 @@ export default function AdminCustomerDetailPage() {
             >
               Cancel
             </Button>
-            <Button
-              onClick={handleUpdateNotes}
-              disabled={actionLoading}
-              className="gap-2"
-            >
+            <Button onClick={handleUpdateNotes} disabled={actionLoading} className="gap-2">
               {actionLoading && <RefreshCw className="h-4 w-4 animate-spin" />}
               Save Dossier
             </Button>

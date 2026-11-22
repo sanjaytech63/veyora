@@ -5,12 +5,7 @@
 export type PaymentProvider = "razorpay" | "stripe" | "cod";
 
 export type PaymentStatus =
-  | "pending"
-  | "processing"
-  | "successful"
-  | "failed"
-  | "refunded"
-  | "partially_refunded";
+  "pending" | "processing" | "successful" | "failed" | "refunded" | "partially_refunded";
 
 export type RefundStatus = "pending" | "processed" | "failed";
 

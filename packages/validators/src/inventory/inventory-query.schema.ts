@@ -13,7 +13,9 @@ export const inventoryQuerySchema = z.object({
       return Boolean(val);
     }, z.boolean())
     .optional(),
-  sortBy: z.enum(["sku", "onHand", "reserved", "available", "createdAt", "updatedAt"]).default("updatedAt"),
+  sortBy: z
+    .enum(["sku", "onHand", "reserved", "available", "createdAt", "updatedAt"])
+    .default("updatedAt"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 

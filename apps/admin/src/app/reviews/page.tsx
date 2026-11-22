@@ -62,7 +62,9 @@ export default function AdminReviewsPage() {
 
   // Rejection Dialog State
   const [rejectionModalOpen, setRejectionModalOpen] = React.useState(false);
-  const [selectedReviewForReject, setSelectedReviewForReject] = React.useState<ReviewDto | null>(null);
+  const [selectedReviewForReject, setSelectedReviewForReject] = React.useState<ReviewDto | null>(
+    null
+  );
   const [rejectionReason, setRejectionReason] = React.useState("");
   const [isModerating, setIsModerating] = React.useState(false);
 
@@ -191,9 +193,13 @@ export default function AdminReviewsPage() {
           <p className="text-[11px] text-muted-foreground mt-1">Submitted across catalog</p>
         </div>
 
-        <div className={`rounded-2xl border bg-card p-4 shadow-sm ${stats.pendingCount > 0 ? "border-amber-500/40 bg-amber-500/[0.02]" : "border-border/80"}`}>
+        <div
+          className={`rounded-2xl border bg-card p-4 shadow-sm ${stats.pendingCount > 0 ? "border-amber-500/40 bg-amber-500/[0.02]" : "border-border/80"}`}
+        >
           <div className="flex items-center justify-between text-muted-foreground mb-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-amber-500">Pending Queue</span>
+            <span className="text-xs font-medium uppercase tracking-wider text-amber-500">
+              Pending Queue
+            </span>
             <Clock className="h-4 w-4 text-amber-500" />
           </div>
           <div className="text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-400">
@@ -206,7 +212,9 @@ export default function AdminReviewsPage() {
 
         <div className="rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
           <div className="flex items-center justify-between text-muted-foreground mb-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-emerald-600">Approved</span>
+            <span className="text-xs font-medium uppercase tracking-wider text-emerald-600">
+              Approved
+            </span>
             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
           </div>
           <div className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
@@ -217,7 +225,9 @@ export default function AdminReviewsPage() {
 
         <div className="rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
           <div className="flex items-center justify-between text-muted-foreground mb-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-rose-500">Rejected</span>
+            <span className="text-xs font-medium uppercase tracking-wider text-rose-500">
+              Rejected
+            </span>
             <XCircle className="h-4 w-4 text-rose-500" />
           </div>
           <div className="text-2xl font-bold tracking-tight text-rose-600 dark:text-rose-400">
@@ -228,7 +238,9 @@ export default function AdminReviewsPage() {
 
         <div className="rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
           <div className="flex items-center justify-between text-muted-foreground mb-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-amber-500">Avg Rating</span>
+            <span className="text-xs font-medium uppercase tracking-wider text-amber-500">
+              Avg Rating
+            </span>
             <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
           </div>
           <div className="text-2xl font-bold tracking-tight flex items-baseline gap-1">
@@ -255,7 +267,9 @@ export default function AdminReviewsPage() {
 
           {/* Rating Filter Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
-            <span className="text-xs text-muted-foreground font-medium mr-1 hidden sm:inline">Stars:</span>
+            <span className="text-xs text-muted-foreground font-medium mr-1 hidden sm:inline">
+              Stars:
+            </span>
             {[
               { label: "All", val: undefined },
               { label: "5 ★", val: 5 },
@@ -364,7 +378,10 @@ export default function AdminReviewsPage() {
                   <TableRow key={review.id} className="hover:bg-muted/30 transition-colors">
                     {/* Garment */}
                     <TableCell>
-                      <div className="font-medium text-foreground line-clamp-1" title={review.productTitle}>
+                      <div
+                        className="font-medium text-foreground line-clamp-1"
+                        title={review.productTitle}
+                      >
                         {review.productTitle || "Atelier Garment"}
                       </div>
                       <div className="text-[11px] text-muted-foreground font-mono truncate">
@@ -377,7 +394,9 @@ export default function AdminReviewsPage() {
                       <div className="flex items-center gap-1.5 font-medium text-foreground">
                         <span>{review.customerName}</span>
                       </div>
-                      <div className="text-[11px] text-muted-foreground truncate">{review.customerEmail}</div>
+                      <div className="text-[11px] text-muted-foreground truncate">
+                        {review.customerEmail}
+                      </div>
                       {review.isVerifiedPurchase && (
                         <div className="inline-flex items-center gap-1 text-[10px] text-emerald-600 font-medium mt-0.5">
                           <ShieldCheck className="h-3 w-3" />
@@ -407,14 +426,19 @@ export default function AdminReviewsPage() {
 
                     {/* Review Feedback */}
                     <TableCell>
-                      <div className="font-semibold text-foreground mb-0.5 line-clamp-1">{review.title}</div>
+                      <div className="font-semibold text-foreground mb-0.5 line-clamp-1">
+                        {review.title}
+                      </div>
                       <p className="text-muted-foreground line-clamp-2 text-[11px] leading-relaxed">
                         {review.comment}
                       </p>
                       {review.helpfulCount > 0 && (
                         <div className="inline-flex items-center gap-1 text-[10px] text-muted-foreground/80 mt-1">
                           <ThumbsUp className="h-2.5 w-2.5" />
-                          <span>{review.helpfulCount} customer{review.helpfulCount > 1 ? "s" : ""} found this helpful</span>
+                          <span>
+                            {review.helpfulCount} customer{review.helpfulCount > 1 ? "s" : ""} found
+                            this helpful
+                          </span>
                         </div>
                       )}
                       {review.status === "rejected" && review.rejectionReason && (
@@ -433,17 +457,26 @@ export default function AdminReviewsPage() {
                     {/* Status Badge */}
                     <TableCell>
                       {review.status === "approved" && (
-                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px] font-semibold gap-1">
+                        <Badge
+                          variant="outline"
+                          className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px] font-semibold gap-1"
+                        >
                           <CheckCircle2 className="h-2.5 w-2.5" /> Approved
                         </Badge>
                       )}
                       {review.status === "pending" && (
-                        <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-[10px] font-semibold gap-1">
+                        <Badge
+                          variant="outline"
+                          className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-[10px] font-semibold gap-1"
+                        >
                           <Clock className="h-2.5 w-2.5" /> Pending
                         </Badge>
                       )}
                       {review.status === "rejected" && (
-                        <Badge variant="outline" className="bg-rose-500/10 text-rose-600 border-rose-500/20 text-[10px] font-semibold gap-1">
+                        <Badge
+                          variant="outline"
+                          className="bg-rose-500/10 text-rose-600 border-rose-500/20 text-[10px] font-semibold gap-1"
+                        >
                           <XCircle className="h-2.5 w-2.5" /> Rejected
                         </Badge>
                       )}
@@ -499,7 +532,8 @@ export default function AdminReviewsPage() {
           <div className="flex items-center justify-between px-4 py-3 border-t border-border/80 text-xs text-muted-foreground">
             <div>
               Showing page <span className="font-semibold text-foreground">{page}</span> of{" "}
-              <span className="font-semibold text-foreground">{totalPages}</span> ({totalCount} total)
+              <span className="font-semibold text-foreground">{totalPages}</span> ({totalCount}{" "}
+              total)
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -575,7 +609,9 @@ export default function AdminReviewsPage() {
             </div>
 
             <div className="space-y-1.5 pt-2">
-              <label className="text-xs font-medium text-foreground">Custom Rejection Reason:</label>
+              <label className="text-xs font-medium text-foreground">
+                Custom Rejection Reason:
+              </label>
               <Textarea
                 placeholder="Provide internal reason for rejection..."
                 value={rejectionReason}
@@ -603,7 +639,11 @@ export default function AdminReviewsPage() {
               disabled={isModerating || !rejectionReason.trim()}
               className="text-xs gap-1.5"
             >
-              {isModerating ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5" />}
+              {isModerating ? (
+                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <XCircle className="h-3.5 w-3.5" />
+              )}
               Confirm Rejection
             </Button>
           </DialogFooter>

@@ -141,7 +141,8 @@ vi.mock("../modules/payment/models/payment.model", () => {
         mockPayments.find((p) => {
           if (filter?.orderId && p.orderId.toString() !== filter.orderId.toString()) return false;
           if (filter?.gatewayOrderId && p.gatewayOrderId !== filter.gatewayOrderId) return false;
-          if (filter?.gatewayPaymentId && p.gatewayPaymentId !== filter.gatewayPaymentId) return false;
+          if (filter?.gatewayPaymentId && p.gatewayPaymentId !== filter.gatewayPaymentId)
+            return false;
           if (filter?.status) {
             if (typeof filter.status === "string" && p.status !== filter.status) return false;
             if (filter.status.$in && !filter.status.$in.includes(p.status)) return false;
@@ -537,10 +538,7 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
       };
 
       const rawBody = JSON.stringify(webhookPayload);
-      const signature = crypto
-        .createHmac("sha256", rzpWebhookSecret)
-        .update(rawBody)
-        .digest("hex");
+      const signature = crypto.createHmac("sha256", rzpWebhookSecret).update(rawBody).digest("hex");
 
       const res = await request(app)
         .post("/api/v1/payments/webhook/razorpay")
@@ -583,10 +581,7 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
       };
 
       const rawBody = JSON.stringify(webhookPayload);
-      const signature = crypto
-        .createHmac("sha256", rzpWebhookSecret)
-        .update(rawBody)
-        .digest("hex");
+      const signature = crypto.createHmac("sha256", rzpWebhookSecret).update(rawBody).digest("hex");
 
       // First delivery
       const res1 = await request(app)
@@ -632,10 +627,7 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
       };
 
       const rawBody = JSON.stringify(webhookPayload);
-      const signature = crypto
-        .createHmac("sha256", rzpWebhookSecret)
-        .update(rawBody)
-        .digest("hex");
+      const signature = crypto.createHmac("sha256", rzpWebhookSecret).update(rawBody).digest("hex");
 
       const res = await request(app)
         .post("/api/v1/payments/webhook/razorpay")
@@ -689,7 +681,9 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
         attemptCount: 1,
         refunds: [],
         save: async function () {
-          const idx = mockPayments.findIndex((p) => p._id.toString() === paymentRecord._id.toString());
+          const idx = mockPayments.findIndex(
+            (p) => p._id.toString() === paymentRecord._id.toString()
+          );
           if (idx > -1) mockPayments[idx] = paymentRecord;
           else mockPayments.push(paymentRecord);
           return paymentRecord;

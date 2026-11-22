@@ -9,15 +9,10 @@ export class CouponController {
   public async validateCoupon(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { code, cartTotal, items } = req.body;
-      const result = await couponService.validateAndCalculateDiscount(
-        code,
-        cartTotal,
-        items,
-        {
-          userId: req.user?.id,
-          email: req.user?.email,
-        }
-      );
+      const result = await couponService.validateAndCalculateDiscount(code, cartTotal, items, {
+        userId: req.user?.id,
+        email: req.user?.email,
+      });
 
       res.status(200).json({
         success: true,
@@ -34,7 +29,9 @@ export class CouponController {
    */
   public async listCoupons(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const paginated = await couponService.listCoupons(req.query as unknown as AdminCouponListQuery);
+      const paginated = await couponService.listCoupons(
+        req.query as unknown as AdminCouponListQuery
+      );
       res.status(200).json({
         success: true,
         data: paginated,
