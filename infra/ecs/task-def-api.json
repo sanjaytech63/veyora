@@ -1,0 +1,89 @@
+{
+  "family": "veyora-api",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::123456789012:role/veyora-ecs-task-execution-role",
+  "taskRoleArn": "arn:aws:iam::123456789012:role/veyora-api-task-role",
+  "containerDefinitions": [
+    {
+      "name": "veyora-api",
+      "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/veyora-api:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 4000,
+          "hostPort": 4000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { "name": "NODE_ENV", "value": "production" },
+        { "name": "PORT", "value": "4000" },
+        { "name": "API_PREFIX", "value": "/api/v1" },
+        { "name": "LOG_LEVEL", "value": "info" }
+      ],
+      "secrets": [
+        {
+          "name": "MONGODB_URI",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:veyora/production/api-secrets:MONGODB_URI::"
+        },
+        {
+          "name": "REDIS_HOST",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:veyora/production/api-secrets:REDIS_HOST::"
+        },
+        {
+          "name": "REDIS_PORT",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:veyora/production/api-secrets:REDIS_PORT::"
+        },
+        {
+          "name": "REDIS_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:veyora/production/api-secrets:REDIS_PASSWORD::"
+        },
+        {
+          "name": "JWT_ACCESS_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:veyora/production/api-secrets:JWT_ACCESS_SECRET::"
+        },
+        {
+          "name": "JWT_REFRESH_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:veyora/production/api-secrets:JWT_REFRESH_SECRET::"
+        },
+        {
+          "name": "COOKIE_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:veyora/production/api-secrets:COOKIE_SECRET::"
+        },
+        {
+          "name": "RAZORPAY_KEY_ID",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:veyora/production/api-secrets:RAZORPAY_KEY_ID::"
+        },
+        {
+          "name": "RAZORPAY_KEY_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:veyora/production/api-secrets:RAZORPAY_KEY_SECRET::"
+        },
+        {
+          "name": "RAZORPAY_WEBHOOK_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:veyora/production/api-secrets:RAZORPAY_WEBHOOK_SECRET::"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/veyora-api",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "api"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://127.0.0.1:4000/health || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 15
+      }
+    }
+  ]
+}

@@ -1,36 +1,61 @@
+# ==============================================================================
 # Production Dockerfile for Veyora Core API
-FROM node:24-alpine AS base
+# Multi-stage, non-root execution, minimal attack surface
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Stage 1: Build & Package Compile
+# ------------------------------------------------------------------------------
+FROM node:24-alpine AS builder
 
 WORKDIR /app
-
-# Step 1: Install build tools
 RUN apk add --no-cache libc6-compat
 
-# Step 2: Copy repository dependencies
+# Copy workspace manifests
 COPY package*.json ./
 COPY turbo.json ./
+COPY tsconfig.json ./
+
+# Copy shared packages and application sources
 COPY packages/ ./packages/
 COPY apps/api/ ./apps/api/
 
-# Step 3: Install all dependencies
+# Install dependencies deterministically
 RUN npm ci
 
-# Step 4: Build shared packages and API application
+# Compile TypeScript packages and build API distribution
 RUN npm run build:packages && npm run build --workspace=@veyora/api
 
-# Step 5: Production runner stage
+# Prune development dependencies for minimal production footprint
+RUN npm prune --production
+
+# ------------------------------------------------------------------------------
+# Stage 2: Production Runner
+# ------------------------------------------------------------------------------
 FROM node:24-alpine AS runner
 
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=4000
 
-COPY --from=base /app/package*.json ./
-COPY --from=base /app/node_modules ./node_modules
-COPY --from=base /app/apps/api/dist ./apps/api/dist
-COPY --from=base /app/apps/api/package.json ./apps/api/package.json
-COPY --from=base /app/packages/ ./packages/
+# Install wget for healthcheck (included in alpine base)
+RUN apk add --no-cache wget
 
+# Copy pruned production dependencies and compiled packages
+COPY --from=builder --chown=node:node /app/package*.json ./
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
+COPY --from=builder --chown=node:node /app/packages ./packages
+COPY --from=builder --chown=node:node /app/apps/api/package.json ./apps/api/package.json
+COPY --from=builder --chown=node:node /app/apps/api/dist ./apps/api/dist
+
+# Switch to unprivileged user
+USER node
+
+# Expose HTTP port
 EXPOSE 4000
+
+# Container liveness & readiness probe
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:4000/health || exit 1
 
 CMD ["node", "apps/api/dist/server.js"]
