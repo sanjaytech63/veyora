@@ -15,7 +15,7 @@ import {
   InventoryStats,
   StockMovementType,
 } from "@veyora/types";
-import { ConflictError, NotFoundError } from "@veyora/utils";
+import { ConflictError, NotFoundError, escapeRegex } from "@veyora/utils";
 
 export interface PaginatedInventory {
   items: InventoryItem[];
@@ -125,9 +125,10 @@ export class InventoryService {
     }
 
     if (query.search) {
+      const safeSearch = escapeRegex(query.search);
       filter["$or"] = [
-        { sku: { $regex: query.search, $options: "i" } },
-        { productTitle: { $regex: query.search, $options: "i" } },
+        { sku: { $regex: safeSearch, $options: "i" } },
+        { productTitle: { $regex: safeSearch, $options: "i" } },
       ];
     }
 

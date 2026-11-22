@@ -28,3 +28,11 @@ export function safeJsonParse<T>(jsonString: string, fallback: T): T {
     return fallback;
   }
 }
+
+/**
+ * Escapes characters with special meaning in Regular Expressions to prevent ReDoS attacks
+ */
+export function escapeRegex(str: string): string {
+  if (!str) return "";
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}

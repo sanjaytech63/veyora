@@ -262,5 +262,7 @@ const orderSchema = new Schema<IOrder>(
 orderSchema.index({ createdAt: -1 });
 orderSchema.index({ customerEmail: 1, createdAt: -1 });
 orderSchema.index({ status: 1, createdAt: -1 });
+orderSchema.index({ userId: 1, createdAt: -1 });
+orderSchema.index({ guestId: 1, createdAt: -1 });
 
 export const Order = mongoose.model<IOrder>("Order", orderSchema);

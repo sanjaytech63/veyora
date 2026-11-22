@@ -677,9 +677,15 @@ export class CheckoutService {
     }
 
     if (!isAdmin) {
-      if (userId && order.userId && order.userId.toString() !== userId) {
-        throw new NotFoundError("Order not found.");
-      } else if (!userId && guestId && order.guestId && order.guestId !== guestId) {
+      if (order.userId) {
+        if (!userId || order.userId.toString() !== userId) {
+          throw new NotFoundError("Order not found.");
+        }
+      } else if (order.guestId) {
+        if (!guestId || order.guestId !== guestId) {
+          throw new NotFoundError("Order not found.");
+        }
+      } else {
         throw new NotFoundError("Order not found.");
       }
     }
@@ -865,9 +871,15 @@ export class CheckoutService {
 
     // Authorization checks
     if (!isAdmin) {
-      if (userId && order.userId && order.userId.toString() !== userId) {
-        throw new NotFoundError("Order not found.");
-      } else if (!userId && guestId && order.guestId && order.guestId !== guestId) {
+      if (order.userId) {
+        if (!userId || order.userId.toString() !== userId) {
+          throw new NotFoundError("Order not found.");
+        }
+      } else if (order.guestId) {
+        if (!guestId || order.guestId !== guestId) {
+          throw new NotFoundError("Order not found.");
+        }
+      } else {
         throw new NotFoundError("Order not found.");
       }
 

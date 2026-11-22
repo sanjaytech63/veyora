@@ -2,6 +2,7 @@ import { Router } from "express";
 import { couponController } from "./controllers/coupon.controller";
 import { optionalAuth, requireAuth, requireRole, requirePermission } from "../../middleware/auth";
 import { validate } from "../../middleware/validate-request";
+import { couponRateLimiter } from "../../middleware/rate-limiter";
 import {
   createCouponSchema,
   updateCouponSchema,
@@ -17,6 +18,7 @@ const router = Router();
 
 router.post(
   "/coupons/validate",
+  couponRateLimiter,
   optionalAuth,
   validate({ body: validateCouponSchema }),
   couponController.validateCoupon.bind(couponController)
