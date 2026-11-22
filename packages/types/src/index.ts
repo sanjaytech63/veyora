@@ -15,3 +15,4 @@ export * from "./customer";
 export * from "./review";
 export * from "./shipping";
 export * from "./notification";
+export * from "./analytics";
