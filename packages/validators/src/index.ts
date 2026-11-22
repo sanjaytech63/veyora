@@ -20,3 +20,4 @@ export * from "./env";
 export * from "./shipping";
 export * from "./notifications";
 export * from "./analytics";
+export * from "./rbac";

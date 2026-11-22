@@ -3,7 +3,7 @@ import { productController } from "./controllers/product.controller";
 import { categoryController } from "./controllers/category.controller";
 import { brandController } from "./controllers/brand.controller";
 import { validate } from "../../middleware/validate-request";
-import { requireAuth, requireRole } from "../../middleware/auth";
+import { requireAuth, requireRole, requirePermission } from "../../middleware/auth";
 import {
   createProductSchema,
   updateProductSchema,
@@ -46,6 +46,7 @@ router.get(
   "/admin/catalog/stats",
   requireAuth,
   requireRole("admin", "superadmin"),
+  requirePermission("products:read"),
   productController.getStats.bind(productController)
 );
 
@@ -54,6 +55,7 @@ router.post(
   "/admin/categories",
   requireAuth,
   requireRole("admin", "superadmin"),
+  requirePermission("categories:write"),
   validate({ body: createCategorySchema }),
   categoryController.createCategory.bind(categoryController)
 );
@@ -62,6 +64,7 @@ router.put(
   "/admin/categories/:id",
   requireAuth,
   requireRole("admin", "superadmin"),
+  requirePermission("categories:write"),
   validate({ body: updateCategorySchema }),
   categoryController.updateCategory.bind(categoryController)
 );
@@ -70,6 +73,7 @@ router.delete(
   "/admin/categories/:id",
   requireAuth,
   requireRole("admin", "superadmin"),
+  requirePermission("categories:delete"),
   categoryController.deleteCategory.bind(categoryController)
 );
 
@@ -78,6 +82,7 @@ router.post(
   "/admin/brands",
   requireAuth,
   requireRole("admin", "superadmin"),
+  requirePermission("categories:write"),
   validate({ body: createBrandSchema }),
   brandController.createBrand.bind(brandController)
 );
@@ -86,6 +91,7 @@ router.put(
   "/admin/brands/:id",
   requireAuth,
   requireRole("admin", "superadmin"),
+  requirePermission("categories:write"),
   validate({ body: updateBrandSchema }),
   brandController.updateBrand.bind(brandController)
 );
@@ -94,6 +100,7 @@ router.delete(
   "/admin/brands/:id",
   requireAuth,
   requireRole("admin", "superadmin"),
+  requirePermission("categories:delete"),
   brandController.deleteBrand.bind(brandController)
 );
 
@@ -102,6 +109,7 @@ router.post(
   "/admin/products",
   requireAuth,
   requireRole("admin", "superadmin"),
+  requirePermission("products:write"),
   validate({ body: createProductSchema }),
   productController.createProduct.bind(productController)
 );
@@ -110,6 +118,7 @@ router.put(
   "/admin/products/:id",
   requireAuth,
   requireRole("admin", "superadmin"),
+  requirePermission("products:write"),
   validate({ body: updateProductSchema }),
   productController.updateProduct.bind(productController)
 );
@@ -118,6 +127,7 @@ router.delete(
   "/admin/products/:id",
   requireAuth,
   requireRole("admin", "superadmin"),
+  requirePermission("products:delete"),
   productController.deleteProduct.bind(productController)
 );
 

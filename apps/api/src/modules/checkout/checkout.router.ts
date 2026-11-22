@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { checkoutController } from "./controllers/checkout.controller";
-import { optionalAuth, requireAuth, requireRole } from "../../middleware/auth";
+import { optionalAuth, requireAuth, requireRole, requirePermission } from "../../middleware/auth";
 import { validate } from "../../middleware/validate-request";
 import {
   createOrderCheckoutSchema,
@@ -49,16 +49,22 @@ router.use("/admin/orders", requireAuth, requireRole("admin", "superadmin"));
 // 6. Admin List Orders (with pagination, filters, search)
 router.get(
   "/admin/orders",
+  requirePermission("orders:read"),
   validate({ query: orderQuerySchema }),
   checkoutController.adminListOrders.bind(checkoutController)
 );
 
 // 7. Admin Get Single Order Detail
-router.get("/admin/orders/:orderId", checkoutController.adminGetOrder.bind(checkoutController));
+router.get(
+  "/admin/orders/:orderId",
+  requirePermission("orders:read"),
+  checkoutController.adminGetOrder.bind(checkoutController)
+);
 
 // 8. Admin Update Order Status (Strict State Machine & Tracking)
 router.patch(
   "/admin/orders/:orderId/status",
+  requirePermission("orders:update_status"),
   validate({ body: updateOrderStatusSchema }),
   checkoutController.adminUpdateOrderStatus.bind(checkoutController)
 );
@@ -66,6 +72,7 @@ router.patch(
 // 9. Admin Cancel Order
 router.post(
   "/admin/orders/:orderId/cancel",
+  requirePermission("orders:cancel"),
   validate({ body: cancelOrderSchema }),
   checkoutController.adminCancelOrder.bind(checkoutController)
 );

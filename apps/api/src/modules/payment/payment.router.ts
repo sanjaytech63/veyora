@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { paymentController } from "./controllers/payment.controller";
-import { optionalAuth, requireAuth, requireRole } from "../../middleware/auth";
+import { optionalAuth, requireAuth, requireRole, requirePermission } from "../../middleware/auth";
 import { validate } from "../../middleware/validate-request";
 import {
   initiatePaymentSchema,
@@ -59,6 +59,7 @@ router.post(
   "/admin/payments/:orderId/refund",
   requireAuth,
   requireRole("admin", "superadmin"),
+  requirePermission("payments:refund"),
   validate({ body: refundPaymentSchema }),
   paymentController.adminRefundPayment.bind(paymentController)
 );

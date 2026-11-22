@@ -4,6 +4,7 @@ import { UserRole, UserPermission } from "@veyora/types";
 import { UnauthorizedError, ForbiddenError } from "@veyora/utils";
 import { tokenService } from "../modules/auth/services/token.service";
 import { Session } from "../modules/auth/models/session.model";
+import { hasPermission } from "../modules/rbac/permission-registry";
 
 /**
  * Enforce valid Bearer Access Token and active, unrevoked session
@@ -141,13 +142,41 @@ export function requirePermission(...requiredPermissions: UserPermission[]) {
 
     const userPermissions = req.user.permissions || [];
     const hasAllPermissions = requiredPermissions.every((perm) =>
-      userPermissions.includes(perm)
+      hasPermission(userPermissions, perm)
     );
 
     if (!hasAllPermissions) {
       return next(
         new ForbiddenError(
           `Access forbidden. Missing required permissions: [${requiredPermissions.join(", ")}].`
+        )
+      );
+    }
+
+    next();
+  };
+}
+
+/**
+ * Check if the user has AT LEAST ONE of the specified permissions
+ */
+export function requireAnyPermission(...permissions: UserPermission[]) {
+  return (req: Request, _res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      return next(new UnauthorizedError("Authentication required."));
+    }
+
+    if (req.user.role === "superadmin") {
+      return next();
+    }
+
+    const userPermissions = req.user.permissions || [];
+    const hasAny = permissions.some((perm) => hasPermission(userPermissions, perm));
+
+    if (!hasAny) {
+      return next(
+        new ForbiddenError(
+          `Access forbidden. Requires at least one of permissions: [${permissions.join(", ")}].`
         )
       );
     }
