@@ -18,3 +18,4 @@ export * from "./admin";
 export * from "./inventory";
 export * from "./env";
 export * from "./shipping";
+export * from "./notifications";

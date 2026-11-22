@@ -12,6 +12,7 @@ import { useWishlist } from "@/lib/hooks/use-wishlist";
 import { useCart } from "@/lib/hooks/use-cart";
 import { authApi } from "@/lib/api/auth-api";
 import { SearchModal } from "@/components/storefront/search-modal";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -141,6 +142,8 @@ export function StoreHeader() {
                 </span>
               )}
             </Button>
+
+            <NotificationBell />
 
             <ThemeToggle />
 

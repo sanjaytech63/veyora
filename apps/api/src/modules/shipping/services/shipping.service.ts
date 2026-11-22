@@ -21,6 +21,9 @@ import {
   CreateShippingMethodPayload,
 } from "@veyora/types";
 import { BadRequestError, NotFoundError, ConflictError } from "@veyora/utils";
+import { notificationService } from "../../notification/services/notification.service";
+import { queueRegistry } from "../../../infrastructure/queues/queue-registry";
+import { eventPublisher } from "../../../infrastructure/events/event-publisher";
 
 export class ShippingService {
   /**
@@ -359,6 +362,43 @@ export class ShippingService {
 
     await order.save();
 
+    // Trigger notification, background email job, and socket update
+    try {
+      if (order.userId) {
+        await notificationService.createNotification({
+          userId: order.userId.toString(),
+          type: "shipping",
+          title: "Order Dispatched",
+          message: `Order #${order.orderNumber} is now in transit via ${shipment.carrierName} (AWB: ${shipment.trackingNumber}).`,
+          actionUrl: `/orders/${order._id.toString()}`,
+          idempotencyKey: `shipping-created:${shipment._id.toString()}`,
+        });
+      }
+
+      await queueRegistry.addEmailJob({
+        type: "shipping-notification",
+        recipient: order.customerEmail,
+        recipientName: order.customerName,
+        data: {
+          orderNumber: order.orderNumber,
+          trackingNumber: shipment.trackingNumber,
+          carrier: shipment.carrierName,
+          trackingUrl: shipment.trackingUrl,
+        },
+        idempotencyKey: `email:shipping-notif:${shipment._id.toString()}`,
+      });
+
+      eventPublisher.publishShipmentUpdate({
+        id: shipment._id.toString(),
+        trackingNumber: shipment.trackingNumber,
+        orderId: order._id.toString(),
+        status: shipment.status,
+        userId: order.userId?.toString(),
+      });
+    } catch {
+      // Non-critical background event
+    }
+
     return this.toShipmentDto(shipment);
   }
 
@@ -450,10 +490,36 @@ export class ShippingService {
           timestamp: eventTimestamp,
         });
         await linkedOrder.save();
+
+        try {
+          if (linkedOrder.userId) {
+            await notificationService.createNotification({
+              userId: linkedOrder.userId.toString(),
+              type: "shipping",
+              title: "Shipment Delivered",
+              message: `Your package #${shipment.shipmentNumber} has arrived and was delivered.`,
+              actionUrl: `/orders/${linkedOrder._id.toString()}`,
+              idempotencyKey: `shipping-delivered:${shipment._id.toString()}`,
+            });
+          }
+        } catch {
+          // ignore background notification failure
+        }
       }
     }
 
     await shipment.save();
+
+    try {
+      eventPublisher.publishShipmentUpdate({
+        id: shipment._id.toString(),
+        trackingNumber: shipment.trackingNumber,
+        orderId: shipment.orderId.toString(),
+        status: shipment.status,
+      });
+    } catch {
+      // ignore
+    }
 
     return this.toShipmentDto(shipment);
   }

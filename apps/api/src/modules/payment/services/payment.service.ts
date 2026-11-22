@@ -20,6 +20,9 @@ import {
   logger,
 } from "@veyora/utils";
 import crypto from "node:crypto";
+import { notificationService } from "../../notification/services/notification.service";
+import { queueRegistry } from "../../../infrastructure/queues/queue-registry";
+import { eventPublisher } from "../../../infrastructure/events/event-publisher";
 
 export class PaymentService {
   /**
@@ -211,6 +214,42 @@ export class PaymentService {
         timestamp: new Date(),
       });
       await order.save();
+    }
+
+    // Publish real-time notification & enqueue payment confirmation email
+    try {
+      if (order.userId) {
+        await notificationService.createNotification({
+          userId: order.userId.toString(),
+          type: "payment",
+          title: "Payment Confirmed",
+          message: `Payment of ₹${payment.amount} for Order #${order.orderNumber} was successfully verified.`,
+          actionUrl: `/orders/${order._id.toString()}`,
+          idempotencyKey: `payment-verified:${payment._id.toString()}`,
+        });
+      }
+
+      await queueRegistry.addEmailJob({
+        type: "payment-confirmation",
+        recipient: order.customerEmail,
+        recipientName: order.customerName,
+        data: {
+          orderNumber: order.orderNumber,
+          amount: payment.amount,
+          method: payment.provider,
+        },
+        idempotencyKey: `email:payment-conf:${payment._id.toString()}`,
+      });
+
+      eventPublisher.publishPaymentUpdate({
+        id: payment._id.toString(),
+        orderId: order._id.toString(),
+        status: payment.status,
+        amount: payment.amount,
+        userId: order.userId?.toString(),
+      });
+    } catch {
+      // Non-critical background event
     }
 
     return {

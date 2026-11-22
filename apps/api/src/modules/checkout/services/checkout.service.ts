@@ -8,6 +8,9 @@ import { Product, IProduct } from "../../catalog/models/product.model";
 import { Inventory } from "../../inventory/models/inventory.model";
 import { StockMovement } from "../../inventory/models/stock-movement.model";
 import { couponService } from "../../coupon/services/coupon.service";
+import { notificationService } from "../../notification/services/notification.service";
+import { queueRegistry } from "../../../infrastructure/queues/queue-registry";
+import { eventPublisher } from "../../../infrastructure/events/event-publisher";
 import {
   AddressDto,
   CreateAddressPayload,
@@ -582,6 +585,45 @@ export class CheckoutService {
     // 9. Clear Active Shopping Cart
     await cartService.clearCart(userId, guestId);
 
+    // 10. Real-time Notification & Background Jobs
+    try {
+      if (order.userId) {
+        await notificationService.createNotification({
+          userId: order.userId.toString(),
+          type: "order",
+          title: "Order Placed Successfully",
+          message: `Your reservation #${order.orderNumber} has been received and is being prepared by the Atelier.`,
+          actionUrl: `/orders/${order._id.toString()}`,
+          idempotencyKey: `order-placed:${order._id.toString()}`,
+        });
+      }
+
+      await queueRegistry.addEmailJob({
+        type: "order-confirmation",
+        recipient: order.customerEmail,
+        recipientName: order.customerName,
+        data: {
+          orderNumber: order.orderNumber,
+          total: order.total,
+          itemsCount: order.items.length,
+        },
+        idempotencyKey: `email:order-conf:${order._id.toString()}`,
+      });
+
+      eventPublisher.publishOrderUpdate(
+        {
+          id: order._id.toString(),
+          orderNumber: order.orderNumber,
+          status: order.status,
+          userId: order.userId?.toString(),
+          total: order.total,
+        },
+        "created"
+      );
+    } catch {
+      // Non-critical background event handling should not fail order placement
+    }
+
     return this.toOrderDto(order);
   }
 
@@ -814,6 +856,44 @@ export class CheckoutService {
     });
 
     await order.save();
+
+    // Notify customer and publish real-time cancellation
+    try {
+      if (order.userId) {
+        await notificationService.createNotification({
+          userId: order.userId.toString(),
+          type: "order",
+          title: "Order Cancelled",
+          message: `Order #${order.orderNumber} has been cancelled.`,
+          actionUrl: `/orders/${order._id.toString()}`,
+          idempotencyKey: `order-cancelled:${order._id.toString()}:${Date.now()}`,
+        });
+      }
+
+      await queueRegistry.addEmailJob({
+        type: "order-cancellation",
+        recipient: order.customerEmail,
+        recipientName: order.customerName,
+        data: {
+          orderNumber: order.orderNumber,
+          reason: order.cancelReason,
+        },
+        idempotencyKey: `email:order-cancel:${order._id.toString()}`,
+      });
+
+      eventPublisher.publishOrderUpdate(
+        {
+          id: order._id.toString(),
+          orderNumber: order.orderNumber,
+          status: order.status,
+          userId: order.userId?.toString(),
+          total: order.total,
+        },
+        "cancelled"
+      );
+    } catch {
+      // Non-critical background event
+    }
 
     // Revert coupon redemption if applicable
     if (mongoose.connection.readyState === 1 && order.couponCode) {

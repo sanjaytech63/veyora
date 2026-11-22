@@ -10,29 +10,16 @@ export async function processSystemJob(job: Job<VeyoraJobData>): Promise<JobExec
     data: job.data,
   });
 
-  // Example foundation processor logic
-  switch (job.data.type) {
-    case "system:ping":
-      logger.info("SYSTEM_PROCESSOR", `Handled ping from ${job.data.source}`);
-      break;
-
-    case "notification:dispatch":
-      logger.info(
-        "SYSTEM_PROCESSOR",
-        `Dispatched notification to ${job.data.recipient} via ${job.data.channel}`
-      );
-      break;
-
-    default:
-      logger.warn(
-        "SYSTEM_PROCESSOR",
-        `Unknown job type received: ${(job.data as { type: string }).type}`
-      );
+  if (job.data.type === "system:ping") {
+    logger.info("SYSTEM_PROCESSOR", `Handled ping from ${job.data.source}`);
+  } else {
+    logger.info("SYSTEM_PROCESSOR", `Handled job type: ${job.data.type}`);
   }
 
   const duration = Date.now() - startTime;
   return {
     jobId: job.id ?? "unknown",
+    queueName: job.queueName || "veyora:system",
     status: "completed",
     executionTimeMs: duration,
     timestamp: new Date().toISOString(),

@@ -4,6 +4,8 @@ import { env } from "./config/env";
 import { logger } from "./config/logger";
 import { MongoDatabase } from "./database/mongodb";
 import { RedisService } from "./database/redis";
+import { socketServer } from "./infrastructure/socket/socket-server";
+import { queueRegistry } from "./infrastructure/queues/queue-registry";
 
 async function startServer(): Promise<void> {
   // 1. Initialize databases asynchronously
@@ -19,6 +21,9 @@ async function startServer(): Promise<void> {
   // 2. Create Express app and HTTP server
   const app = createApp();
   const server = http.createServer(app);
+
+  // Initialize Socket.IO server
+  socketServer.init(server);
 
   server.listen(env.PORT, () => {
     logger.info(
@@ -48,6 +53,10 @@ async function startServer(): Promise<void> {
     }, 10000);
 
     try {
+      // Close Socket.IO & background queues
+      await socketServer.close();
+      await queueRegistry.closeAll();
+
       // Close HTTP server
       await new Promise<void>((resolve, reject) => {
         server.close((err) => (err ? reject(err) : resolve()));
