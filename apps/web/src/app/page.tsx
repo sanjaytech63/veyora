@@ -43,6 +43,8 @@ export default function StorefrontHomePage() {
   };
 
   const heroProduct = featuredProducts[0];
+  const firstCategory = categories[0];
+  const secondCategory = categories[1];
 
   return (
     <div className="space-y-24 md:space-y-32 pb-28">
@@ -100,7 +102,9 @@ export default function StorefrontHomePage() {
                   size="lg"
                   className="h-12 w-full rounded-full border-border/80 bg-background/60 px-8 text-sm font-semibold backdrop-blur-sm hover:bg-muted/60 sm:w-auto"
                 >
-                  <Link href="/category/kurtis">Shop Kurtis &amp; Sets</Link>
+                  <Link href={firstCategory ? `/category/${firstCategory.slug}` : "/shop"}>
+                    {firstCategory ? `Shop ${firstCategory.name}` : "Explore Atelier"}
+                  </Link>
                 </Button>
               </div>
 
@@ -130,75 +134,100 @@ export default function StorefrontHomePage() {
             {/* Right Column: Hero Fashion Campaign Stage */}
             <div className="lg:col-span-5">
               <div className="group relative mx-auto aspect-[4/4.8] max-w-md lg:max-w-none rounded-[30px] border border-border/80 bg-card/60 p-2.5 shadow-[0_32px_64px_-20px_rgba(0,0,0,0.12)] backdrop-blur-xl dark:shadow-[0_32px_64px_-20px_rgba(0,0,0,0.6)]">
-                <div className="relative h-full w-full overflow-hidden rounded-[22px] bg-zinc-950 ring-1 ring-inset ring-white/10">
-                  <OptimizedImage
-                    src={
-                      heroProduct?.images?.[0]?.url ||
-                      "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=1200&q=85"
-                    }
-                    alt={heroProduct?.title || "Veyora Festive Couture"}
-                    fill
-                    priority
-                    className="h-full w-full object-cover object-center transition-transform duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
-                    sizes="(max-width: 1024px) 100vw, 42vw"
-                  />
+                <div className="relative h-full w-full overflow-hidden rounded-[22px] bg-zinc-950 ring-1 ring-inset ring-white/10 flex flex-col justify-end">
+                  {heroProduct && heroProduct.images?.[0]?.url ? (
+                    <>
+                      <OptimizedImage
+                        src={heroProduct.images[0].url}
+                        alt={heroProduct.title}
+                        fill
+                        priority
+                        className="h-full w-full object-cover object-center transition-transform duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
+                        sizes="(max-width: 1024px) 100vw, 42vw"
+                      />
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/30" />
 
-                  {/* Gradient Vignette */}
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/30" />
-
-                  {/* Top Spec Pill */}
-                  <div className="absolute left-4 right-4 top-4 flex items-center justify-between">
-                    <span className="rounded-full border border-white/15 bg-black/50 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-zinc-200 backdrop-blur-md">
-                      {heroProduct?.sku ? `EDITION // ${heroProduct.sku}` : "FESTIVE // 2026"}
-                    </span>
-                    <span className="rounded-full border border-emerald-400/30 bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-300 backdrop-blur-md">
-                      {heroProduct?.stock && heroProduct.stock > 0
-                        ? "In Stock"
-                        : "Handcrafted Atelier"}
-                    </span>
-                  </div>
-
-                  {/* Floating Glassmorphic Product Card */}
-                  <Link
-                    href={heroProduct ? `/products/${heroProduct.slug}` : "/shop"}
-                    className="absolute inset-x-4 bottom-4 block rounded-2xl border border-white/15 bg-zinc-950/75 p-4 text-white shadow-2xl backdrop-blur-xl transition-all duration-300 hover:border-white/35 hover:bg-zinc-950/90"
-                  >
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-zinc-400">
-                          <span>{heroProduct ? "Featured Garment" : "Curated Atelier"}</span>
-                          <span>•</span>
-                          <span className="text-amber-400">★ 4.95</span>
-                        </div>
-                        <h2 className="text-sm sm:text-base font-semibold tracking-tight text-white line-clamp-1">
-                          {heroProduct?.title || "Chanderi Silk Kurti Set with Organza Dupatta"}
-                        </h2>
+                      {/* Top Spec Pill */}
+                      <div className="absolute left-4 right-4 top-4 flex items-center justify-between">
+                        <span className="rounded-full border border-white/15 bg-black/50 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-zinc-200 backdrop-blur-md">
+                          {heroProduct.sku ? `EDITION // ${heroProduct.sku}` : "FESTIVE // 2026"}
+                        </span>
+                        <span className="rounded-full border border-emerald-400/30 bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-300 backdrop-blur-md">
+                          {heroProduct.stock > 0 ? "In Stock" : "Handcrafted Atelier"}
+                        </span>
                       </div>
 
-                      <div className="flex items-center gap-3 shrink-0">
-                        {heroProduct ? (
-                          <div className="text-right tabular-nums">
-                            <div className="text-base font-bold text-white">
-                              ${heroProduct.price.toFixed(2)}
+                      {/* Floating Glassmorphic Product Card */}
+                      <Link
+                        href={`/products/${heroProduct.slug}`}
+                        className="relative z-10 mx-4 mb-4 block rounded-2xl border border-white/15 bg-zinc-950/75 p-4 text-white shadow-2xl backdrop-blur-xl transition-all duration-300 hover:border-white/35 hover:bg-zinc-950/90"
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-zinc-400">
+                              <span>Featured Garment</span>
+                              {heroProduct.averageRating ? (
+                                <>
+                                  <span>•</span>
+                                  <span className="text-amber-400">
+                                    ★ {heroProduct.averageRating.toFixed(1)}
+                                  </span>
+                                </>
+                              ) : null}
                             </div>
-                            {heroProduct.compareAtPrice &&
-                              heroProduct.compareAtPrice > heroProduct.price && (
-                                <div className="text-[11px] text-zinc-400 line-through">
-                                  ${heroProduct.compareAtPrice.toFixed(2)}
-                                </div>
-                              )}
+                            <h2 className="text-sm sm:text-base font-semibold tracking-tight text-white line-clamp-1">
+                              {heroProduct.title}
+                            </h2>
                           </div>
-                        ) : (
-                          <div className="text-right text-xs font-semibold text-zinc-300">
-                            Discover
+
+                          <div className="flex items-center gap-3 shrink-0">
+                            <div className="text-right tabular-nums">
+                              <div className="text-base font-bold text-white">
+                                ${heroProduct.price.toFixed(2)}
+                              </div>
+                              {heroProduct.compareAtPrice &&
+                                heroProduct.compareAtPrice > heroProduct.price && (
+                                  <div className="text-[11px] text-zinc-400 line-through">
+                                    ${heroProduct.compareAtPrice.toFixed(2)}
+                                  </div>
+                                )}
+                            </div>
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-zinc-950 transition-transform duration-300 group-hover:scale-105">
+                              <ArrowUpRight className="h-4 w-4" />
+                            </div>
                           </div>
-                        )}
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-zinc-950 transition-transform duration-300 group-hover:scale-105">
-                          <ArrowUpRight className="h-4 w-4" />
                         </div>
+                      </Link>
+                    </>
+                  ) : (
+                    <div className="relative z-10 p-8 space-y-4 text-white text-center flex flex-col items-center justify-center h-full">
+                      <div className="h-14 w-14 rounded-2xl border border-white/20 bg-white/10 flex items-center justify-center text-amber-400 shadow-xl backdrop-blur-md">
+                        <Sparkles className="h-7 w-7" />
                       </div>
+                      <div className="space-y-1">
+                        <div className="font-mono text-[10px] uppercase tracking-widest text-zinc-400">
+                          Haute Couture Edit // 2026
+                        </div>
+                        <h3 className="text-xl font-bold tracking-tight">
+                          Veyora Atelier Collections
+                        </h3>
+                        <p className="text-xs text-zinc-400 max-w-xs leading-relaxed">
+                          Handcrafted Indian traditional silhouettes and couture curated for festive
+                          celebrations.
+                        </p>
+                      </div>
+                      <Button
+                        asChild
+                        size="sm"
+                        className="rounded-full px-6 text-xs font-semibold bg-white text-zinc-950 hover:bg-zinc-200"
+                      >
+                        <Link href="/shop" className="inline-flex items-center gap-1.5">
+                          Browse Storefront Catalog
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
+                      </Button>
                     </div>
-                  </Link>
+                  )}
                 </div>
               </div>
             </div>
@@ -367,7 +396,21 @@ export default function StorefrontHomePage() {
                     size="lg"
                     className="h-12 rounded-full bg-white px-7 text-sm font-semibold text-zinc-950 hover:bg-zinc-200"
                   >
-                    <Link href="/category/ethnic-wear">Explore Festive Lehengas</Link>
+                    <Link
+                      href={
+                        secondCategory
+                          ? `/category/${secondCategory.slug}`
+                          : firstCategory
+                            ? `/category/${firstCategory.slug}`
+                            : "/shop"
+                      }
+                    >
+                      {secondCategory
+                        ? `Explore ${secondCategory.name}`
+                        : firstCategory
+                          ? `Explore ${firstCategory.name}`
+                          : "Explore Storefront"}
+                    </Link>
                   </Button>
                   <Button
                     asChild

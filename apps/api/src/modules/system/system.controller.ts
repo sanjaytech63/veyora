@@ -18,4 +18,21 @@ export class SystemController {
     res.setHeader("Content-Type", "text/plain; version=0.0.4; charset=utf-8");
     res.status(200).send(metrics);
   }
+
+  public static async getSettings(_req: Request, res: Response): Promise<void> {
+    const settings = await SystemService.getSettings();
+    res.status(200).json({
+      success: true,
+      data: settings,
+    });
+  }
+
+  public static async updateSettings(req: Request, res: Response): Promise<void> {
+    const settings = await SystemService.updateSettings(req.body);
+    res.status(200).json({
+      success: true,
+      data: settings,
+      message: "Settings updated successfully.",
+    });
+  }
 }

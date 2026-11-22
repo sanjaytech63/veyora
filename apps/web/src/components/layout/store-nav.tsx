@@ -12,9 +12,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCategories } from "@/hooks/use-catalog";
 
 export function StoreNav({ className }: { className?: string }) {
   const pathname = usePathname();
+  const { data: categories = [] } = useCategories();
+
+  const activeCategories = React.useMemo(() => {
+    return categories.filter((c) => c.status === "active");
+  }, [categories]);
 
   return (
     <nav className={cn("hidden lg:flex items-center gap-1", className)}>
@@ -54,143 +60,76 @@ export function StoreNav({ className }: { className?: string }) {
         </Link>
       </Button>
 
-      {/* 3. Kurtis & Sets Dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+      {/* 3. Dynamic Categories Dropdown or Direct Links */}
+      {activeCategories.length > 0 && activeCategories.length <= 3 ? (
+        activeCategories.map((cat) => (
           <Button
+            key={cat.id}
+            asChild
             variant="ghost"
             size="sm"
-            className={cn(
-              "h-9 px-3.5 font-semibold text-xs tracking-wider uppercase gap-1",
-              pathname.includes("/kurtis") ? "text-primary font-bold" : "text-muted-foreground"
-            )}
+            className="h-9 px-3.5 font-semibold text-xs tracking-wider uppercase"
           >
-            <span>Kurtis &amp; Sets</span>
-            <ChevronDown className="h-3 w-3 opacity-60" />
+            <Link
+              href={`/category/${cat.slug}`}
+              className={cn(
+                "transition-colors hover:text-primary",
+                pathname.includes(cat.slug) ? "text-primary font-bold" : "text-muted-foreground"
+              )}
+            >
+              {cat.name}
+            </Link>
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="start"
-          className="w-80 p-3 rounded-2xl border border-border/80 bg-card shadow-xl space-y-1"
-        >
-          <div className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-primary flex items-center justify-between">
-            <span>Kurtis &amp; Salwar Suits</span>
-            <Sparkles className="h-3 w-3" />
-          </div>
-          <DropdownMenuItem asChild>
-            <Link
-              href="/category/kurtis"
-              className="cursor-pointer text-xs font-medium py-2 rounded-xl"
+        ))
+      ) : activeCategories.length > 3 ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "h-9 px-3.5 font-semibold text-xs tracking-wider uppercase gap-1",
+                pathname.startsWith("/category")
+                  ? "text-primary font-bold"
+                  : "text-muted-foreground"
+              )}
             >
-              Straight Cut Daily Kurtis
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link
-              href="/category/kurtis"
-              className="cursor-pointer text-xs font-medium py-2 rounded-xl"
-            >
-              Anarkali Suits with Dupatta
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link
-              href="/category/kurtis"
-              className="cursor-pointer text-xs font-medium py-2 rounded-xl"
-            >
-              Pure Mulmul Block Prints
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link
-              href="/category/kurtis"
-              className="cursor-pointer text-xs font-medium py-2 rounded-xl"
-            >
-              Chanderi Silk Festive Sets
-            </Link>
-          </DropdownMenuItem>
-          <div className="pt-2 border-t border-border/60 mt-1">
-            <Link
-              href="/category/kurtis"
-              className="flex items-center justify-between text-xs font-semibold text-primary px-2 py-1 hover:underline"
-            >
-              <span>Explore All Kurtis</span>
-              <ArrowRight className="h-3 w-3" />
-            </Link>
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* 4. Ethnic & Festive Wear Dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "h-9 px-3.5 font-semibold text-xs tracking-wider uppercase gap-1",
-              pathname.includes("/ethnic-wear") || pathname.includes("/sarees")
-                ? "text-primary font-bold"
-                : "text-muted-foreground"
-            )}
+              <span>Categories</span>
+              <ChevronDown className="h-3 w-3 opacity-60" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="start"
+            className="w-72 p-2.5 rounded-2xl border border-border/80 bg-card shadow-xl space-y-1"
           >
-            <span>Ethnic &amp; Festive</span>
-            <ChevronDown className="h-3 w-3 opacity-60" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="start"
-          className="w-80 p-3 rounded-2xl border border-border/80 bg-card shadow-xl space-y-1"
-        >
-          <div className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-primary flex items-center justify-between">
-            <span>Traditional Indian Couture</span>
-            <Sparkles className="h-3 w-3" />
-          </div>
-          <DropdownMenuItem asChild>
-            <Link
-              href="/category/ethnic-wear"
-              className="cursor-pointer text-xs font-medium py-2 rounded-xl"
-            >
-              Bridal &amp; Sangeet Lehengas
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link
-              href="/category/ethnic-wear"
-              className="cursor-pointer text-xs font-medium py-2 rounded-xl"
-            >
-              Rajasthani Ghagra Choli
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link
-              href="/category/sarees"
-              className="cursor-pointer text-xs font-medium py-2 rounded-xl"
-            >
-              Banarasi Katan Silk Sarees
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link
-              href="/category/accessories"
-              className="cursor-pointer text-xs font-medium py-2 rounded-xl"
-            >
-              Mirror-Work Silk Dupattas
-            </Link>
-          </DropdownMenuItem>
-          <div className="pt-2 border-t border-border/60 mt-1">
-            <Link
-              href="/category/ethnic-wear"
-              className="flex items-center justify-between text-xs font-semibold text-primary px-2 py-1 hover:underline"
-            >
-              <span>View Festive Edit</span>
-              <ArrowRight className="h-3 w-3" />
-            </Link>
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-primary flex items-center justify-between">
+              <span>Curated Departments</span>
+              <Sparkles className="h-3 w-3" />
+            </div>
+            {activeCategories.slice(0, 8).map((cat) => (
+              <DropdownMenuItem key={cat.id} asChild>
+                <Link
+                  href={`/category/${cat.slug}`}
+                  className="cursor-pointer text-xs font-medium py-2 rounded-xl"
+                >
+                  {cat.name}
+                </Link>
+              </DropdownMenuItem>
+            ))}
+            <div className="pt-2 border-t border-border/60 mt-1">
+              <Link
+                href="/shop"
+                className="flex items-center justify-between text-xs font-semibold text-primary px-2 py-1 hover:underline"
+              >
+                <span>View All Garments</span>
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : null}
 
-      {/* 5. New Arrivals */}
+      {/* 4. New Arrivals */}
       <Button
         asChild
         variant="ghost"
@@ -209,7 +148,7 @@ export function StoreNav({ className }: { className?: string }) {
         </Link>
       </Button>
 
-      {/* 6. Collections */}
+      {/* 5. Collections */}
       <Button
         asChild
         variant="ghost"

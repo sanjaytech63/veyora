@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/ui/optimized-image";
-import { useSearch } from "@/hooks/use-catalog";
+import { useSearch, useCategories } from "@/hooks/use-catalog";
 import { Search, ArrowRight, LoaderCircle, Package, Sparkles } from "lucide-react";
 
 interface SearchModalProps {
@@ -15,18 +15,15 @@ interface SearchModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const POPULAR_SEARCHES = [
-  "Headphones",
-  "Mechanical Keyboard",
-  "Wireless Mouse",
-  "Desk Pad",
-  "MagSafe Stand",
-];
-
 export function SearchModal({ open, onOpenChange }: SearchModalProps) {
   const router = useRouter();
   const [query, setQuery] = React.useState("");
   const { data: results, isLoading } = useSearch(query);
+  const { data: categories = [] } = useCategories();
+
+  const popularSearches = React.useMemo(() => {
+    return categories.slice(0, 6).map((c) => c.name);
+  }, [categories]);
 
   // Keyboard shortcut Cmd+K / Ctrl+K
   React.useEffect(() => {
@@ -75,26 +72,28 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
 
         <div className="max-h-[60vh] overflow-y-auto p-4 space-y-4">
           {query.trim().length === 0 ? (
-            <div className="space-y-4 py-2">
-              <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
-                Popular Searches
+            popularSearches.length > 0 ? (
+              <div className="space-y-4 py-2">
+                <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <Sparkles className="h-3.5 w-3.5 text-primary" />
+                  Popular Departments
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {popularSearches.map((term) => (
+                    <Button
+                      key={term}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSelectQuickSearch(term)}
+                      className="rounded-full text-xs font-medium h-7 px-3 bg-muted/30 hover:bg-accent hover:border-primary/40"
+                    >
+                      {term}
+                    </Button>
+                  ))}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {POPULAR_SEARCHES.map((term) => (
-                  <Button
-                    key={term}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleSelectQuickSearch(term)}
-                    className="rounded-full text-xs font-medium h-7 px-3 bg-muted/30 hover:bg-accent hover:border-primary/40"
-                  >
-                    {term}
-                  </Button>
-                ))}
-              </div>
-            </div>
+            ) : null
           ) : results && results.length > 0 ? (
             <div className="space-y-2">
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">

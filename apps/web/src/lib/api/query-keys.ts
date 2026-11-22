@@ -18,6 +18,8 @@ export const catalogKeys = {
     ["catalog", "related", id, categoryId ?? "all"] as const,
   categories: () => ["catalog", "categories"] as const,
   category: (slug: string) => ["catalog", "category", slug] as const,
+  collections: () => ["catalog", "collections"] as const,
+  collection: (slug: string) => ["catalog", "collection", slug] as const,
   brands: () => ["catalog", "brands"] as const,
   search: (query: string) => ["catalog", "search", query] as const,
   searchAdvanced: (params?: Record<string, unknown>) =>
