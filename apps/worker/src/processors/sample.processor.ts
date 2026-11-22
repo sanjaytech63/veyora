@@ -19,7 +19,7 @@ export async function processSystemJob(job: Job<VeyoraJobData>): Promise<JobExec
   const duration = Date.now() - startTime;
   return {
     jobId: job.id ?? "unknown",
-    queueName: job.queueName || "veyora:system",
+    queueName: job.queueName || "veyora-system",
     status: "completed",
     executionTimeMs: duration,
     timestamp: new Date().toISOString(),
