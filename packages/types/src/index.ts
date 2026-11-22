@@ -14,3 +14,4 @@ export * from "./coupon";
 export * from "./customer";
 export * from "./review";
 export * from "./shipping";
+export * from "./notification";

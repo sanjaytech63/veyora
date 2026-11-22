@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose, { Document, Schema, Types, Model } from "mongoose";
 import { ShipmentStatus, CarrierType } from "@veyora/types";
 
@@ -146,7 +147,7 @@ const shipmentSchema = new Schema<IShipmentDoc>(
   {
     timestamps: true,
     toJSON: {
-      transform: (_doc, ret: Record<string, unknown>) => {
+      transform: (_doc, ret: Record<string, any>) => {
         ret.id = ret._id.toString();
         ret.orderId = ret.orderId.toString();
         delete ret._id;

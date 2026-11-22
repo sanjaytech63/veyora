@@ -9,6 +9,7 @@ export const workerEnvSchema = z.object({
   REDIS_PORT: z.coerce.number().int().positive().default(6379),
   REDIS_PASSWORD: z.string().optional().default(""),
   CONCURRENCY: z.coerce.number().int().positive().default(5),
+  MONGODB_URI: z.string().default("mongodb://127.0.0.1:27017/veyora_dev"),
 });
 
 export type WorkerEnv = z.infer<typeof workerEnvSchema>;

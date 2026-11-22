@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose, { Document, Schema, Types, Model } from "mongoose";
 
 export interface IShippingMethodDoc extends Document {
@@ -32,7 +33,7 @@ const shippingMethodSchema = new Schema<IShippingMethodDoc>(
   {
     timestamps: true,
     toJSON: {
-      transform: (_doc, ret: Record<string, unknown>) => {
+      transform: (_doc, ret: Record<string, any>) => {
         ret.id = ret._id.toString();
         delete ret._id;
         delete ret.__v;
