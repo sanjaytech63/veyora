@@ -34,6 +34,7 @@ function VerifyOtpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const emailParam = searchParams.get("email") || "";
+  const otpParam = searchParams.get("otp") || "";
   const { setAuth } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isResending, setIsResending] = React.useState(false);
@@ -43,7 +44,7 @@ function VerifyOtpForm() {
     resolver: zodResolver(verifyOtpSchema),
     defaultValues: {
       email: emailParam,
-      otp: "",
+      otp: otpParam,
       type: "EMAIL_VERIFICATION",
     },
   });
@@ -52,7 +53,10 @@ function VerifyOtpForm() {
     if (emailParam) {
       form.setValue("email", emailParam);
     }
-  }, [emailParam, form]);
+    if (otpParam) {
+      form.setValue("otp", otpParam);
+    }
+  }, [emailParam, otpParam, form]);
 
   React.useEffect(() => {
     if (resendCooldown <= 0) return;

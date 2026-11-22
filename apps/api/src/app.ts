@@ -42,12 +42,43 @@ export function createApp(): Application {
   );
 
   // 4. CORS Whitelist
+  const configuredOrigins =
+    env.CORS_ORIGIN === "*"
+      ? ["*"]
+      : env.CORS_ORIGIN.split(",").map((o) => o.trim());
+
   app.use(
     cors({
-      origin: env.CORS_ORIGIN === "*" ? "*" : env.CORS_ORIGIN.split(","),
+      origin: (origin, callback) => {
+        // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+        if (!origin) {
+          return callback(null, true);
+        }
+        if (configuredOrigins.includes("*") || configuredOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+        // In development, automatically allow any port on localhost or 127.0.0.1
+        if (env.NODE_ENV !== "production") {
+          const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+          if (isLocalhost) {
+            return callback(null, true);
+          }
+        }
+        return callback(null, false);
+      },
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization", "X-Request-Id"],
+      allowedHeaders: [
+        "Content-Type",
+        "Authorization",
+        "X-Request-Id",
+        "X-Guest-Id",
+        "x-guest-id",
+        "Accept",
+        "Origin",
+        "X-Requested-With",
+      ],
+      exposedHeaders: ["X-Request-Id", "RateLimit-Limit", "RateLimit-Remaining", "RateLimit-Reset"],
     })
   );
 

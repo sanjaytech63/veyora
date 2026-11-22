@@ -56,7 +56,12 @@ function LoginForm() {
       router.push(redirectPath);
     } catch (err) {
       if (err instanceof ApiClientError) {
-        if (err.code === "EMAIL_NOT_VERIFIED") {
+        const isEmailNotVerified =
+          err.code === "EMAIL_NOT_VERIFIED" ||
+          err.details?.some((d) => d.code === "EMAIL_NOT_VERIFIED") ||
+          err.message.toLowerCase().includes("verify your email");
+
+        if (isEmailNotVerified) {
           toast.warning("Email Verification Required", {
             description: "Please verify your email address to continue.",
           });
