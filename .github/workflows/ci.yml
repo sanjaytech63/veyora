@@ -97,13 +97,45 @@ jobs:
           path: .turbo
           key: ${{ runner.os }}-turbo-${{ github.sha }}
           restore-keys: |
-            ${ runner.os }}-turbo-
+            ${{ runner.os }}-turbo-
 
       - name: Install dependencies
         run: npm ci
 
       - name: Build packages and applications
         run: npm run build
+
+  docker-build:
+    name: Production Docker Build Validation
+    needs: [quality-gate, typecheck, test-suite]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - name: api
+            file: apps/api/Dockerfile
+          - name: worker
+            file: apps/worker/Dockerfile
+          - name: web
+            file: apps/web/Dockerfile
+          - name: admin
+            file: apps/admin/Dockerfile
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build ${{ matrix.service.name }} container image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ matrix.service.file }}
+          push: false
+          tags: veyora-${{ matrix.service.name }}:ci-check
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   e2e:
     name: Playwright E2E Tests

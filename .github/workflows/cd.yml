@@ -1,6 +1,5 @@
-name: Veyora Continuous Delivery (Template)
+name: Veyora Continuous Delivery (AWS ECS & ECR)
 
-# Trigger deployment on push to main branch after CI passes
 on:
   workflow_dispatch:
     inputs:
@@ -20,11 +19,15 @@ concurrency:
   group: cd-${{ github.ref }}
   cancel-in-progress: false
 
+permissions:
+  id-token: write # Required for AWS OIDC authentication (least-privilege, no long-lived keys)
+  contents: read
+  packages: write
+
 jobs:
-  deploy-containers:
-    name: Build & Deploy Container Images
+  validate-and-gate:
+    name: Pre-Deployment Quality Gates
     runs-on: ubuntu-latest
-    environment: production
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -38,30 +41,186 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run verification checks
+      - name: Verify compilation and tests
         run: |
           npm run typecheck
           npm run lint:check
           npm run format:check
+          npm run test
+
+  deploy-aws-ecs:
+    name: Build, Push to ECR & Deploy to ECS
+    needs: [validate-and-gate]
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.target_env || 'production' }}
+      url: https://veyora.com
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Note: Wire secrets when production container registry (e.g. AWS ECR / GHCR) is provisioned
-      - name: Docker Meta Definition
-        id: meta
-        uses: docker/metadata-action@v5
+      # Assume IAM Role using GitHub OpenID Connect (OIDC) - Zero static AWS secrets
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          images: |
-            ghcr.io/${{ github.repository_owner }}/veyora-api
-            ghcr.io/${{ github.repository_owner }}/veyora-worker
-            ghcr.io/${{ github.repository_owner }}/veyora-web
-            ghcr.io/${{ github.repository_owner }}/veyora-admin
-          tags: |
-            type=sha,format=long
-            type=raw,value=latest,enable={{is_default_branch}}
+          role-to-assume: ${{ secrets.AWS_DEPLOYMENT_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+          audience: sts.amazonaws.com
 
-      - name: Document CD Deployment State
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Define Image Tags
+        id: tags
         run: |
-          echo "Production CD Pipeline configured and ready for container registry credentials."
-          echo "Services covered: [API, Worker, Storefront Web, Admin Console]"
+          ECR_REGISTRY="${{ steps.login-ecr.outputs.registry }}"
+          COMMIT_SHA="${{ github.sha }}"
+          echo "ecr_registry=${ECR_REGISTRY}" >> $GITHUB_OUTPUT
+          echo "commit_sha=${COMMIT_SHA}" >> $GITHUB_OUTPUT
+
+      # ------------------------------------------------------------------------
+      # Build & Push API Image
+      # ------------------------------------------------------------------------
+      - name: Build & Push API Container
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.tags.outputs.ecr_registry }}/veyora-api:${{ steps.tags.outputs.commit_sha }}
+            ${{ steps.tags.outputs.ecr_registry }}/veyora-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ------------------------------------------------------------------------
+      # Build & Push Worker Image
+      # ------------------------------------------------------------------------
+      - name: Build & Push Worker Container
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/worker/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.tags.outputs.ecr_registry }}/veyora-worker:${{ steps.tags.outputs.commit_sha }}
+            ${{ steps.tags.outputs.ecr_registry }}/veyora-worker:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ------------------------------------------------------------------------
+      # Build & Push Web Storefront Image
+      # ------------------------------------------------------------------------
+      - name: Build & Push Web Container
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.tags.outputs.ecr_registry }}/veyora-web:${{ steps.tags.outputs.commit_sha }}
+            ${{ steps.tags.outputs.ecr_registry }}/veyora-web:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ------------------------------------------------------------------------
+      # Build & Push Admin Console Image
+      # ------------------------------------------------------------------------
+      - name: Build & Push Admin Container
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/admin/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.tags.outputs.ecr_registry }}/veyora-admin:${{ steps.tags.outputs.commit_sha }}
+            ${{ steps.tags.outputs.ecr_registry }}/veyora-admin:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ------------------------------------------------------------------------
+      # Render Updated ECS Task Definitions
+      # ------------------------------------------------------------------------
+      - name: Render API Task Definition
+        id: render-api
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: infra/ecs/task-def-api.json
+          container-name: veyora-api
+          image: ${{ steps.tags.outputs.ecr_registry }}/veyora-api:${{ steps.tags.outputs.commit_sha }}
+
+      - name: Render Worker Task Definition
+        id: render-worker
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: infra/ecs/task-def-worker.json
+          container-name: veyora-worker
+          image: ${{ steps.tags.outputs.ecr_registry }}/veyora-worker:${{ steps.tags.outputs.commit_sha }}
+
+      - name: Render Web Task Definition
+        id: render-web
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: infra/ecs/task-def-web.json
+          container-name: veyora-web
+          image: ${{ steps.tags.outputs.ecr_registry }}/veyora-web:${{ steps.tags.outputs.commit_sha }}
+
+      - name: Render Admin Task Definition
+        id: render-admin
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: infra/ecs/task-def-admin.json
+          container-name: veyora-admin
+          image: ${{ steps.tags.outputs.ecr_registry }}/veyora-admin:${{ steps.tags.outputs.commit_sha }}
+
+      # ------------------------------------------------------------------------
+      # Deploy to ECS Services with Rolling Updates & Circuit Breaker Rollback
+      # ------------------------------------------------------------------------
+      - name: Deploy API Service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-api.outputs.task-definition }}
+          service: veyora-api-service
+          cluster: veyora-production-cluster
+          wait-for-service-stability: true
+
+      - name: Deploy Worker Service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-worker.outputs.task-definition }}
+          service: veyora-worker-service
+          cluster: veyora-production-cluster
+          wait-for-service-stability: true
+
+      - name: Deploy Web Service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-web.outputs.task-definition }}
+          service: veyora-web-service
+          cluster: veyora-production-cluster
+          wait-for-service-stability: true
+
+      - name: Deploy Admin Service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-admin.outputs.task-definition }}
+          service: veyora-admin-service
+          cluster: veyora-production-cluster
+          wait-for-service-stability: true
+
+      # ------------------------------------------------------------------------
+      # Invalidate CloudFront CDN Cache for Fresh Deployment
+      # ------------------------------------------------------------------------
+      - name: Invalidate CloudFront Distribution
+        if: success()
+        run: |
+          if [ -n "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" ]; then
+            aws cloudfront create-invalidation \
+              --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" \
+              --paths "/*"
+            echo "CloudFront cache invalidation triggered successfully."
+          fi

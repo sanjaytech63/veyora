@@ -1,0 +1,47 @@
+{
+  "family": "veyora-admin",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::123456789012:role/veyora-ecs-task-execution-role",
+  "taskRoleArn": "arn:aws:iam::123456789012:role/veyora-admin-task-role",
+  "containerDefinitions": [
+    {
+      "name": "veyora-admin",
+      "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/veyora-admin:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 3001,
+          "hostPort": 3001,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { "name": "NODE_ENV", "value": "production" },
+        { "name": "PORT", "value": "3001" },
+        { "name": "NEXT_PUBLIC_API_URL", "value": "https://api.veyora.com/api/v1" },
+        { "name": "NEXT_PUBLIC_ADMIN_URL", "value": "https://admin.veyora.com" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/veyora-admin",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "admin"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://127.0.0.1:3001 || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 20
+      }
+    }
+  ]
+}
