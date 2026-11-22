@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { ApiClientError } from "@/lib/api/api-client";
-import { Shield, LoaderCircle } from "lucide-react";
+import { Shield, LoaderCircle, Eye, EyeOff } from "lucide-react";
 
 function AdminLoginForm() {
   const router = useRouter();
@@ -35,6 +35,7 @@ function AdminLoginForm() {
   const redirectPath = searchParams.get("redirect") || "/";
   const { setAdminAuth } = useAdminAuthStore();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -109,13 +110,30 @@ function AdminLoginForm() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="••••••••"
-                        type="password"
-                        autoComplete="current-password"
-                        disabled={isSubmitting}
-                        {...field}
-                      />
+                      <div className="relative">
+                        <Input
+                          placeholder="••••••••"
+                          type={showPassword ? "text" : "password"}
+                          autoComplete="current-password"
+                          disabled={isSubmitting}
+                          className="pr-10"
+                          {...field}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((prev) => !prev)}
+                          disabled={isSubmitting}
+                          className="absolute right-0 top-0 h-full px-3 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-r-md cursor-pointer disabled:pointer-events-none"
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                          tabIndex={-1}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" aria-hidden="true" />
+                          ) : (
+                            <Eye className="h-4 w-4" aria-hidden="true" />
+                          )}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
