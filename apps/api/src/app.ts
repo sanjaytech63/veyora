@@ -24,6 +24,7 @@ import { customerRouter } from "./modules/customer/customer.router";
 import { reviewRouter } from "./modules/review/review.router";
 import { shippingRouter } from "./modules/shipping/shipping.router";
 import { notificationRouter } from "./modules/notification/notification.router";
+import { analyticsRouter } from "./modules/analytics/analytics.router";
 import { openApiSpec } from "./docs/openapi";
 
 export function createApp(): Application {
@@ -131,6 +132,7 @@ export function createApp(): Application {
   apiV1Router.use("/", reviewRouter);
   apiV1Router.use("/", shippingRouter);
   apiV1Router.use("/", notificationRouter);
+  apiV1Router.use("/", analyticsRouter);
 
   app.use(env.API_PREFIX, apiV1Router);
 
