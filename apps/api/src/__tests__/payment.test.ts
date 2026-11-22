@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import crypto from "node:crypto";
 import { createApp } from "../app";
+import { env } from "../config/env";
 
 let mockOrders: any[] = [];
 let mockPayments: any[] = [];
@@ -209,9 +210,9 @@ vi.mock("../modules/payment/models/webhook-event.model", () => {
 
 describe("Phase K — Veyora Payment Integration Tests", () => {
   let app: any;
-  const jwtSecret = "veyora_jwt_access_secret_super_secure_32chars_min";
-  const rzpKeySecret = "rzp_test_VeyoraSecretKey456";
-  const rzpWebhookSecret = "rzp_webhook_secret_789";
+  const jwtSecret = env.JWT_ACCESS_SECRET || "veyora_jwt_access_secret_super_secure_32chars_min";
+  const rzpKeySecret = env.RAZORPAY_KEY_SECRET || "rzp_test_VeyoraSecretKey456";
+  const rzpWebhookSecret = env.RAZORPAY_WEBHOOK_SECRET || "rzp_webhook_secret_789";
 
   const adminToken = jwt.sign(
     {

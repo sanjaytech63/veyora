@@ -34,8 +34,8 @@ export const apiEnvSchema = z.object({
   REDIS_HOST: z.string().default("127.0.0.1"),
   REDIS_PORT: z.coerce.number().int().positive().default(6379),
   REDIS_PASSWORD: z.string().optional().default(""),
-  RAZORPAY_KEY_ID: z.string().default("rzp_test_VeyoraKey123"),
-  RAZORPAY_KEY_SECRET: z.string().default("rzp_test_VeyoraSecretKey456"),
+  RAZORPAY_KEY_ID: z.string().default("rzp_test_U3As5vXTcofA3X"),
+  RAZORPAY_KEY_SECRET: z.string().default("uNn0vIaNUov5gtKr6fl6cVUo"),
   RAZORPAY_WEBHOOK_SECRET: z.string().default("rzp_webhook_secret_789"),
 });
 
