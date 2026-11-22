@@ -4,6 +4,7 @@ import request from "supertest";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import { createApp } from "../app";
+import { env } from "../config/env";
 
 let mockOrders: any[] = [];
 let mockProducts: any[] = [];
@@ -199,7 +200,7 @@ vi.mock("../modules/catalog/models/product.model", () => ({
 
 describe("Phase J — Order Management & Lifecycle State Machine Integration Tests", () => {
   let app: any;
-  const adminSecret = "veyora_jwt_access_secret_super_secure_32chars_min";
+  const adminSecret = env.JWT_ACCESS_SECRET;
 
   const adminToken = jwt.sign(
     {

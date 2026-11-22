@@ -4,6 +4,9 @@ export interface RequestOptions extends Omit<RequestInit, "body"> {
   params?: Record<string, string | number | boolean | undefined | null>;
   body?: unknown;
   timeout?: number;
+  raw?: boolean;
+  _retry?: boolean;
+  skipAuthRefresh?: boolean;
 }
 
 export class ApiClientError extends Error {
@@ -25,12 +28,17 @@ export type RequestInterceptor = (
   options: RequestOptions
 ) => RequestOptions | Promise<RequestOptions>;
 export type ResponseInterceptor = (response: Response) => Response | Promise<Response>;
+export type RefreshTokenHandler = () => Promise<string | null>;
+export type SessionExpiredHandler = () => void;
 
 export class ApiClient {
   private readonly baseUrl: string;
   private authTokenProvider: AuthTokenProvider | null = null;
   private readonly requestInterceptors: RequestInterceptor[] = [];
   private readonly responseInterceptors: ResponseInterceptor[] = [];
+  private refreshPromise: Promise<string | null> | null = null;
+  private refreshTokenHandler: RefreshTokenHandler | null = null;
+  private onSessionExpiredHandler: SessionExpiredHandler | null = null;
 
   constructor(baseUrl?: string) {
     this.baseUrl = baseUrl || process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
@@ -40,12 +48,86 @@ export class ApiClient {
     this.authTokenProvider = provider;
   }
 
+  public setRefreshTokenHandler(handler: RefreshTokenHandler): void {
+    this.refreshTokenHandler = handler;
+  }
+
+  public setOnSessionExpired(handler: SessionExpiredHandler): void {
+    this.onSessionExpiredHandler = handler;
+  }
+
   public addRequestInterceptor(interceptor: RequestInterceptor): void {
     this.requestInterceptors.push(interceptor);
   }
 
   public addResponseInterceptor(interceptor: ResponseInterceptor): void {
     this.responseInterceptors.push(interceptor);
+  }
+
+  private isAuthEndpoint(endpoint: string): boolean {
+    const clean = endpoint.toLowerCase();
+    return (
+      clean.includes("/auth/login") ||
+      clean.includes("/auth/register") ||
+      clean.includes("/auth/refresh") ||
+      clean.includes("/auth/verify-email") ||
+      clean.includes("/auth/resend-otp") ||
+      clean.includes("/auth/forgot-password") ||
+      clean.includes("/auth/reset-password") ||
+      clean.includes("/auth/logout")
+    );
+  }
+
+  private async executeTokenRefresh(): Promise<string | null> {
+    try {
+      if (this.refreshTokenHandler) {
+        return await this.refreshTokenHandler();
+      }
+
+      // Default built-in refresh fallback
+      const refreshUrl = this.buildUrl("/auth/refresh");
+      const res = await fetch(refreshUrl, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        return null;
+      }
+
+      const data = await res.json();
+      return data?.data?.accessToken || data?.accessToken || null;
+    } catch {
+      return null;
+    }
+  }
+
+  private async handleTokenRefreshAndRetry<T>(
+    endpoint: string,
+    options: RequestOptions
+  ): Promise<T> {
+    // Single-flight deduplication mutex: reuse active in-flight refresh promise
+    if (!this.refreshPromise) {
+      this.refreshPromise = this.executeTokenRefresh().finally(() => {
+        this.refreshPromise = null;
+      });
+    }
+
+    const newToken = await this.refreshPromise;
+    if (!newToken) {
+      this.onSessionExpiredHandler?.();
+      throw new ApiClientError("Authentication session expired", 401, "SESSION_EXPIRED");
+    }
+
+    // Retry the original request with _retry: true to prevent infinite loops
+    return this.request<T>(endpoint, {
+      ...options,
+      _retry: true,
+    });
   }
 
   private buildUrl(
@@ -113,6 +195,16 @@ export class ApiClient {
       const data = isJson ? await response.json() : null;
 
       if (!response.ok) {
+        // Automatic 401 token refresh and single retry
+        if (
+          response.status === 401 &&
+          !options._retry &&
+          !options.skipAuthRefresh &&
+          !this.isAuthEndpoint(endpoint)
+        ) {
+          return await this.handleTokenRefreshAndRetry<T>(endpoint, options);
+        }
+
         const errorData = data as ApiResponseError | null;
         throw new ApiClientError(
           errorData?.error?.message || response.statusText || "Request failed",
@@ -122,6 +214,11 @@ export class ApiClient {
         );
       }
 
+      if (options.raw) {
+        return data as T;
+      }
+
+      // If wrapped in ApiResponseSuccess format, unwrap data
       if (data && typeof data === "object" && "success" in data && data.success === true) {
         return (data as ApiResponseSuccess<T>).data;
       }

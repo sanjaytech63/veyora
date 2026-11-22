@@ -2,27 +2,14 @@ import { Request, Response, NextFunction } from "express";
 import { authService, RequestMetadata } from "./services/auth.service";
 import { env } from "../../config/env";
 import { UnauthorizedError } from "@veyora/utils";
+import {
+  AUTH_COOKIE_NAME,
+  setRefreshTokenCookie,
+  clearRefreshTokenCookie,
+} from "./config/auth-cookie.config";
 
-const COOKIE_NAME = "refreshToken";
-
-export function setRefreshTokenCookie(res: Response, token: string): void {
-  res.cookie(COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/api/v1/auth",
-    maxAge: env.JWT_REFRESH_EXPIRES_IN_DAYS * 24 * 60 * 60 * 1000,
-  });
-}
-
-export function clearRefreshTokenCookie(res: Response): void {
-  res.clearCookie(COOKIE_NAME, {
-    httpOnly: true,
-    secure: env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/api/v1/auth",
-  });
-}
+export { setRefreshTokenCookie, clearRefreshTokenCookie };
+const COOKIE_NAME = AUTH_COOKIE_NAME;
 
 function getRequestMetadata(req: Request): RequestMetadata {
   return {

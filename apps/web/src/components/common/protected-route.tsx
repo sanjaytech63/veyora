@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
-import { LoaderCircle } from "lucide-react";
+import { AuthLoadingScreen } from "./auth-loading-screen";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,21 +12,18 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated, status, isLoading } = useAuthStore();
+
+  const isInitializing = status === "initializing" || isLoading;
 
   React.useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isInitializing && !isAuthenticated) {
       router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
     }
-  }, [isAuthenticated, isLoading, pathname, router]);
+  }, [isAuthenticated, isInitializing, pathname, router]);
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
-        <LoaderCircle className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground">Verifying authentication...</p>
-      </div>
-    );
+  if (isInitializing) {
+    return <AuthLoadingScreen message="Verifying authentication..." />;
   }
 
   if (!isAuthenticated) {
