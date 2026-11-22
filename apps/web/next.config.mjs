@@ -2,6 +2,8 @@
 const nextConfig = {
   transpilePackages: ["@veyora/types", "@veyora/utils", "@veyora/validators", "@veyora/config"],
   images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 86400,
     remotePatterns: [
       {
         protocol: "https",

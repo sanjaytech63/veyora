@@ -11,7 +11,6 @@ import { VariantSelector } from "@/components/storefront/variant-selector";
 import { StockBadge } from "@/components/storefront/stock-badge";
 import { ProductAccordion } from "@/components/storefront/product-accordion";
 import { ProductGrid } from "@/components/storefront/product-grid";
-import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/storefront/json-ld";
 import { WishlistButton } from "@/components/storefront/wishlist-button";
 import { ProductReviews } from "@/components/storefront/product-reviews";
 import { useRelatedProducts, useCategories } from "@/hooks/use-catalog";
@@ -95,19 +94,8 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
     }
   };
 
-  const breadcrumbs = [
-    { name: "Home", url: "/" },
-    { name: "Shop", url: "/shop" },
-    { name: categoryName, url: `/category/${product.categoryId}` },
-    { name: product.title, url: `/products/${product.slug}` },
-  ];
-
   return (
     <div className="py-8 md:py-12 space-y-16 pb-20 md:pb-12">
-      {/* JSON-LD Schemas for Rich Snippets */}
-      <ProductJsonLd product={product} url={`/products/${product.slug}`} />
-      <BreadcrumbJsonLd items={breadcrumbs} />
-
       <Container size="xl" className="space-y-12">
         {/* Breadcrumb Trail */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">

@@ -5,6 +5,7 @@ import { CreateProductInput, UpdateProductInput, ProductQueryInput } from "@veyo
 import { Product as ProductType, Category as CategoryType, Brand as BrandType, CatalogStats } from "@veyora/types";
 import { ConflictError, NotFoundError, slugify } from "@veyora/utils";
 import mongoose from "mongoose";
+import { catalogCacheService } from "./catalog-cache.service";
 
 export interface PaginatedProducts {
   items: ProductType[];
@@ -185,6 +186,8 @@ export class ProductService {
       tags: input.tags || [],
     });
 
+    await catalogCacheService.invalidateCatalogCache();
+
     return this.toProductDto(product, category);
   }
 
@@ -247,6 +250,8 @@ export class ProductService {
 
     await product.save();
 
+    await catalogCacheService.invalidateCatalogCache();
+
     const populated = (await Product.findById(product._id)
       .populate("categoryId")
       .populate("brandId")) as unknown as PopulatedProductDoc | null;
@@ -270,6 +275,8 @@ export class ProductService {
       product.status = "archived";
       await product.save();
     }
+
+    await catalogCacheService.invalidateCatalogCache();
   }
 
   async getProductByIdOrSlug(idOrSlug: string, allowDraft = false): Promise<ProductType> {
@@ -294,6 +301,12 @@ export class ProductService {
   }
 
   async getProducts(query: ProductQueryInput, allowDraft = false): Promise<PaginatedProducts> {
+    const cacheKey = !allowDraft ? `catalog:products:${JSON.stringify(query)}` : null;
+    if (cacheKey) {
+      const cached = await catalogCacheService.get<PaginatedProducts>(cacheKey);
+      if (cached) return cached;
+    }
+
     const filter: Record<string, unknown> = {};
 
     if (!allowDraft) {
@@ -314,6 +327,10 @@ export class ProductService {
       filter["tags"] = query.tag;
     }
 
+    if (query.minRating) {
+      filter["averageRating"] = { $gte: query.minRating };
+    }
+
     if (query.inStock) {
       filter["stock"] = { $gt: 0 };
     }
@@ -325,12 +342,13 @@ export class ProductService {
       filter["price"] = priceFilter;
     }
 
-    if (query.search) {
+    const searchTerm = query.search || query.q;
+    if (searchTerm) {
       filter["$or"] = [
-        { title: { $regex: query.search, $options: "i" } },
-        { description: { $regex: query.search, $options: "i" } },
-        { sku: { $regex: query.search, $options: "i" } },
-        { tags: { $regex: query.search, $options: "i" } },
+        { title: { $regex: searchTerm, $options: "i" } },
+        { description: { $regex: searchTerm, $options: "i" } },
+        { sku: { $regex: searchTerm, $options: "i" } },
+        { tags: { $regex: searchTerm, $options: "i" } },
       ];
     }
 
@@ -352,7 +370,7 @@ export class ProductService {
       Product.countDocuments(filter),
     ]);
 
-    return {
+    const result = {
       items: products.map((p) =>
         this.toProductDto(p, p.categoryId, p.brandId ?? undefined)
       ),
@@ -361,6 +379,12 @@ export class ProductService {
       limit,
       totalPages: Math.ceil(total / limit) || 1,
     };
+
+    if (cacheKey) {
+      await catalogCacheService.set(cacheKey, result, 120);
+    }
+
+    return result;
   }
 
   async getCatalogStats(): Promise<CatalogStats> {

@@ -6,6 +6,7 @@ import { productStatusSchema } from "./create-product.schema";
  * Product Catalog Filtering & Query Schema
  */
 export const productQuerySchema = paginationQuerySchema.extend({
+  q: z.string().trim().optional(),
   categoryId: z.string().trim().optional(),
   brandId: z.string().trim().optional(),
   status: productStatusSchema.optional(),
@@ -17,6 +18,7 @@ export const productQuerySchema = paginationQuerySchema.extend({
       return val;
     }, z.boolean())
     .optional(),
+  minRating: z.coerce.number().min(0).max(5).optional(),
   tag: z.string().trim().optional(),
 });
 

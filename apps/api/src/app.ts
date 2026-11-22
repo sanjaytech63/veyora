@@ -26,6 +26,7 @@ import { shippingRouter } from "./modules/shipping/shipping.router";
 import { notificationRouter } from "./modules/notification/notification.router";
 import { analyticsRouter } from "./modules/analytics/analytics.router";
 import { rbacRouter } from "./modules/rbac/rbac.router";
+import { searchRouter } from "./modules/search/search.router";
 import { openApiSpec } from "./docs/openapi";
 
 export function createApp(): Application {
@@ -135,6 +136,7 @@ export function createApp(): Application {
   apiV1Router.use("/", notificationRouter);
   apiV1Router.use("/", analyticsRouter);
   apiV1Router.use("/", rbacRouter);
+  apiV1Router.use("/search", searchRouter);
 
   app.use(env.API_PREFIX, apiV1Router);
 

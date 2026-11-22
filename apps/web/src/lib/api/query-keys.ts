@@ -20,6 +20,9 @@ export const catalogKeys = {
   category: (slug: string) => ["catalog", "category", slug] as const,
   brands: () => ["catalog", "brands"] as const,
   search: (query: string) => ["catalog", "search", query] as const,
+  searchAdvanced: (params?: Record<string, unknown>) =>
+    ["catalog", "search-advanced", ...(params ? [params] : [])] as const,
+  suggestions: (q: string) => ["catalog", "suggestions", q] as const,
 };
 
 export const cartKeys = {

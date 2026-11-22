@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { Container } from "@/components/ui/container";
 import { ProductGrid } from "@/components/storefront/product-grid";
-import { BreadcrumbJsonLd } from "@/components/storefront/json-ld";
 import { Category } from "@veyora/types";
 import { useProducts, useCategories } from "@/hooks/use-catalog";
 import {
@@ -46,16 +45,8 @@ export function CategoryClient({ initialCategory }: CategoryClientProps) {
     return list.filter((p) => p.stock > 0);
   }, [data?.items, inStockOnly]);
 
-  const breadcrumbs = [
-    { name: "Home", url: "/" },
-    { name: "Shop", url: "/shop" },
-    { name: initialCategory.name, url: `/category/${initialCategory.slug}` },
-  ];
-
   return (
     <div className="py-8 md:py-12 space-y-10">
-      <BreadcrumbJsonLd items={breadcrumbs} />
-
       <Container size="xl" className="space-y-8">
         {/* Breadcrumb Trail */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-muted-foreground">

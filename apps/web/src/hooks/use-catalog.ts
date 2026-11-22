@@ -1,8 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { catalogApi, ProductsResponse } from "@/lib/api/catalog-api";
 import { catalogKeys } from "@/lib/api/query-keys";
-import { ProductQueryInput } from "@veyora/validators";
-import { Product, Category, Brand } from "@veyora/types";
+import { ProductQueryInput, SearchQueryInput } from "@veyora/validators";
+import {
+  Product,
+  Category,
+  Brand,
+  SearchResponse,
+  SearchSuggestionResponse,
+} from "@veyora/types";
 
 export function useProducts(params?: Partial<ProductQueryInput>) {
   return useQuery<ProductsResponse>({
@@ -69,5 +75,22 @@ export function useSearch(query: string) {
     queryFn: () => catalogApi.searchProducts(query),
     enabled: query.trim().length > 1,
     staleTime: 1000 * 60 * 2,
+  });
+}
+
+export function useSearchCatalog(params?: Partial<SearchQueryInput>) {
+  return useQuery<SearchResponse>({
+    queryKey: catalogKeys.searchAdvanced(params as Record<string, unknown>),
+    queryFn: () => catalogApi.searchCatalog(params),
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
+export function useSearchSuggestions(query: string) {
+  return useQuery<SearchSuggestionResponse>({
+    queryKey: catalogKeys.suggestions(query),
+    queryFn: () => catalogApi.getSuggestions(query),
+    enabled: query.trim().length > 0,
+    staleTime: 1000 * 60 * 5,
   });
 }

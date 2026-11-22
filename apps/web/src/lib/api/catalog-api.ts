@@ -1,6 +1,13 @@
 import { apiClient } from "./api-client";
-import { Product, Category, Brand, PaginationMeta } from "@veyora/types";
-import { ProductQueryInput } from "@veyora/validators";
+import {
+  Product,
+  Category,
+  Brand,
+  PaginationMeta,
+  SearchResponse,
+  SearchSuggestionResponse,
+} from "@veyora/types";
+import { ProductQueryInput, SearchQueryInput } from "@veyora/validators";
 
 export interface ProductsResponse {
   items: Product[];
@@ -110,6 +117,51 @@ export const catalogApi = {
       return await catalogApi.getProducts({ search: query, limit: 20 });
     } catch {
       return [];
+    }
+  },
+
+  searchCatalog: async (params?: Partial<SearchQueryInput>): Promise<SearchResponse> => {
+    try {
+      const response = await apiClient.getWithMeta<Product[]>("/search", {
+        params: params as Record<string, string | number | boolean | undefined | null>,
+      });
+      return {
+        items: Array.isArray(response.data) ? response.data : [],
+        meta: (response.meta as unknown as PaginationMeta) || {
+          total: Array.isArray(response.data) ? response.data.length : 0,
+          page: Number(params?.page) || 1,
+          limit: Number(params?.limit) || 20,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+        facets: (response as unknown as { facets?: SearchResponse["facets"] }).facets,
+        query: (response as unknown as { query?: string }).query,
+      };
+    } catch {
+      return {
+        items: [],
+        meta: {
+          total: 0,
+          page: Number(params?.page) || 1,
+          limit: Number(params?.limit) || 20,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      };
+    }
+  },
+
+  getSuggestions: async (q: string): Promise<SearchSuggestionResponse> => {
+    if (!q.trim()) return { suggestions: [], products: [], categories: [] };
+    try {
+      const data = await apiClient.get<SearchSuggestionResponse>("/search/suggestions", {
+        params: { q },
+      });
+      return data || { suggestions: [], products: [], categories: [] };
+    } catch {
+      return { suggestions: [], products: [], categories: [] };
     }
   },
 
