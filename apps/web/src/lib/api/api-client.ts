@@ -34,7 +34,7 @@ export class ApiClient {
   private readonly responseInterceptors: ResponseInterceptor[] = [];
 
   constructor(baseUrl?: string) {
-    this.baseUrl = baseUrl || process.env["NEXT_PUBLIC_API_URL"] || "http://localhost:4000/api/v1";
+    this.baseUrl = baseUrl || process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
   }
 
   public setAuthTokenProvider(provider: AuthTokenProvider): void {

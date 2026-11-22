@@ -14,4 +14,21 @@ describe("System API Endpoints", () => {
     expect(res.body.data).toHaveProperty("nodeVersion");
     expect(res.body.data).toHaveProperty("platform");
   });
+
+  it("GET /api/v1/system/metrics returns Prometheus text exposition metrics", async () => {
+    const res = await request(app).get("/api/v1/system/metrics");
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toContain("text/plain");
+    expect(res.text).toContain("process_uptime_seconds");
+    expect(res.text).toContain("process_heap_bytes");
+    expect(res.text).toContain("veyora_database_connected");
+    expect(res.text).toContain("veyora_build_info");
+  });
+
+  it("GET /metrics returns top-level Prometheus metrics", async () => {
+    const res = await request(app).get("/metrics");
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toContain("text/plain");
+    expect(res.text).toContain("process_uptime_seconds");
+  });
 });

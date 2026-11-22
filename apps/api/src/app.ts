@@ -11,6 +11,7 @@ import { errorHandler } from "./middleware/error-handler";
 import { notFoundHandler } from "./middleware/not-found";
 import { healthRouter } from "./modules/health/health.router";
 import { systemRouter } from "./modules/system/system.router";
+import { SystemController } from "./modules/system/system.controller";
 import { authRouter } from "./modules/auth/auth.router";
 import { catalogRouter } from "./modules/catalog/catalog.router";
 import { inventoryRouter } from "./modules/inventory/inventory.router";
@@ -100,8 +101,9 @@ export function createApp(): Application {
     app.use(requestLogger);
   }
 
-  // 8. Top-level Liveness/Readiness Health Probes (no rate limit for orchestrator probes)
+  // 8. Top-level Liveness/Readiness Health Probes & Prometheus Metrics
   app.use("/health", healthRouter);
+  app.get("/metrics", SystemController.getMetrics);
 
   // 9. OpenAPI Documentation UI
   app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
