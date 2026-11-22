@@ -4,6 +4,7 @@ import request from "supertest";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import { createApp } from "../app";
+import { env } from "../config/env";
 
 let mockCoupons: any[] = [];
 let mockCouponUsages: any[] = [];
@@ -205,7 +206,7 @@ vi.mock("../modules/coupon/models/coupon-usage.model", () => {
 
 describe("Phase L — Veyora Coupons & Promotions Integration Tests", () => {
   let app: any;
-  const jwtSecret = "veyora_jwt_access_secret_super_secure_32chars_min";
+  const jwtSecret = env.JWT_ACCESS_SECRET;
 
   const adminToken = jwt.sign(
     {

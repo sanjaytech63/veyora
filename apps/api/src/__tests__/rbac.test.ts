@@ -4,6 +4,7 @@ import request from "supertest";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import { createApp } from "../app";
+import { env } from "../config/env";
 import { hasPermission } from "../modules/rbac/permission-registry";
 import { RoleService } from "../modules/rbac/services/role.service";
 import { StaffService } from "../modules/rbac/services/staff.service";
@@ -254,7 +255,7 @@ describe("Phase R — Veyora Administrative Authorization, Roles & Permissions",
     mockRoles = [];
     mockAuditLogs = [];
 
-    const secret = "veyora_jwt_access_secret_super_secure_32chars_min";
+    const secret = env.JWT_ACCESS_SECRET;
 
     superadminToken = jwt.sign(
       {

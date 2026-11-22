@@ -9,6 +9,7 @@ import { eventPublisher } from "../infrastructure/events/event-publisher";
 import { notificationService } from "../modules/notification/services/notification.service";
 import { notificationController } from "../modules/notification/controllers/notification.controller";
 import { SOCKET_ROOMS, SOCKET_EVENTS } from "@veyora/config";
+import { env } from "../config/env";
 
 let mockSessions: any[] = [];
 let mockNotifications: any[] = [];
@@ -185,7 +186,7 @@ vi.mock("../modules/notification/models/notification.model", () => {
 });
 
 describe("Phase P — Veyora Notifications, Background Workers & Socket.IO Test Suite", () => {
-  const secret = "veyora_jwt_access_secret_super_secure_32chars_min";
+  const secret = env.JWT_ACCESS_SECRET;
   let customerToken: string;
   let customerUserId: mongoose.Types.ObjectId;
   let otherCustomerUserId: mongoose.Types.ObjectId;

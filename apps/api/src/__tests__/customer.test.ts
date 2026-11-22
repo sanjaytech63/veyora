@@ -4,6 +4,7 @@ import request from "supertest";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import { createApp } from "../app";
+import { env } from "../config/env";
 
 let mockUsers: any[] = [];
 let mockOrders: any[] = [];
@@ -345,7 +346,7 @@ describe("Phase M — Veyora Customer Management Tests", () => {
     );
 
     // Generate JWT access tokens
-    const secret = "veyora_jwt_access_secret_super_secure_32chars_min";
+    const secret = env.JWT_ACCESS_SECRET;
 
     adminToken = jwt.sign(
       {
