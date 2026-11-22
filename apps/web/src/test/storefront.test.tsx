@@ -261,11 +261,11 @@ describe("Customer Storefront - Fashion E-Commerce", () => {
       const increaseBtn = screen.getByRole("button", { name: /increase quantity/i });
       const decreaseBtn = screen.getByRole("button", { name: /decrease quantity/i });
 
-      expect(screen.getByText("1")).toBeInTheDocument();
+      expect(screen.getByText("1", { selector: "span.tabular-nums" })).toBeInTheDocument();
       fireEvent.click(increaseBtn);
-      expect(screen.getByText("2")).toBeInTheDocument();
+      expect(screen.getByText("2", { selector: "span.tabular-nums" })).toBeInTheDocument();
       fireEvent.click(decreaseBtn);
-      expect(screen.getByText("1")).toBeInTheDocument();
+      expect(screen.getByText("1", { selector: "span.tabular-nums" })).toBeInTheDocument();
     });
 
     it("renders specifications accordion with active variant SKU", () => {

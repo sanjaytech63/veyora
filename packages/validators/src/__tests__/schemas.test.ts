@@ -42,6 +42,38 @@ import {
   // Env
   apiEnvSchema,
   webEnvSchema,
+  // Reviews
+  createReviewSchema,
+  moderateReviewSchema,
+  reviewQuerySchema,
+  adminReviewQuerySchema,
+  // Shipping
+  calculateShippingSchema,
+  createShipmentSchema,
+  updateShipmentTrackingSchema,
+  shipmentStatusEnum,
+  createShippingZoneSchema,
+  createShippingMethodSchema,
+  // Notifications
+  notificationTypeEnum,
+  createNotificationSchema,
+  notificationListQuerySchema,
+  markNotificationReadSchema,
+  // Analytics
+  analyticsPeriodEnum,
+  dashboardQuerySchema,
+  // RBAC
+  standardPermissionEnum,
+  createRoleSchema,
+  updateRoleSchema,
+  createStaffUserSchema,
+  updateStaffUserSchema,
+  assignRolesSchema,
+  assignPermissionsSchema,
+  // Search
+  searchSortEnum,
+  searchQuerySchema,
+  searchSuggestionQuerySchema,
 } from "../index";
 
 describe("Centralized Zod Validation Suite", () => {
@@ -394,6 +426,268 @@ describe("Centralized Zod Validation Suite", () => {
         NEXT_PUBLIC_API_URL: "https://api.veyora.com/api/v1",
       });
       expect(webConfig.NEXT_PUBLIC_API_URL).toBe("https://api.veyora.com/api/v1");
+    });
+  });
+
+  describe("Product Review Schemas", () => {
+    it("createReviewSchema validates ratings between 1 and 5 and enforces title/comment length", () => {
+      const validReview = {
+        rating: 5,
+        title: "Exquisite mulmul fabric",
+        comment: "The craftsmanship and softness are extraordinary. Perfect festive wear.",
+      };
+      expect(createReviewSchema.safeParse(validReview).success).toBe(true);
+
+      // Rejects rating 0 or 6
+      expect(createReviewSchema.safeParse({ ...validReview, rating: 0 }).success).toBe(false);
+      expect(createReviewSchema.safeParse({ ...validReview, rating: 6 }).success).toBe(false);
+
+      // Rejects empty or too short comment
+      expect(createReviewSchema.safeParse({ ...validReview, comment: "bad" }).success).toBe(false);
+    });
+
+    it("moderateReviewSchema allows approved, rejected, pending statuses", () => {
+      expect(moderateReviewSchema.safeParse({ status: "approved" }).success).toBe(true);
+      expect(
+        moderateReviewSchema.safeParse({
+          status: "rejected",
+          rejectionReason: "Inappropriate language in review body",
+        }).success
+      ).toBe(true);
+      expect(moderateReviewSchema.safeParse({ status: "unknown" }).success).toBe(false);
+    });
+
+    it("reviewQuerySchema and adminReviewQuerySchema apply defaults and sorting", () => {
+      const query = reviewQuerySchema.parse({});
+      expect(query.page).toBe(1);
+      expect(query.limit).toBe(10);
+      expect(query.sort).toBe("newest");
+
+      const adminQuery = adminReviewQuerySchema.parse({
+        status: "pending",
+        rating: "4",
+      });
+      expect(adminQuery.status).toBe("pending");
+      expect(adminQuery.rating).toBe(4);
+      expect(adminQuery.sortBy).toBe("createdAt");
+      expect(adminQuery.sortOrder).toBe("desc");
+    });
+  });
+
+  describe("Shipping Schemas", () => {
+    it("calculateShippingSchema validates destination address and cart subtotal", () => {
+      const validCalc = {
+        destinationPostalCode: "302001",
+        destinationCountry: "IN",
+        destinationState: "Rajasthan",
+        subtotal: 185.0,
+        items: [{ productId: "prod-1", quantity: 2, weightGrams: 500 }],
+      };
+      expect(calculateShippingSchema.safeParse(validCalc).success).toBe(true);
+      expect(calculateShippingSchema.safeParse({ ...validCalc, subtotal: -10 }).success).toBe(false);
+      expect(calculateShippingSchema.safeParse({ ...validCalc, destinationPostalCode: "1" }).success).toBe(false);
+    });
+
+    it("createShipmentSchema and updateShipmentTrackingSchema validate carrier tracking lifecycle", () => {
+      const shipment = {
+        orderId: "6b02bc89574f487cd44a76f2",
+        carrier: "delhivery",
+        trackingNumber: "DEL1234567890",
+        notes: "Fragile silk garment packaging",
+      };
+      expect(createShipmentSchema.safeParse(shipment).success).toBe(true);
+
+      expect(shipmentStatusEnum.safeParse("in_transit").success).toBe(true);
+      expect(shipmentStatusEnum.safeParse("out_for_delivery").success).toBe(true);
+      expect(shipmentStatusEnum.safeParse("delivered").success).toBe(true);
+      expect(shipmentStatusEnum.safeParse("invalid_status").success).toBe(false);
+
+      expect(
+        updateShipmentTrackingSchema.safeParse({
+          status: "in_transit",
+          location: "Jaipur Sorting Hub",
+          description: "Package departed fulfillment facility",
+        }).success
+      ).toBe(true);
+    });
+
+    it("createShippingZoneSchema and createShippingMethodSchema validate logistics configuration", () => {
+      const zone = {
+        name: "North India Domestic",
+        code: "ZONE-NORTH-IN",
+        countries: ["IN"],
+        states: ["Rajasthan", "Delhi", "Punjab"],
+      };
+      expect(createShippingZoneSchema.safeParse(zone).success).toBe(true);
+
+      const method = {
+        code: "EXPRESS-AIR",
+        name: "Express Courier Delivery",
+        rate: 15.0,
+        estimatedDaysMin: 1,
+        estimatedDaysMax: 3,
+      };
+      expect(createShippingMethodSchema.safeParse(method).success).toBe(true);
+    });
+  });
+
+  describe("Notification Schemas", () => {
+    it("notificationTypeEnum validates supported notification categories", () => {
+      expect(notificationTypeEnum.safeParse("order").success).toBe(true);
+      expect(notificationTypeEnum.safeParse("payment").success).toBe(true);
+      expect(notificationTypeEnum.safeParse("shipping").success).toBe(true);
+      expect(notificationTypeEnum.safeParse("unsupported").success).toBe(false);
+    });
+
+    it("createNotificationSchema and markNotificationReadSchema validate payloads", () => {
+      const notif = {
+        userId: "user-991",
+        type: "order",
+        title: "Order Confirmed",
+        message: "Your order #VYR-8831 has been placed.",
+        data: { orderId: "ord-8831" },
+      };
+      expect(createNotificationSchema.safeParse(notif).success).toBe(true);
+      expect(createNotificationSchema.safeParse({ ...notif, title: "" }).success).toBe(false);
+
+      expect(markNotificationReadSchema.safeParse({ notificationId: "notif-01" }).success).toBe(true);
+      expect(markNotificationReadSchema.safeParse({ notificationId: "" }).success).toBe(false);
+    });
+
+    it("notificationListQuerySchema transforms unreadOnly string to boolean", () => {
+      const parsedUnread = notificationListQuerySchema.parse({ unreadOnly: "true" });
+      expect(parsedUnread.unreadOnly).toBe(true);
+
+      const parsedAll = notificationListQuerySchema.parse({ unreadOnly: "false" });
+      expect(parsedAll.unreadOnly).toBe(false);
+    });
+  });
+
+  describe("Analytics Schemas", () => {
+    it("analyticsPeriodEnum supports standard dashboard reporting windows", () => {
+      expect(analyticsPeriodEnum.safeParse("today").success).toBe(true);
+      expect(analyticsPeriodEnum.safeParse("7d").success).toBe(true);
+      expect(analyticsPeriodEnum.safeParse("30d").success).toBe(true);
+      expect(analyticsPeriodEnum.safeParse("90d").success).toBe(true);
+      expect(analyticsPeriodEnum.safeParse("12m").success).toBe(true);
+      expect(analyticsPeriodEnum.safeParse("custom").success).toBe(true);
+      expect(analyticsPeriodEnum.safeParse("invalid_period").success).toBe(false);
+    });
+
+    it("dashboardQuerySchema applies default period and validates ISO date bounds", () => {
+      const defaultQuery = dashboardQuerySchema.parse({});
+      expect(defaultQuery.period).toBe("30d");
+      expect(defaultQuery.limit).toBe(5);
+
+      const customQuery = dashboardQuerySchema.safeParse({
+        period: "custom",
+        startDate: "2026-01-01T00:00:00.000Z",
+        endDate: "2026-01-31T23:59:59.000Z",
+      });
+      expect(customQuery.success).toBe(true);
+
+      const invalidDateQuery = dashboardQuerySchema.safeParse({
+        period: "custom",
+        startDate: "not-a-date",
+      });
+      expect(invalidDateQuery.success).toBe(false);
+    });
+  });
+
+  describe("RBAC & Staff Authorization Schemas", () => {
+    it("standardPermissionEnum encompasses all core domain privileges", () => {
+      expect(standardPermissionEnum.safeParse("products:read").success).toBe(true);
+      expect(standardPermissionEnum.safeParse("products:write").success).toBe(true);
+      expect(standardPermissionEnum.safeParse("inventory:write").success).toBe(true);
+      expect(standardPermissionEnum.safeParse("orders:cancel").success).toBe(true);
+      expect(standardPermissionEnum.safeParse("analytics:read").success).toBe(true);
+      expect(standardPermissionEnum.safeParse("staff:write").success).toBe(true);
+      expect(standardPermissionEnum.safeParse("arbitrary:hack").success).toBe(false);
+    });
+
+    it("createRoleSchema validates lowercase slug name and non-empty permissions", () => {
+      const validRole = {
+        name: "catalog-manager",
+        displayName: "Catalog Manager",
+        description: "Manages products and inventory",
+        permissions: ["products:read", "products:write", "inventory:read"],
+      };
+      expect(createRoleSchema.safeParse(validRole).success).toBe(true);
+
+      // Rejects uppercase characters in role slug
+      expect(createRoleSchema.safeParse({ ...validRole, name: "Catalog_Manager" }).success).toBe(false);
+
+      // Rejects empty permissions
+      expect(createRoleSchema.safeParse({ ...validRole, permissions: [] }).success).toBe(false);
+
+      expect(
+        updateRoleSchema.safeParse({
+          displayName: "Catalog Lead",
+          permissions: ["products:read"],
+        }).success
+      ).toBe(true);
+    });
+
+    it("createStaffUserSchema and updateStaffUserSchema validate staff credentials", () => {
+      const staffUser = {
+        email: "staff.ops@veyora.com",
+        firstName: "Ananya",
+        lastName: "Sharma",
+        role: "admin",
+      };
+      expect(createStaffUserSchema.safeParse(staffUser).success).toBe(true);
+
+      expect(
+        updateStaffUserSchema.safeParse({
+          firstName: "Ananya Updated",
+          isActive: false,
+        }).success
+      ).toBe(true);
+    });
+
+    it("assignRolesSchema and assignPermissionsSchema enforce non-empty assignments", () => {
+      expect(assignRolesSchema.safeParse({ roleIds: ["role-1"] }).success).toBe(true);
+      expect(assignRolesSchema.safeParse({ roleIds: [] }).success).toBe(false);
+
+      expect(assignPermissionsSchema.safeParse({ permissions: ["products:read"] }).success).toBe(true);
+    });
+  });
+
+  describe("Search & SEO Schemas", () => {
+    it("searchSortEnum supports relevancy and price sort keys", () => {
+      expect(searchSortEnum.safeParse("relevance").success).toBe(true);
+      expect(searchSortEnum.safeParse("price_asc").success).toBe(true);
+      expect(searchSortEnum.safeParse("price_desc").success).toBe(true);
+      expect(searchSortEnum.safeParse("newest").success).toBe(true);
+      expect(searchSortEnum.safeParse("unsupported_sort").success).toBe(false);
+    });
+
+    it("searchQuerySchema parses faceted query strings and coerces numbers and booleans", () => {
+      const parsed = searchQuerySchema.parse({
+        q: "Chanderi Silk",
+        minPrice: "50",
+        maxPrice: "300",
+        inStock: "true",
+        minRating: "4",
+        sortBy: "price_asc",
+        page: "2",
+        limit: "24",
+      });
+
+      expect(parsed.q).toBe("Chanderi Silk");
+      expect(parsed.minPrice).toBe(50);
+      expect(parsed.maxPrice).toBe(300);
+      expect(parsed.inStock).toBe(true);
+      expect(parsed.minRating).toBe(4);
+      expect(parsed.sortBy).toBe("price_asc");
+      expect(parsed.page).toBe(2);
+      expect(parsed.limit).toBe(24);
+    });
+
+    it("searchSuggestionQuerySchema enforces query parameter presence", () => {
+      expect(searchSuggestionQuerySchema.safeParse({ q: "kurt" }).success).toBe(true);
+      expect(searchSuggestionQuerySchema.safeParse({ q: "" }).success).toBe(false);
+      expect(searchSuggestionQuerySchema.safeParse({}).success).toBe(false);
     });
   });
 });

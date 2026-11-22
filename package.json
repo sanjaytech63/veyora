@@ -30,12 +30,14 @@
     "typecheck:turbo": "turbo run typecheck",
     "test": "npm run test --workspaces --if-present",
     "test:turbo": "turbo run test",
+    "test:e2e": "playwright test",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mjs,json,md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mjs,json,md,yml,yaml}\"",
     "clean": "rimraf node_modules apps/*/node_modules apps/*/.next apps/*/dist packages/*/node_modules packages/*/dist .turbo"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@playwright/test": "^1.65.1",
     "concurrently": "^10.0.7",
     "eslint": "^9.21.0",
     "globals": "^16.0.0",
