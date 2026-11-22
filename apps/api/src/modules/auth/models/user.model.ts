@@ -9,6 +9,8 @@ export interface IUser extends Document {
   phone?: string | null;
   role: UserRole;
   permissions: UserPermission[];
+  assignedRoles?: mongoose.Types.ObjectId[];
+  customPermissions?: string[];
   isEmailVerified: boolean;
   isActive: boolean;
   statusReason?: string | null;
@@ -54,6 +56,16 @@ const userSchema = new Schema<IUser>(
       index: true,
     },
     permissions: {
+      type: [String],
+      default: [],
+    },
+    assignedRoles: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Role",
+      },
+    ],
+    customPermissions: {
       type: [String],
       default: [],
     },

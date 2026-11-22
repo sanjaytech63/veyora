@@ -10,7 +10,8 @@ export type UserPermission =
   | "read:system"
   | "manage:system"
   | "manage:catalog"
-  | "manage:orders";
+  | "manage:orders"
+  | (string & {});
 
 export interface AuthUser {
   id: string;

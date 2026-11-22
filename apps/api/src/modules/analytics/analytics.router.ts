@@ -1,13 +1,18 @@
 import { Router } from "express";
 import { analyticsController } from "./controllers/analytics.controller";
-import { requireAuth, requireRole } from "../../middleware/auth";
+import { requireAuth, requireRole, requirePermission } from "../../middleware/auth";
 import { validate } from "../../middleware/validate-request";
 import { dashboardQuerySchema } from "@veyora/validators";
 
 const router = Router();
 
-// All analytics routes require authentication and admin/superadmin privileges
-router.use("/admin/analytics", requireAuth, requireRole("admin", "superadmin"));
+// All analytics routes require authentication, admin/superadmin privileges, and analytics:read permission
+router.use(
+  "/admin/analytics",
+  requireAuth,
+  requireRole("admin", "superadmin"),
+  requirePermission("analytics:read")
+);
 
 // 1. Comprehensive Master Dashboard
 router.get(

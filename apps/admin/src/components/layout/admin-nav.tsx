@@ -17,6 +17,9 @@ import {
   TicketPercent,
   Star,
   Settings,
+  UserCheck,
+  ShieldCheck,
+  History,
 } from "lucide-react";
 
 export interface NavItem {
@@ -38,6 +41,9 @@ export const adminNavItems: NavItem[] = [
   { title: "Coupons & Discounts", href: "/coupons", icon: TicketPercent },
   { title: "Customer Reviews", href: "/reviews", icon: Star },
   { title: "Fashion Ateliers", href: "/brands", icon: Tags },
+  { title: "Staff & Team", href: "/staff", icon: UserCheck },
+  { title: "Roles & Permissions", href: "/roles", icon: ShieldCheck },
+  { title: "Security Audit", href: "/audit-logs", icon: History },
   { title: "Settings", href: "/settings", icon: Settings },
 ];
 
