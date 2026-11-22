@@ -9,5 +9,20 @@ export default defineConfig({
       "packages/utils/vitest.config.ts",
       "packages/validators/vitest.config.ts",
     ],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      exclude: [
+        "**/node_modules/**",
+        "**/dist/**",
+        "**/coverage/**",
+        "**/.next/**",
+        "**/*.config.*",
+        "**/e2e/**",
+        "**/apps/api/src/database/seed.ts",
+        "**/*.d.ts",
+        "**/*.d.mts",
+      ],
+    },
   },
 });
