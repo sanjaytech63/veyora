@@ -89,6 +89,8 @@ export class ProductService {
       attributes: doc.attributes || [],
       seo: doc.seo,
       tags: doc.tags || [],
+      averageRating: doc.averageRating || 0,
+      reviewCount: doc.reviewCount || 0,
       createdAt: doc.createdAt.toISOString(),
       updatedAt: doc.updatedAt.toISOString(),
     };

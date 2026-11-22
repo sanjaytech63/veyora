@@ -9,6 +9,8 @@ import { Category } from "../modules/catalog/models/category.model";
 import { Product } from "../modules/catalog/models/product.model";
 import { Inventory } from "../modules/inventory/models/inventory.model";
 import { StockMovement } from "../modules/inventory/models/stock-movement.model";
+import { Review } from "../modules/review/models/review.model";
+import { reviewService } from "../modules/review/services/review.service";
 
 const ADMIN_PERMISSIONS: UserPermission[] = [
   "read:users",
@@ -782,6 +784,42 @@ export async function runDatabaseSeed(): Promise<void> {
       }
     }
     logger.info({ count: productsToSeed.length }, "Seeded fashion products and variant inventories");
+
+    // 5. Seed Initial Curated Product Reviews
+    const customerUser = await User.findOne({ email: "customer@veyora.local" });
+    const firstProduct = await Product.findOne({ status: "active" });
+
+    if (customerUser && firstProduct) {
+      const existingReviews = await Review.countDocuments();
+      if (existingReviews === 0) {
+        await Review.create([
+          {
+            productId: firstProduct._id,
+            userId: customerUser._id,
+            rating: 5,
+            title: "Artisanal perfection and exquisite drape",
+            comment:
+              "The pure fabric hand feel and meticulous embroidery surpassed all expectations. Truly couture grade tailoring.",
+            status: "approved",
+            isVerifiedPurchase: true,
+            helpfulCount: 5,
+          },
+          {
+            productId: firstProduct._id,
+            userId: adminUser._id,
+            rating: 4,
+            title: "Regal festive aesthetic",
+            comment:
+              "Ordered for our anniversary celebration. Colors are vibrant and the silhouette is exceptionally flattering.",
+            status: "approved",
+            isVerifiedPurchase: true,
+            helpfulCount: 2,
+          },
+        ]);
+        await reviewService.recalculateProductRating(firstProduct._id);
+        logger.info("Seeded initial luxury fashion product reviews");
+      }
+    }
 
     logger.info("Veyora Fashion database seeding completed successfully!");
   } finally {

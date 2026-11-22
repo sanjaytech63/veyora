@@ -27,6 +27,8 @@ export interface IProduct extends Document {
   attributes: ProductAttribute[];
   seo?: ProductSeo;
   tags: string[];
+  averageRating?: number;
+  reviewCount?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -165,6 +167,18 @@ const productSchema = new Schema<IProduct>(
       type: [String],
       default: [],
       index: true,
+    },
+    averageRating: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+      index: true,
+    },
+    reviewCount: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
   },
   {

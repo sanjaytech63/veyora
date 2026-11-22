@@ -13,6 +13,7 @@ export * from "./orders";
 export * from "./payments";
 export * from "./coupons";
 export * from "./customers";
+export * from "./reviews";
 export * from "./admin";
 export * from "./inventory";
 export * from "./env";
