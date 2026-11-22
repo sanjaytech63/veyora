@@ -54,6 +54,8 @@ export interface Product {
   attributes: ProductAttribute[];
   seo?: ProductSeo;
   tags: string[];
+  averageRating?: number;
+  reviewCount?: number;
   createdAt: string;
   updatedAt: string;
 }

@@ -13,6 +13,7 @@ import { ProductAccordion } from "@/components/storefront/product-accordion";
 import { ProductGrid } from "@/components/storefront/product-grid";
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/storefront/json-ld";
 import { WishlistButton } from "@/components/storefront/wishlist-button";
+import { ProductReviews } from "@/components/storefront/product-reviews";
 import { useRelatedProducts, useCategories } from "@/hooks/use-catalog";
 import { useUIStore } from "@/stores/ui-store";
 import { useCart } from "@/lib/hooks/use-cart";
@@ -144,15 +145,32 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
                 <span className="text-xs font-bold uppercase tracking-wider text-primary">
                   {categoryName}
                 </span>
-                <div className="flex items-center gap-1.5 text-foreground/90">
+                <a
+                  href="#reviews-section"
+                  className="flex items-center gap-1.5 text-foreground/90 hover:opacity-80 transition-opacity cursor-pointer group"
+                  title="View Client Reviews"
+                >
                   <div className="flex items-center text-amber-400">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className="h-3.5 w-3.5 fill-current" />
+                      <Star
+                        key={i}
+                        className={`h-3.5 w-3.5 ${
+                          i < Math.round(product.averageRating && product.averageRating > 0 ? product.averageRating : 5)
+                            ? "fill-amber-400 text-amber-400"
+                            : "text-muted/60"
+                        }`}
+                      />
                     ))}
                   </div>
-                  <span className="text-xs font-semibold">4.9</span>
-                  <span className="text-xs text-muted-foreground">(48 reviews)</span>
-                </div>
+                  <span className="text-xs font-semibold">
+                    {product.averageRating && product.averageRating > 0
+                      ? product.averageRating.toFixed(1)
+                      : "5.0"}
+                  </span>
+                  <span className="text-xs text-muted-foreground group-hover:underline">
+                    ({product.reviewCount !== undefined ? product.reviewCount : 0} reviews)
+                  </span>
+                </a>
               </div>
 
               <h1 className="text-2xl sm:text-3xl xl:text-4xl font-extrabold tracking-tight text-foreground leading-tight">
@@ -292,6 +310,12 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
             />
           </div>
         </div>
+
+        {/* Customer Reviews & Feedback Section */}
+        <ProductReviews
+          productId={product.id}
+          productTitle={product.title}
+        />
 
         {/* Related Products Recommendation Grid */}
         {relatedProducts.length > 0 && (
