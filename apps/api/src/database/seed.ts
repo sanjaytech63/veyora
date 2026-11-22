@@ -50,6 +50,28 @@ export async function runDatabaseSeed(): Promise<void> {
       logger.info("Verified active admin user: sjat11463@gmail.com");
     }
 
+    // 1b. Seed or Verify Default Verified Customer
+    const customerPasswordHash = await bcrypt.hash("Customer@123456", 12);
+    const existingCustomer = await User.findOne({ email: "customer@veyora.local" });
+    if (!existingCustomer) {
+      await User.create({
+        email: "customer@veyora.local",
+        passwordHash: customerPasswordHash,
+        firstName: "Priya",
+        lastName: "Sharma",
+        role: "customer",
+        permissions: [],
+        isEmailVerified: true,
+        isActive: true,
+      });
+      logger.info("Created test customer: customer@veyora.local (password: Customer@123456)");
+    } else {
+      existingCustomer.isEmailVerified = true;
+      existingCustomer.isActive = true;
+      await existingCustomer.save();
+      logger.info("Verified active customer: customer@veyora.local");
+    }
+
     const adminUser = (await User.findOne({ email: "sjat11463@gmail.com" }))!;
 
     // 2. Seed Fashion Brands

@@ -46,11 +46,14 @@ export default function RegisterPage() {
   async function onSubmit(values: RegisterInput) {
     setIsSubmitting(true);
     try {
-      await authApi.register(values);
+      const response = await authApi.register(values);
       toast.success("Account created successfully!", {
-        description: "Please enter the 6-digit verification code sent to your email.",
+        description: response.otp
+          ? `Verification code: ${response.otp}`
+          : "Please enter the 6-digit verification code sent to your email.",
       });
-      router.push(`/verify-otp?email=${encodeURIComponent(values.email)}`);
+      const otpQuery = response.otp ? `&otp=${encodeURIComponent(response.otp)}` : "";
+      router.push(`/verify-otp?email=${encodeURIComponent(values.email)}${otpQuery}`);
     } catch (err) {
       if (err instanceof ApiClientError) {
         toast.error("Registration Failed", {
