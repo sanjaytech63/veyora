@@ -13,6 +13,7 @@ import {
   capitalize,
   truncate,
   safeJsonParse,
+  escapeRegex,
   logger,
 } from "../index";
 
@@ -153,6 +154,19 @@ describe("@veyora/utils Package Tests", () => {
         const fallback = { status: "unknown" };
         const result = safeJsonParse("not-a-valid-json", fallback);
         expect(result).toBe(fallback);
+      });
+    });
+
+    describe("escapeRegex()", () => {
+      it("escapes all regex special characters to prevent ReDoS", () => {
+        expect(escapeRegex("hello.*+?^${}()|[]\\world")).toBe(
+          "hello\\.\\*\\+\\?\\^\\$\\{\\}\\(\\)\\|\\[\\]\\\\world"
+        );
+      });
+
+      it("handles empty and normal strings safely", () => {
+        expect(escapeRegex("")).toBe("");
+        expect(escapeRegex("normal search term")).toBe("normal search term");
       });
     });
   });

@@ -445,6 +445,31 @@ describe("Centralized Zod Validation Suite", () => {
       });
       expect(webConfig.NEXT_PUBLIC_API_URL).toBe("https://api.veyora.com/api/v1");
     });
+
+    it("apiEnvSchema rejects default fallback secrets in production mode", () => {
+      const prodWithDefaults = {
+        NODE_ENV: "production",
+      };
+      const result = apiEnvSchema.safeParse(prodWithDefaults);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const issues = result.error.issues.map((i) => i.path[0]);
+        expect(issues).toContain("JWT_ACCESS_SECRET");
+        expect(issues).toContain("JWT_REFRESH_SECRET");
+        expect(issues).toContain("COOKIE_SECRET");
+        expect(issues).toContain("CORS_ORIGIN");
+      }
+
+      // Passes when custom production secrets provided
+      const prodValid = {
+        NODE_ENV: "production",
+        JWT_ACCESS_SECRET: "a_very_strong_custom_production_jwt_access_secret_123",
+        JWT_REFRESH_SECRET: "a_very_strong_custom_production_jwt_refresh_secret_123",
+        COOKIE_SECRET: "a_very_strong_cookie_secret_123",
+        CORS_ORIGIN: "https://veyora.luxury,https://admin.veyora.luxury",
+      };
+      expect(apiEnvSchema.safeParse(prodValid).success).toBe(true);
+    });
   });
 
   describe("Product Review Schemas", () => {

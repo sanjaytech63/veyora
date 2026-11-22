@@ -690,5 +690,37 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);
     });
+
+    it("should prevent unauthorized guest from accessing another customer order (IDOR protection)", async () => {
+      const orderId = new mongoose.Types.ObjectId();
+      const registeredUserId = new mongoose.Types.ObjectId();
+      mockOrders.push({
+        _id: orderId,
+        orderNumber: "VY-ORD-SECURE",
+        userId: registeredUserId,
+        customerEmail: "private@customer.com",
+        customerName: "Private Client",
+        items: [],
+        shippingAddress: {},
+        billingAddress: {},
+        shippingMethod: "standard",
+        shippingCost: 0,
+        subtotal: 200,
+        discount: 0,
+        tax: 16,
+        total: 216,
+        status: "pending",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      // Different guest attempt to access registered user's order
+      const res = await request(app)
+        .get(`/api/v1/orders/${orderId.toString()}`)
+        .set("x-guest-id", "attacker-guest-999");
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+    });
   });
 });

@@ -65,10 +65,14 @@ export class CatalogCacheService {
 
     try {
       const fullPattern = `${CatalogCacheService.PREFIX}${pattern}`;
-      const keys = await client.keys(fullPattern);
-      if (keys.length > 0) {
-        await client.del(...keys);
-      }
+      let cursor = "0";
+      do {
+        const [nextCursor, keys] = await client.scan(cursor, "MATCH", fullPattern, "COUNT", 100);
+        cursor = nextCursor;
+        if (keys.length > 0) {
+          await client.del(...keys);
+        }
+      } while (cursor !== "0");
     } catch (err: unknown) {
       logger.debug({ err, pattern }, "Cache pattern invalidation failed gracefully");
     }

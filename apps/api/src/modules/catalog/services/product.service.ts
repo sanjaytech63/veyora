@@ -8,7 +8,7 @@ import {
   Brand as BrandType,
   CatalogStats,
 } from "@veyora/types";
-import { ConflictError, NotFoundError, slugify } from "@veyora/utils";
+import { ConflictError, NotFoundError, slugify, escapeRegex } from "@veyora/utils";
 import mongoose from "mongoose";
 import { catalogCacheService } from "./catalog-cache.service";
 
@@ -345,11 +345,12 @@ export class ProductService {
 
     const searchTerm = query.search || query.q;
     if (searchTerm) {
+      const safeSearch = escapeRegex(searchTerm);
       filter["$or"] = [
-        { title: { $regex: searchTerm, $options: "i" } },
-        { description: { $regex: searchTerm, $options: "i" } },
-        { sku: { $regex: searchTerm, $options: "i" } },
-        { tags: { $regex: searchTerm, $options: "i" } },
+        { title: { $regex: safeSearch, $options: "i" } },
+        { description: { $regex: safeSearch, $options: "i" } },
+        { sku: { $regex: safeSearch, $options: "i" } },
+        { tags: { $regex: safeSearch, $options: "i" } },
       ];
     }
 

@@ -28,6 +28,7 @@ export class TokenService {
 
     const accessToken = jwt.sign(accessPayload, env.JWT_ACCESS_SECRET, {
       expiresIn: env.JWT_ACCESS_EXPIRES_IN as unknown as number,
+      algorithm: "HS256",
     });
 
     const refreshPayload = {
@@ -38,6 +39,7 @@ export class TokenService {
 
     const refreshToken = jwt.sign(refreshPayload, env.JWT_REFRESH_SECRET, {
       expiresIn: `${env.JWT_REFRESH_EXPIRES_IN_DAYS}d`,
+      algorithm: "HS256",
     });
 
     return {
@@ -48,11 +50,11 @@ export class TokenService {
   }
 
   verifyAccessToken(token: string): JwtAccessPayload {
-    return jwt.verify(token, env.JWT_ACCESS_SECRET) as JwtAccessPayload;
+    return jwt.verify(token, env.JWT_ACCESS_SECRET, { algorithms: ["HS256"] }) as JwtAccessPayload;
   }
 
   verifyRefreshToken(token: string): { sub: string; sessionId: string; familyId: string } {
-    return jwt.verify(token, env.JWT_REFRESH_SECRET) as {
+    return jwt.verify(token, env.JWT_REFRESH_SECRET, { algorithms: ["HS256"] }) as {
       sub: string;
       sessionId: string;
       familyId: string;

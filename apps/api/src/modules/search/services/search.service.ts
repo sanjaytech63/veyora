@@ -5,6 +5,7 @@ import { Category } from "../../catalog/models/category.model";
 import { Brand } from "../../catalog/models/brand.model";
 import { catalogCacheService } from "../../catalog/services/catalog-cache.service";
 import { SearchQueryInput } from "@veyora/validators";
+import { escapeRegex } from "@veyora/utils";
 import {
   Product as ProductType,
   SearchResponse,
@@ -144,6 +145,7 @@ export class SearchService {
     let useTextScore = false;
 
     if (rawTerm) {
+      const safeTerm = escapeRegex(rawTerm);
       // First try text search if relevance sorting is requested
       if (sortBy === "relevance") {
         searchFilter = {
@@ -155,10 +157,10 @@ export class SearchService {
         searchFilter = {
           ...filter,
           $or: [
-            { title: { $regex: rawTerm, $options: "i" } },
-            { description: { $regex: rawTerm, $options: "i" } },
-            { sku: { $regex: rawTerm, $options: "i" } },
-            { tags: { $regex: rawTerm, $options: "i" } },
+            { title: { $regex: safeTerm, $options: "i" } },
+            { description: { $regex: safeTerm, $options: "i" } },
+            { sku: { $regex: safeTerm, $options: "i" } },
+            { tags: { $regex: safeTerm, $options: "i" } },
           ],
         };
       }
@@ -190,13 +192,14 @@ export class SearchService {
 
       // If text search returned 0 items, fallback to regex/fuzzy search
       if (total === 0) {
+        const safeTerm = escapeRegex(rawTerm);
         searchFilter = {
           ...filter,
           $or: [
-            { title: { $regex: rawTerm, $options: "i" } },
-            { description: { $regex: rawTerm, $options: "i" } },
-            { sku: { $regex: rawTerm, $options: "i" } },
-            { tags: { $regex: rawTerm, $options: "i" } },
+            { title: { $regex: safeTerm, $options: "i" } },
+            { description: { $regex: safeTerm, $options: "i" } },
+            { sku: { $regex: safeTerm, $options: "i" } },
+            { tags: { $regex: safeTerm, $options: "i" } },
           ],
         };
 
@@ -272,10 +275,11 @@ export class SearchService {
       delete facetFilter.averageRating;
 
       if (rawTerm) {
+        const safeTerm = escapeRegex(rawTerm);
         facetFilter.$or = [
-          { title: { $regex: rawTerm, $options: "i" } },
-          { tags: { $regex: rawTerm, $options: "i" } },
-          { sku: { $regex: rawTerm, $options: "i" } },
+          { title: { $regex: safeTerm, $options: "i" } },
+          { tags: { $regex: safeTerm, $options: "i" } },
+          { sku: { $regex: safeTerm, $options: "i" } },
         ];
       }
 
@@ -381,14 +385,15 @@ export class SearchService {
       return cached;
     }
 
+    const safeTerm = escapeRegex(trimmed);
     const [matchingProducts, matchingCategories] = await Promise.all([
       Product.find(
         {
           status: "active",
           $or: [
-            { title: { $regex: trimmed, $options: "i" } },
-            { tags: { $regex: trimmed, $options: "i" } },
-            { sku: { $regex: trimmed, $options: "i" } },
+            { title: { $regex: safeTerm, $options: "i" } },
+            { tags: { $regex: safeTerm, $options: "i" } },
+            { sku: { $regex: safeTerm, $options: "i" } },
           ],
         },
         {
@@ -405,7 +410,7 @@ export class SearchService {
       Category.find(
         {
           status: "active",
-          name: { $regex: trimmed, $options: "i" },
+          name: { $regex: safeTerm, $options: "i" },
         },
         { name: 1, slug: 1 }
       )

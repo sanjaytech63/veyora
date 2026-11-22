@@ -2,6 +2,7 @@ import { Router } from "express";
 import { paymentController } from "./controllers/payment.controller";
 import { optionalAuth, requireAuth, requireRole, requirePermission } from "../../middleware/auth";
 import { validate } from "../../middleware/validate-request";
+import { paymentRateLimiter } from "../../middleware/rate-limiter";
 import {
   initiatePaymentSchema,
   verifyPaymentSchema,
@@ -17,6 +18,7 @@ const router = Router();
 
 router.post(
   "/payments/initiate",
+  paymentRateLimiter,
   optionalAuth,
   validate({ body: initiatePaymentSchema }),
   paymentController.initiatePayment.bind(paymentController)
@@ -31,6 +33,7 @@ router.post(
 
 router.post(
   "/payments/retry",
+  paymentRateLimiter,
   optionalAuth,
   validate({ body: retryPaymentSchema }),
   paymentController.retryPayment.bind(paymentController)
