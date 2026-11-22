@@ -15,6 +15,7 @@ import {
   safeJsonParse,
   escapeRegex,
   logger,
+  calculateProfileCompletion,
 } from "../index";
 
 describe("@veyora/utils Package Tests", () => {
@@ -262,6 +263,50 @@ describe("@veyora/utils Package Tests", () => {
       expect(parsed.meta.service).toBe("@veyora/worker");
       expect(parsed.meta.queue).toBe("email");
       expect(parsed.meta.orderId).toBe("ord-4412");
+    });
+  });
+
+  describe("4. Profile Completion Calculator Tests", () => {
+    it("returns 0% and all remaining items for empty profile", () => {
+      const result = calculateProfileCompletion(null);
+      expect(result.percentage).toBe(0);
+      expect(result.isComplete).toBe(false);
+      expect(result.completedItems).toHaveLength(0);
+      expect(result.remainingItems).toHaveLength(5);
+    });
+
+    it("calculates 100% when all profile fields are satisfied", () => {
+      const result = calculateProfileCompletion({
+        firstName: "Ananya",
+        lastName: "Sharma",
+        email: "ananya@veyora.com",
+        isEmailVerified: true,
+        phone: "+91 9123456789",
+        avatar: { secureUrl: "https://res.cloudinary.com/test.webp" },
+        bio: "Contemporary luxury aficionado",
+      });
+      expect(result.percentage).toBe(100);
+      expect(result.isComplete).toBe(true);
+      expect(result.completedItems).toHaveLength(5);
+      expect(result.remainingItems).toHaveLength(0);
+    });
+
+    it("deducts appropriate weight when items are missing", () => {
+      const result = calculateProfileCompletion({
+        firstName: "Ananya",
+        lastName: "Sharma",
+        email: "ananya@veyora.com",
+        isEmailVerified: false, // unverified email loses 25%
+        phone: null, // missing phone loses 20%
+        avatar: null, // missing avatar loses 15%
+        displayName: "Ananya", // personal details present +15%
+      });
+      // 25 (name) + 15 (details) = 40%
+      expect(result.percentage).toBe(40);
+      expect(result.isComplete).toBe(false);
+      expect(result.remainingItems).toContain("Verified Email");
+      expect(result.remainingItems).toContain("Phone Number");
+      expect(result.remainingItems).toContain("Profile Photo");
     });
   });
 });

@@ -36,6 +36,10 @@ export const apiEnvSchema = z
     RAZORPAY_KEY_ID: z.string().default("rzp_test_U3As5vXTcofA3X"),
     RAZORPAY_KEY_SECRET: z.string().default("uNn0vIaNUov5gtKr6fl6cVUo"),
     RAZORPAY_WEBHOOK_SECRET: z.string().default("rzp_webhook_secret_789"),
+    CLOUDINARY_CLOUD_NAME: z.string().default("veyora-cloud"),
+    CLOUDINARY_API_KEY: z.string().default("veyora_cloud_api_key_12345"),
+    CLOUDINARY_API_SECRET: z.string().default("veyora_cloud_api_secret_67890"),
+    CLOUDINARY_UPLOAD_FOLDER: z.string().default("veyora"),
   })
   .superRefine((data, ctx) => {
     if (data.NODE_ENV === "production") {

@@ -1,11 +1,31 @@
 import mongoose, { Schema, model, Document } from "mongoose";
 import { UserRole, UserPermission } from "@veyora/types";
 
+export interface IUserAvatar {
+  publicId: string;
+  secureUrl: string;
+  width?: number;
+  height?: number;
+  format?: string;
+  bytes?: number;
+}
+
+export interface IUserPreferences {
+  language?: string;
+  timezone?: string;
+}
+
 export interface IUser extends Document {
   email: string;
   passwordHash: string;
   firstName: string;
   lastName: string;
+  displayName?: string | null;
+  avatar?: IUserAvatar | null;
+  bio?: string | null;
+  dateOfBirth?: Date | null;
+  gender?: "male" | "female" | "other" | "prefer_not_to_say" | null;
+  preferences?: IUserPreferences;
   phone?: string | null;
   role: UserRole;
   permissions: UserPermission[];
@@ -43,6 +63,39 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: true,
       trim: true,
+    },
+    displayName: {
+      type: String,
+      trim: true,
+      default: null,
+      maxlength: 100,
+    },
+    avatar: {
+      publicId: { type: String, default: null },
+      secureUrl: { type: String, default: null },
+      width: { type: Number },
+      height: { type: Number },
+      format: { type: String },
+      bytes: { type: Number },
+    },
+    bio: {
+      type: String,
+      trim: true,
+      default: null,
+      maxlength: 500,
+    },
+    dateOfBirth: {
+      type: Date,
+      default: null,
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other", "prefer_not_to_say", null],
+      default: null,
+    },
+    preferences: {
+      language: { type: String, default: "en" },
+      timezone: { type: String, default: "UTC" },
     },
     phone: {
       type: String,

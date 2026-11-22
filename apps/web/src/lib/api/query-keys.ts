@@ -56,6 +56,12 @@ export const paymentKeys = {
   status: (orderId: string) => ["payments", "status", orderId] as const,
 };
 
+export const profileKeys = {
+  all: ["profile"] as const,
+  current: () => ["profile", "current"] as const,
+  completion: () => ["profile", "completion"] as const,
+};
+
 export function createEntityKeyFactory(entityName: string) {
   return {
     all: [entityName] as const,
