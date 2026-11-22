@@ -4,6 +4,7 @@ import { CreateCategoryInput, UpdateCategoryInput } from "@veyora/validators";
 import { Category as CategoryType, CategoryStatus } from "@veyora/types";
 import { ConflictError, NotFoundError, slugify } from "@veyora/utils";
 import mongoose from "mongoose";
+import { catalogCacheService } from "./catalog-cache.service";
 
 export class CategoryService {
   private toCategoryDto(doc: ICategory): CategoryType {
@@ -63,6 +64,8 @@ export class CategoryService {
       order: input.order || 0,
     });
 
+    await catalogCacheService.invalidateCatalogCache();
+
     return this.toCategoryDto(category);
   }
 
@@ -98,6 +101,7 @@ export class CategoryService {
     if (input.order !== undefined) category.order = input.order;
 
     await category.save();
+    await catalogCacheService.invalidateCatalogCache();
     return this.toCategoryDto(category);
   }
 
@@ -122,6 +126,7 @@ export class CategoryService {
     }
 
     await Category.deleteOne({ _id: id });
+    await catalogCacheService.invalidateCatalogCache();
   }
 
   async getCategoryByIdOrSlug(idOrSlug: string): Promise<CategoryType> {

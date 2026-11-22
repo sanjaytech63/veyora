@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { catalogApi } from "@/lib/api/catalog-api";
 import { CategoryClient } from "./category-client";
+import { CollectionPageJsonLd, BreadcrumbJsonLd } from "@/components/storefront/json-ld";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -20,10 +21,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return {
     title: `${category.name} | Veyora Haute Couture Collection`,
-    description: category.description || `Browse curated ${category.name} designs, Indian attire and apparel on Veyora.`,
+    description:
+      category.description ||
+      `Browse curated ${category.name} designs and apparel on Veyora Atelier.`,
+    alternates: {
+      canonical: `/category/${category.slug}`,
+    },
     openGraph: {
-      title: `${category.name} | Veyora Fashion`,
-      description: category.description || `Browse ${category.name} fashion apparel on Veyora.`,
+      title: `${category.name} | Veyora Atelier`,
+      description:
+        category.description ||
+        `Browse curated ${category.name} apparel on Veyora Atelier.`,
+      url: `/category/${category.slug}`,
       type: "website",
     },
   };
@@ -37,5 +46,17 @@ export default async function CategoryPage({ params }: PageProps) {
     notFound();
   }
 
-  return <CategoryClient initialCategory={category} />;
+  const breadcrumbs = [
+    { name: "Home", url: "/" },
+    { name: "Shop", url: "/shop" },
+    { name: category.name, url: `/category/${category.slug}` },
+  ];
+
+  return (
+    <>
+      <CollectionPageJsonLd category={category} url={`/category/${category.slug}`} />
+      <BreadcrumbJsonLd items={breadcrumbs} />
+      <CategoryClient initialCategory={category} />
+    </>
+  );
 }

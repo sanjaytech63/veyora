@@ -186,16 +186,34 @@ const productSchema = new Schema<IProduct>(
   }
 );
 
-// Compound index for filtering active products by price and creation date
+// Compound indexes for high-throughput filtering, sorting, and storefront discovery
 productSchema.index({ status: 1, createdAt: -1 });
 productSchema.index({ categoryId: 1, status: 1 });
 productSchema.index({ brandId: 1, status: 1 });
+productSchema.index({ status: 1, price: 1 });
+productSchema.index({ status: 1, categoryId: 1, price: 1 });
+productSchema.index({ status: 1, brandId: 1, price: 1 });
+productSchema.index({ status: 1, averageRating: -1, createdAt: -1 });
+productSchema.index({ status: 1, stock: 1 });
+productSchema.index({ status: 1, tags: 1 });
 
-// Text index for search functionality
-productSchema.index({
-  title: "text",
-  description: "text",
-  tags: "text",
-});
+// Weighted text search index for precision relevance ranking
+productSchema.index(
+  {
+    title: "text",
+    sku: "text",
+    tags: "text",
+    description: "text",
+  },
+  {
+    weights: {
+      sku: 15,
+      title: 10,
+      tags: 5,
+      description: 1,
+    },
+    name: "product_search_text_weighted",
+  }
+);
 
 export const Product = model<IProduct>("Product", productSchema);
