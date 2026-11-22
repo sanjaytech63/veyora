@@ -14,7 +14,10 @@ export const createBrandSchema = z.object({
   slug: z
     .string()
     .min(2)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must only contain lowercase alphanumeric characters and hyphens")
+    .regex(
+      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      "Slug must only contain lowercase alphanumeric characters and hyphens"
+    )
     .optional(),
   description: z.string().trim().optional(),
   logo: z.string().trim().optional(),

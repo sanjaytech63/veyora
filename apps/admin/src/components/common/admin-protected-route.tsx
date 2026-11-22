@@ -18,7 +18,10 @@ export function AdminProtectedRoute({ children }: AdminProtectedRouteProps) {
     // Skip protection on login page itself
     if (pathname === "/login") return;
 
-    if (!isLoading && (!isAuthenticated || !admin || (admin.role !== "admin" && admin.role !== "superadmin"))) {
+    if (
+      !isLoading &&
+      (!isAuthenticated || !admin || (admin.role !== "admin" && admin.role !== "superadmin"))
+    ) {
       router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
     }
   }, [admin, isAuthenticated, isLoading, pathname, router]);

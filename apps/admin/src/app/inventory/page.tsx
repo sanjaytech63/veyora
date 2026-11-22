@@ -139,8 +139,7 @@ export default function AdminInventoryPage() {
         item.productTitle.toLowerCase().includes(search.toLowerCase()) ||
         (item.variantName && item.variantName.toLowerCase().includes(search.toLowerCase()));
 
-      const matchesStatus =
-        statusFilter === "all" || item.status === statusFilter;
+      const matchesStatus = statusFilter === "all" || item.status === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
@@ -311,9 +310,7 @@ export default function AdminInventoryPage() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-center font-bold text-base">
-                      {item.onHand}
-                    </TableCell>
+                    <TableCell className="text-center font-bold text-base">{item.onHand}</TableCell>
                     <TableCell className="text-center">
                       {item.reserved > 0 ? (
                         <span className="font-medium text-amber-600 bg-amber-50 dark:bg-amber-950/20 px-2 py-0.5 rounded text-xs">
@@ -335,22 +332,22 @@ export default function AdminInventoryPage() {
                           item.status === "in_stock"
                             ? "default"
                             : item.status === "low_stock"
-                            ? "secondary"
-                            : "destructive"
+                              ? "secondary"
+                              : "destructive"
                         }
                         className={
                           item.status === "in_stock"
                             ? "bg-emerald-600 text-white hover:bg-emerald-700"
                             : item.status === "low_stock"
-                            ? "bg-amber-500 text-white hover:bg-amber-600"
-                            : ""
+                              ? "bg-amber-500 text-white hover:bg-amber-600"
+                              : ""
                         }
                       >
                         {item.status === "in_stock"
                           ? "In Stock"
                           : item.status === "low_stock"
-                          ? "Low Stock"
-                          : "Out of Stock"}
+                            ? "Low Stock"
+                            : "Out of Stock"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -430,7 +427,9 @@ export default function AdminInventoryPage() {
                 <SelectContent>
                   <SelectItem value="increase">Restock / Add Stock (+ Units)</SelectItem>
                   <SelectItem value="decrease">Write-off / Damage / Remove (- Units)</SelectItem>
-                  <SelectItem value="correction">Physical Count Correction (Set Absolute Total)</SelectItem>
+                  <SelectItem value="correction">
+                    Physical Count Correction (Set Absolute Total)
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

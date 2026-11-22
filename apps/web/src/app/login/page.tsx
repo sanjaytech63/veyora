@@ -88,9 +88,7 @@ function LoginForm() {
             <ShoppingBag className="h-6 w-6 text-primary" />
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight">Sign in to Veyora</CardTitle>
-          <CardDescription>
-            Enter your email and password to access your account
-          </CardDescription>
+          <CardDescription>Enter your email and password to access your account</CardDescription>
         </CardHeader>
 
         <CardContent>
@@ -190,7 +188,9 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <React.Suspense fallback={<div className="flex min-h-[50vh] items-center justify-center">Loading...</div>}>
+    <React.Suspense
+      fallback={<div className="flex min-h-[50vh] items-center justify-center">Loading...</div>}
+    >
       <LoginForm />
     </React.Suspense>
   );

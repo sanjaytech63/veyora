@@ -37,12 +37,19 @@ export const createRoleSchema = z.object({
     .string()
     .min(2, "Role name must have at least 2 characters")
     .max(50, "Role name cannot exceed 50 characters")
-    .regex(/^[a-z0-9_-]+$/, "Role name must contain only lowercase alphanumeric characters, hyphens, and underscores"),
+    .regex(
+      /^[a-z0-9_-]+$/,
+      "Role name must contain only lowercase alphanumeric characters, hyphens, and underscores"
+    ),
   displayName: z
     .string()
     .min(2, "Display name must have at least 2 characters")
     .max(100, "Display name cannot exceed 100 characters"),
-  description: z.string().max(500, "Description cannot exceed 500 characters").optional().default(""),
+  description: z
+    .string()
+    .max(500, "Description cannot exceed 500 characters")
+    .optional()
+    .default(""),
   permissions: z.array(z.string().min(1)).min(1, "Role must contain at least one permission"),
 });
 

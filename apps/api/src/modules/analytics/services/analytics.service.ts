@@ -154,7 +154,8 @@ export class AnalyticsService {
     const refundedTotal = refundedAgg[0]?.refundedTotal || 0;
     const orderCount = currentAgg[0]?.orderCount || 0;
     const netRevenue = Math.max(0, totalRevenue - refundedTotal);
-    const averageOrderValue = orderCount > 0 ? Math.round((totalRevenue / orderCount) * 100) / 100 : 0;
+    const averageOrderValue =
+      orderCount > 0 ? Math.round((totalRevenue / orderCount) * 100) / 100 : 0;
     const revenueGrowthRate = this.calculateGrowth(totalRevenue, previousPeriodRevenue);
 
     // Daily/Periodic Revenue Timeline
@@ -232,7 +233,8 @@ export class AnalyticsService {
     }
 
     const ordersGrowthRate = this.calculateGrowth(totalOrders, priorOrderCount);
-    const cancellationRate = totalOrders > 0 ? Math.round((cancelledCount / totalOrders) * 1000) / 10 : 0;
+    const cancellationRate =
+      totalOrders > 0 ? Math.round((cancelledCount / totalOrders) * 1000) / 10 : 0;
 
     const statusDistribution: OrderStatusDistribution[] = statusAgg.map((item) => ({
       status: item._id,
@@ -283,7 +285,9 @@ export class AnalyticsService {
   /**
    * 3. CUSTOMERS OVERVIEW & COHORTS
    */
-  public async getCustomersOverview(filter: AnalyticsDateRangeFilter): Promise<CustomersOverviewDto> {
+  public async getCustomersOverview(
+    filter: AnalyticsDateRangeFilter
+  ): Promise<CustomersOverviewDto> {
     const { start, end, priorStart, priorEnd } = this.resolveDateRange(filter);
 
     // Total registered customer count
@@ -555,10 +559,7 @@ export class AnalyticsService {
    * 6. RECENT ORDERS STREAM
    */
   public async getRecentOrders(limit = 5): Promise<DashboardRecentOrderDto[]> {
-    const orders: any[] = await Order.find()
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .lean();
+    const orders: any[] = await Order.find().sort({ createdAt: -1 }).limit(limit).lean();
 
     return orders.map((o: any) => {
       const itemsList = o.items || [];
@@ -584,7 +585,9 @@ export class AnalyticsService {
   /**
    * 7. MASTER COMPREHENSIVE DASHBOARD METRIC AGGREGATION
    */
-  public async getComprehensiveDashboard(filter: AnalyticsDateRangeFilter): Promise<ComprehensiveDashboardDto> {
+  public async getComprehensiveDashboard(
+    filter: AnalyticsDateRangeFilter
+  ): Promise<ComprehensiveDashboardDto> {
     const { start, end, period } = this.resolveDateRange(filter);
 
     // Parallel aggregation execution across bounded collections

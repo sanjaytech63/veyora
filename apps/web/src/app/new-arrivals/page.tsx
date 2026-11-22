@@ -46,7 +46,10 @@ export default function NewArrivalsPage() {
     <div className="py-8 md:py-12 space-y-10">
       <Container size="xl" className="space-y-8">
         {/* Breadcrumb Trail */}
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-muted-foreground">
+        <nav
+          aria-label="Breadcrumb"
+          className="flex items-center gap-2 text-xs text-muted-foreground"
+        >
           <Link href="/" className="hover:text-foreground transition-colors">
             Home
           </Link>
@@ -65,7 +68,8 @@ export default function NewArrivalsPage() {
               New Arrivals
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-              Explore freshly tailored Indian couture, handwoven Chanderi sets, pure mulmul daily kurtis, and contemporary festive silhouettes.
+              Explore freshly tailored Indian couture, handwoven Chanderi sets, pure mulmul daily
+              kurtis, and contemporary festive silhouettes.
             </p>
           </div>
         </div>
@@ -107,7 +111,10 @@ export default function NewArrivalsPage() {
 
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <label htmlFor="new-instock-toggle" className="text-xs text-muted-foreground cursor-pointer">
+              <label
+                htmlFor="new-instock-toggle"
+                className="text-xs text-muted-foreground cursor-pointer"
+              >
                 In Stock Only
               </label>
               <Switch

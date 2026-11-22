@@ -1,12 +1,6 @@
 import { z } from "zod";
 
-export const notificationTypeEnum = z.enum([
-  "order",
-  "payment",
-  "shipping",
-  "account",
-  "system",
-]);
+export const notificationTypeEnum = z.enum(["order", "payment", "shipping", "account", "system"]);
 
 export const notificationListQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),

@@ -19,7 +19,10 @@ export const adminCustomersApi = {
   getCustomer: (id: string): Promise<CustomerDetailDto> =>
     apiClient.get<CustomerDetailDto>(`/admin/customers/${id}`),
 
-  getCustomerOrders: (id: string, query?: { page?: number; limit?: number }): Promise<PaginatedOrdersDto> =>
+  getCustomerOrders: (
+    id: string,
+    query?: { page?: number; limit?: number }
+  ): Promise<PaginatedOrdersDto> =>
     apiClient.get<PaginatedOrdersDto>(`/admin/customers/${id}/orders`, {
       params: query as Record<string, string | number | boolean | undefined | null>,
     }),

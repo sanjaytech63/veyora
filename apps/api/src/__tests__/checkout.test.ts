@@ -181,7 +181,8 @@ vi.mock("../modules/checkout/models/address.model", () => {
   MockAddressModel.find = vi.fn((filter: any) =>
     mockQuery(() => {
       return mockAddresses.filter((a) => {
-        if (filter?.userId && (!a.userId || a.userId.toString() !== filter.userId.toString())) return false;
+        if (filter?.userId && (!a.userId || a.userId.toString() !== filter.userId.toString()))
+          return false;
         if (filter?.guestId && a.guestId !== filter.guestId) return false;
         return true;
       });
@@ -193,7 +194,8 @@ vi.mock("../modules/checkout/models/address.model", () => {
       return (
         mockAddresses.find((a) => {
           if (filter?._id && a._id.toString() !== filter._id.toString()) return false;
-          if (filter?.userId && (!a.userId || a.userId.toString() !== filter.userId.toString())) return false;
+          if (filter?.userId && (!a.userId || a.userId.toString() !== filter.userId.toString()))
+            return false;
           if (filter?.guestId && a.guestId !== filter.guestId) return false;
           return true;
         }) || null
@@ -222,7 +224,8 @@ vi.mock("../modules/checkout/models/address.model", () => {
     let count = 0;
     mockAddresses.forEach((a) => {
       let match = true;
-      if (filter?.userId && (!a.userId || a.userId.toString() !== filter.userId.toString())) match = false;
+      if (filter?.userId && (!a.userId || a.userId.toString() !== filter.userId.toString()))
+        match = false;
       if (filter?.guestId && a.guestId !== filter.guestId) match = false;
       if (match && update?.$set) {
         Object.assign(a, update.$set);
@@ -234,7 +237,8 @@ vi.mock("../modules/checkout/models/address.model", () => {
 
   MockAddressModel.countDocuments = vi.fn(async (filter: any) => {
     return mockAddresses.filter((a) => {
-      if (filter?.userId && (!a.userId || a.userId.toString() !== filter.userId.toString())) return false;
+      if (filter?.userId && (!a.userId || a.userId.toString() !== filter.userId.toString()))
+        return false;
       if (filter?.guestId && a.guestId !== filter.guestId) return false;
       return true;
     }).length;
@@ -271,7 +275,8 @@ vi.mock("../modules/checkout/models/order.model", () => {
   MockOrderModel.find = vi.fn((filter: any) =>
     mockQuery(() => {
       return mockOrders.filter((o) => {
-        if (filter?.userId && (!o.userId || o.userId.toString() !== filter.userId.toString())) return false;
+        if (filter?.userId && (!o.userId || o.userId.toString() !== filter.userId.toString()))
+          return false;
         if (filter?.guestId && o.guestId !== filter.guestId) return false;
         return true;
       });
@@ -379,20 +384,17 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
 
   describe("1. Address Management API", () => {
     it("should allow guest to create a delivery address", async () => {
-      const res = await request(app)
-        .post("/api/v1/addresses")
-        .set(guestHeader)
-        .send({
-          firstName: "Ananya",
-          lastName: "Roy",
-          street: "74 Park Street, Flat 4B",
-          city: "Kolkata",
-          state: "West Bengal",
-          postalCode: "700016",
-          country: "India",
-          phone: "+91 98300 12345",
-          isDefault: true,
-        });
+      const res = await request(app).post("/api/v1/addresses").set(guestHeader).send({
+        firstName: "Ananya",
+        lastName: "Roy",
+        street: "74 Park Street, Flat 4B",
+        city: "Kolkata",
+        state: "West Bengal",
+        postalCode: "700016",
+        country: "India",
+        phone: "+91 98300 12345",
+        isDefault: true,
+      });
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
@@ -403,13 +405,10 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
     });
 
     it("should reject address creation if required fields are missing", async () => {
-      const res = await request(app)
-        .post("/api/v1/addresses")
-        .set(guestHeader)
-        .send({
-          firstName: "Ananya",
-          // missing street, city, state, postalCode
-        });
+      const res = await request(app).post("/api/v1/addresses").set(guestHeader).send({
+        firstName: "Ananya",
+        // missing street, city, state, postalCode
+      });
 
       expect(res.status).toBe(422);
       expect(res.body.success).toBe(false);
@@ -429,9 +428,7 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
         isDefault: true,
       });
 
-      const res = await request(app)
-        .get("/api/v1/addresses")
-        .set(guestHeader);
+      const res = await request(app).get("/api/v1/addresses").set(guestHeader);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -530,9 +527,7 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
       testInventory.onHand = 0; // zero inventory
       testProduct.stock = 0;
 
-      const res = await request(app)
-        .get("/api/v1/checkout/validate")
-        .set(guestHeader);
+      const res = await request(app).get("/api/v1/checkout/validate").set(guestHeader);
 
       expect(res.status).toBe(200);
       expect(res.body.data.isValid).toBe(false);
@@ -681,9 +676,7 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
         updatedAt: new Date(),
       });
 
-      const res = await request(app)
-        .get(`/api/v1/orders/${orderId.toString()}`)
-        .set(guestHeader);
+      const res = await request(app).get(`/api/v1/orders/${orderId.toString()}`).set(guestHeader);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -692,9 +685,7 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
 
     it("should return 404 for nonexistent order ID", async () => {
       const fakeId = new mongoose.Types.ObjectId();
-      const res = await request(app)
-        .get(`/api/v1/orders/${fakeId.toString()}`)
-        .set(guestHeader);
+      const res = await request(app).get(`/api/v1/orders/${fakeId.toString()}`).set(guestHeader);
 
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);

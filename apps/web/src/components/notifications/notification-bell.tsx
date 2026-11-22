@@ -12,15 +12,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Bell,
-  CheckCheck,
-  ShoppingBag,
-  CreditCard,
-  Truck,
-  User,
-  Sparkles,
-} from "lucide-react";
+import { Bell, CheckCheck, ShoppingBag, CreditCard, Truck, User, Sparkles } from "lucide-react";
 import { NotificationType } from "@veyora/types";
 
 const NOTIF_ICONS: Record<NotificationType, React.ElementType> = {
@@ -100,7 +92,10 @@ export function NotificationBell() {
           <div className="flex items-center gap-2">
             <span className="font-serif font-semibold text-sm">Notifications</span>
             {unreadCount > 0 && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-primary/10 text-primary border-primary/20">
+              <Badge
+                variant="outline"
+                className="text-[10px] px-1.5 py-0 h-4 bg-primary/10 text-primary border-primary/20"
+              >
                 {unreadCount} new
               </Badge>
             )}
@@ -158,11 +153,16 @@ export function NotificationBell() {
 
                   <div className="flex-1 space-y-1 text-xs min-w-0">
                     <div className="flex items-center justify-between gap-1">
-                      <p className={`font-semibold truncate ${!notif.isRead ? "text-foreground font-bold" : "text-muted-foreground"}`}>
+                      <p
+                        className={`font-semibold truncate ${!notif.isRead ? "text-foreground font-bold" : "text-muted-foreground"}`}
+                      >
                         {notif.title}
                       </p>
                       <span className="text-[10px] text-muted-foreground shrink-0 font-mono">
-                        {new Date(notif.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(notif.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </span>
                     </div>
 

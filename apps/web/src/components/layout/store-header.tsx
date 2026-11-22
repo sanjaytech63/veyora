@@ -150,7 +150,11 @@ export function StoreHeader() {
             {isAuthenticated && user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full ring-1 ring-border ml-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full ring-1 ring-border ml-1"
+                  >
                     <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary">
                       {user.firstName ? user.firstName.charAt(0).toUpperCase() : "U"}
                     </div>
@@ -180,14 +184,22 @@ export function StoreHeader() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                  >
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button asChild variant="default" size="sm" className="hidden sm:inline-flex rounded-full text-xs px-4">
+              <Button
+                asChild
+                variant="default"
+                size="sm"
+                className="hidden sm:inline-flex rounded-full text-xs px-4"
+              >
                 <Link href="/login">Sign In</Link>
               </Button>
             )}

@@ -1,9 +1,5 @@
 import { apiClient } from "./api-client";
-import {
-  InventoryItem,
-  StockMovement,
-  InventoryStats,
-} from "@veyora/types";
+import { InventoryItem, StockMovement, InventoryStats } from "@veyora/types";
 import {
   AdjustStockInput,
   ReserveStockInput,
@@ -19,16 +15,14 @@ export const adminInventoryApi = {
       params: params as Record<string, string | number | boolean | undefined | null>,
     }),
 
-  getStats: () =>
-    apiClient.get<InventoryStats>("/admin/inventory/stats"),
+  getStats: () => apiClient.get<InventoryStats>("/admin/inventory/stats"),
 
   getLowStock: (params?: { page?: number; limit?: number }) =>
     apiClient.get<InventoryItem[]>("/admin/inventory/low-stock", {
       params: params as Record<string, string | number | boolean | undefined | null>,
     }),
 
-  getItem: (skuOrId: string) =>
-    apiClient.get<InventoryItem>(`/admin/inventory/${skuOrId}`),
+  getItem: (skuOrId: string) => apiClient.get<InventoryItem>(`/admin/inventory/${skuOrId}`),
 
   getMovements: (skuOrId: string, page = 1, limit = 20) =>
     apiClient.get<StockMovement[]>(`/admin/inventory/${skuOrId}/movements`, {

@@ -82,13 +82,29 @@ vi.mock("../modules/checkout/models/order.model", () => {
     mockQuery(() => {
       return mockOrders.filter((o) => {
         if (filter?.status && o.status !== filter.status) return false;
-        if (filter?.userId && (!o.userId || o.userId.toString() !== filter.userId.toString())) return false;
+        if (filter?.userId && (!o.userId || o.userId.toString() !== filter.userId.toString()))
+          return false;
         if (filter?.guestId && o.guestId !== filter.guestId) return false;
         if (filter?.$or && Array.isArray(filter.$or)) {
           return filter.$or.some((clause: any) => {
-            if (clause.orderNumber && clause.orderNumber.test && clause.orderNumber.test(o.orderNumber)) return true;
-            if (clause.customerEmail && clause.customerEmail.test && clause.customerEmail.test(o.customerEmail)) return true;
-            if (clause.customerName && clause.customerName.test && clause.customerName.test(o.customerName)) return true;
+            if (
+              clause.orderNumber &&
+              clause.orderNumber.test &&
+              clause.orderNumber.test(o.orderNumber)
+            )
+              return true;
+            if (
+              clause.customerEmail &&
+              clause.customerEmail.test &&
+              clause.customerEmail.test(o.customerEmail)
+            )
+              return true;
+            if (
+              clause.customerName &&
+              clause.customerName.test &&
+              clause.customerName.test(o.customerName)
+            )
+              return true;
             return false;
           });
         }
@@ -379,7 +395,7 @@ describe("Phase J — Order Management & Lifecycle State Machine Integration Tes
         });
 
       expect(res.status).toBe(400);
-      expect(res.body.message).toContain("Invalid status transition from \"pending\" to \"delivered\"");
+      expect(res.body.message).toContain('Invalid status transition from "pending" to "delivered"');
     });
 
     it("should reject transitioning from terminal cancelled state", async () => {
@@ -393,7 +409,7 @@ describe("Phase J — Order Management & Lifecycle State Machine Integration Tes
         });
 
       expect(res.status).toBe(400);
-      expect(res.body.message).toContain("Invalid status transition from \"cancelled\"");
+      expect(res.body.message).toContain('Invalid status transition from "cancelled"');
     });
   });
 
@@ -431,7 +447,7 @@ describe("Phase J — Order Management & Lifecycle State Machine Integration Tes
         });
 
       expect(res.status).toBe(400);
-      expect(res.body.message).toContain("cannot be cancelled in \"shipped\" status");
+      expect(res.body.message).toContain('cannot be cancelled in "shipped" status');
     });
   });
 

@@ -3,11 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { checkoutApi } from "../api/checkout-api";
 import { checkoutKeys, cartKeys, orderKeys } from "../api/query-keys";
-import {
-  CheckoutValidationDto,
-  CreateOrderPayload,
-  OrderDto,
-} from "@veyora/types";
+import { CheckoutValidationDto, CreateOrderPayload, OrderDto } from "@veyora/types";
 import { toast } from "sonner";
 
 export function useCheckout(shippingMethod: "standard" | "express" = "standard") {
@@ -31,7 +27,8 @@ export function useCheckout(shippingMethod: "standard" | "express" = "standard")
     },
     onError: (error: Error) => {
       toast.error("Checkout Failed", {
-        description: error.message || "We could not place your order. Please check item stock or address.",
+        description:
+          error.message || "We could not place your order. Please check item stock or address.",
       });
     },
   });

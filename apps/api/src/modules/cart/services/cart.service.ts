@@ -6,12 +6,7 @@ import { Product, IProduct } from "../../catalog/models/product.model";
 import { Inventory } from "../../inventory/models/inventory.model";
 import { Coupon } from "../../coupon/models/coupon.model";
 import { couponService } from "../../coupon/services/coupon.service";
-import {
-  CartDto,
-  CartItemDto,
-  CartTotals,
-  SyncCartItemPayload,
-} from "@veyora/types";
+import { CartDto, CartItemDto, CartTotals, SyncCartItemPayload } from "@veyora/types";
 import { AddToCartInput } from "@veyora/validators";
 import { BadRequestError, ConflictError, NotFoundError } from "@veyora/utils";
 
@@ -47,7 +42,8 @@ export class CartService {
 
     if (!cart) {
       cart = new Cart({
-        userId: userId && mongoose.Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : null,
+        userId:
+          userId && mongoose.Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : null,
         guestId: guestId || null,
         items: [],
       });
@@ -180,7 +176,8 @@ export class CartService {
 
     // Totals calculation
     const discountPercent = cart.discountPercent || 0;
-    const discount = discountPercent > 0 ? Math.round(((subtotal * discountPercent) / 100) * 100) / 100 : 0;
+    const discount =
+      discountPercent > 0 ? Math.round(((subtotal * discountPercent) / 100) * 100) / 100 : 0;
     const discountedSubtotal = Math.max(0, subtotal - discount);
     const shipping =
       discountedSubtotal >= FREE_SHIPPING_THRESHOLD || discountedSubtotal === 0
@@ -280,7 +277,9 @@ export class CartService {
       (item) =>
         item.productId.toString() === productId &&
         (item.variantId ? item.variantId.toString() : undefined) ===
-          (targetVariant && (targetVariant as any)._id ? (targetVariant as any)._id.toString() : undefined)
+          (targetVariant && (targetVariant as any)._id
+            ? (targetVariant as any)._id.toString()
+            : undefined)
     );
 
     const currentQtyInCart = existingIndex > -1 ? cart.items[existingIndex]!.quantity : 0;
@@ -355,7 +354,9 @@ export class CartService {
         availableStock = Math.max(0, inv.onHand - inv.reserved);
       } else {
         if (item.variantId) {
-          const v = product.variants.find((vr) => (vr as any)._id?.toString() === item.variantId?.toString());
+          const v = product.variants.find(
+            (vr) => (vr as any)._id?.toString() === item.variantId?.toString()
+          );
           availableStock = v ? v.stock : 0;
         } else {
           availableStock = product.stock;
@@ -435,7 +436,9 @@ export class CartService {
           );
 
           if (!validation.isValid) {
-            throw new BadRequestError(validation.message || "Invalid or ineligible promotional code.");
+            throw new BadRequestError(
+              validation.message || "Invalid or ineligible promotional code."
+            );
           }
 
           cart.couponCode = cleanCode;
@@ -509,7 +512,11 @@ export class CartService {
           productId: product._id,
           variantId: variant && (variant as any)._id ? (variant as any)._id : null,
         });
-        available = inv ? Math.max(0, inv.onHand - inv.reserved) : (variant ? variant.stock : product.stock);
+        available = inv
+          ? Math.max(0, inv.onHand - inv.reserved)
+          : variant
+            ? variant.stock
+            : product.stock;
       } else {
         available = 999;
       }

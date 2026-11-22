@@ -228,12 +228,16 @@ export default function RolesManagementPage() {
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
               Administrative Roles & Permissions
             </h1>
-            <Badge variant="outline" className="border-primary/40 text-primary font-mono text-[11px]">
+            <Badge
+              variant="outline"
+              className="border-primary/40 text-primary font-mono text-[11px]"
+            >
               RBAC v2.0
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            Configure granular access tiers, security privileges, and domain-level authorization matrices.
+            Configure granular access tiers, security privileges, and domain-level authorization
+            matrices.
           </p>
         </div>
 
@@ -325,7 +329,8 @@ export default function RolesManagementPage() {
             <ShieldAlert className="h-10 w-10 text-muted-foreground mx-auto" />
             <h3 className="font-semibold text-foreground">No administrative roles found</h3>
             <p className="text-xs text-muted-foreground max-w-md mx-auto">
-              No roles match your search filter. Create custom roles to grant tailored permissions to atelier staff.
+              No roles match your search filter. Create custom roles to grant tailored permissions
+              to atelier staff.
             </p>
           </CardContent>
         </Card>
@@ -346,7 +351,10 @@ export default function RolesManagementPage() {
                       <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
                         <span>{role.displayName}</span>
                         {role.isSystem && (
-                          <Badge variant="secondary" className="text-[10px] uppercase font-mono tracking-wider">
+                          <Badge
+                            variant="secondary"
+                            className="text-[10px] uppercase font-mono tracking-wider"
+                          >
                             System
                           </Badge>
                         )}
@@ -448,10 +456,13 @@ export default function RolesManagementPage() {
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-primary" />
-              <span>{editingRole ? `Configure Role: ${editingRole.displayName}` : "Create Custom Role"}</span>
+              <span>
+                {editingRole ? `Configure Role: ${editingRole.displayName}` : "Create Custom Role"}
+              </span>
             </DialogTitle>
             <DialogDescription className="text-xs">
-              Define the role identity and select granular access privileges across operational modules.
+              Define the role identity and select granular access privileges across operational
+              modules.
             </DialogDescription>
           </DialogHeader>
 
@@ -534,7 +545,8 @@ export default function RolesManagementPage() {
                           </Label>
                         </div>
                         <span className="text-[11px] font-mono text-muted-foreground">
-                          {catKeys.filter((k) => selectedPermissions.includes(k)).length}/{catKeys.length} active
+                          {catKeys.filter((k) => selectedPermissions.includes(k)).length}/
+                          {catKeys.length} active
                         </span>
                       </div>
 

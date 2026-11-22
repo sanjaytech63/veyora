@@ -14,11 +14,7 @@ import {
   PaginatedAdminReviewsDto,
   RatingBreakdown,
 } from "@veyora/types";
-import {
-  NotFoundError,
-  BadRequestError,
-  ConflictError,
-} from "@veyora/utils";
+import { NotFoundError, BadRequestError, ConflictError } from "@veyora/utils";
 import { logger } from "../../../config/logger";
 
 interface PopulatedReviewUser {
@@ -39,15 +35,21 @@ export class ReviewService {
   /**
    * Helper to transform Mongoose IReview doc to safe ReviewDto
    */
-  public toReviewDto(doc: IReview, userDoc?: PopulatedReviewUser, productDoc?: PopulatedReviewProduct): ReviewDto {
+  public toReviewDto(
+    doc: IReview,
+    userDoc?: PopulatedReviewUser,
+    productDoc?: PopulatedReviewProduct
+  ): ReviewDto {
     const user = userDoc || (doc.userId as unknown as PopulatedReviewUser);
     const product = productDoc || (doc.productId as unknown as PopulatedReviewProduct);
 
-    const customerName = user && (user.firstName || user.lastName)
-      ? `${user.firstName || ""} ${user.lastName || ""}`.trim()
-      : "Verified Customer";
+    const customerName =
+      user && (user.firstName || user.lastName)
+        ? `${user.firstName || ""} ${user.lastName || ""}`.trim()
+        : "Verified Customer";
 
-    const primaryImage = product?.images?.find((img) => img.isPrimary)?.url || product?.images?.[0]?.url;
+    const primaryImage =
+      product?.images?.find((img) => img.isPrimary)?.url || product?.images?.[0]?.url;
 
     return {
       id: doc._id.toString(),
@@ -103,9 +105,7 @@ export class ReviewService {
       userId: userObjectId,
     });
     if (existingReview) {
-      throw new ConflictError(
-        "You have already submitted a review for this product."
-      );
+      throw new ConflictError("You have already submitted a review for this product.");
     }
 
     // 3. Verified Purchase Foundation
@@ -138,7 +138,10 @@ export class ReviewService {
     );
 
     // Fetch user for sanitized DTO response
-    const user = await User.findById(userObjectId, "firstName lastName email").lean() as PopulatedReviewUser;
+    const user = (await User.findById(
+      userObjectId,
+      "firstName lastName email"
+    ).lean()) as PopulatedReviewUser;
 
     return this.toReviewDto(review, user, {
       _id: product._id,
@@ -151,8 +154,11 @@ export class ReviewService {
   /**
    * Recalculate and persist average rating and review count on Product
    */
-  async recalculateProductRating(productId: string | Types.ObjectId): Promise<ProductRatingSummary> {
-    const productObjectId = typeof productId === "string" ? new Types.ObjectId(productId) : productId;
+  async recalculateProductRating(
+    productId: string | Types.ObjectId
+  ): Promise<ProductRatingSummary> {
+    const productObjectId =
+      typeof productId === "string" ? new Types.ObjectId(productId) : productId;
 
     const stats = await Review.aggregate([
       {
@@ -170,12 +176,9 @@ export class ReviewService {
       },
     ]);
 
-    const averageRating = stats.length > 0 && stats[0].averageRating
-      ? Math.round(stats[0].averageRating * 10) / 10
-      : 0;
-    const reviewCount = stats.length > 0 && stats[0].reviewCount
-      ? stats[0].reviewCount
-      : 0;
+    const averageRating =
+      stats.length > 0 && stats[0].averageRating ? Math.round(stats[0].averageRating * 10) / 10 : 0;
+    const reviewCount = stats.length > 0 && stats[0].reviewCount ? stats[0].reviewCount : 0;
 
     // Update Product document cache
     await Product.findByIdAndUpdate(productObjectId, {
@@ -220,9 +223,7 @@ export class ReviewService {
       }
     }
 
-    const averageRating = totalReviews > 0
-      ? Math.round((sumRating / totalReviews) * 10) / 10
-      : 0;
+    const averageRating = totalReviews > 0 ? Math.round((sumRating / totalReviews) * 10) / 10 : 0;
 
     return {
       productId,
@@ -283,9 +284,7 @@ export class ReviewService {
       this.getProductRatingSummary(productId),
     ]);
 
-    const reviewDtos = (reviews as unknown as IReview[]).map((r) =>
-      this.toReviewDto(r)
-    );
+    const reviewDtos = (reviews as unknown as IReview[]).map((r) => this.toReviewDto(r));
 
     return {
       reviews: reviewDtos,
@@ -328,15 +327,15 @@ export class ReviewService {
       // Find matching users and products
       const [matchingUsers, matchingProducts] = await Promise.all([
         User.find({
-          $or: [
-            { firstName: searchRegex },
-            { lastName: searchRegex },
-            { email: searchRegex },
-          ],
-        }).select("_id").lean(),
+          $or: [{ firstName: searchRegex }, { lastName: searchRegex }, { email: searchRegex }],
+        })
+          .select("_id")
+          .lean(),
         Product.find({
           title: searchRegex,
-        }).select("_id").lean(),
+        })
+          .select("_id")
+          .lean(),
       ]);
 
       const userIds = matchingUsers.map((u) => u._id);
@@ -366,9 +365,7 @@ export class ReviewService {
       this.getAdminReviewStats(),
     ]);
 
-    const reviewDtos = (reviews as unknown as IReview[]).map((r) =>
-      this.toReviewDto(r)
-    );
+    const reviewDtos = (reviews as unknown as IReview[]).map((r) => this.toReviewDto(r));
 
     return {
       reviews: reviewDtos,
@@ -416,9 +413,7 @@ export class ReviewService {
       if (s._id === "rejected") rejectedCount = s.count;
     }
 
-    const averageRating = ratingItems > 0
-      ? Math.round((ratingSum / ratingItems) * 10) / 10
-      : 0;
+    const averageRating = ratingItems > 0 ? Math.round((ratingSum / ratingItems) * 10) / 10 : 0;
 
     return {
       totalReviews,
@@ -468,7 +463,8 @@ export class ReviewService {
 
     review.status = payload.status;
     if (payload.status === "rejected") {
-      review.rejectionReason = payload.rejectionReason || "Does not meet community feedback guidelines";
+      review.rejectionReason =
+        payload.rejectionReason || "Does not meet community feedback guidelines";
     } else {
       review.rejectionReason = undefined;
     }
@@ -542,9 +538,7 @@ export class ReviewService {
       Review.countDocuments({ userId: userObjectId }),
     ]);
 
-    const reviewDtos = (reviews as unknown as IReview[]).map((r) =>
-      this.toReviewDto(r)
-    );
+    const reviewDtos = (reviews as unknown as IReview[]).map((r) => this.toReviewDto(r));
 
     return {
       reviews: reviewDtos,

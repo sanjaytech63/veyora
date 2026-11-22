@@ -33,7 +33,9 @@ export function UserMenu() {
     }
   };
 
-  const displayName = admin ? `${admin.firstName} ${admin.lastName}`.trim() || admin.email : "Admin Operator";
+  const displayName = admin
+    ? `${admin.firstName} ${admin.lastName}`.trim() || admin.email
+    : "Admin Operator";
   const displayEmail = admin?.email || "operator@veyora.local";
   const initials = admin?.firstName
     ? `${admin.firstName[0]}${admin.lastName ? admin.lastName[0] : ""}`.toUpperCase()

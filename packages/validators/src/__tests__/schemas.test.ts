@@ -148,14 +148,22 @@ describe("Centralized Zod Validation Suite", () => {
     });
 
     it("loginSchema accepts valid email and non-empty password", () => {
-      expect(loginSchema.safeParse({ email: "bob@example.com", password: "pwd" }).success).toBe(true);
+      expect(loginSchema.safeParse({ email: "bob@example.com", password: "pwd" }).success).toBe(
+        true
+      );
       expect(loginSchema.safeParse({ email: "bob@example.com", password: "" }).success).toBe(false);
     });
 
     it("verifyOtpSchema enforces exact 6 digit numeric code", () => {
-      expect(verifyOtpSchema.safeParse({ email: "test@example.com", otp: "123456" }).success).toBe(true);
-      expect(verifyOtpSchema.safeParse({ email: "test@example.com", otp: "12345" }).success).toBe(false);
-      expect(verifyOtpSchema.safeParse({ email: "test@example.com", otp: "abcdef" }).success).toBe(false);
+      expect(verifyOtpSchema.safeParse({ email: "test@example.com", otp: "123456" }).success).toBe(
+        true
+      );
+      expect(verifyOtpSchema.safeParse({ email: "test@example.com", otp: "12345" }).success).toBe(
+        false
+      );
+      expect(verifyOtpSchema.safeParse({ email: "test@example.com", otp: "abcdef" }).success).toBe(
+        false
+      );
     });
 
     it("resetPasswordSchema validates token and new password", () => {
@@ -179,7 +187,13 @@ describe("Centralized Zod Validation Suite", () => {
         stock: 120,
         categoryId: "cat-electronics-123",
         variants: [
-          { size: "Standard", color: "Matte Black", sku: "MOU-WL-001-BLK", price: 49.99, stock: 60 },
+          {
+            size: "Standard",
+            color: "Matte Black",
+            sku: "MOU-WL-001-BLK",
+            price: 49.99,
+            stock: 60,
+          },
         ],
         images: [{ url: "https://example.com/mouse.jpg", alt: "Mouse top view", isPrimary: true }],
       };
@@ -263,7 +277,9 @@ describe("Centralized Zod Validation Suite", () => {
         shippingMethodId: "ship_express",
       };
       expect(checkoutSessionSchema.safeParse(checkoutPayload).success).toBe(true);
-      expect(checkoutSessionSchema.safeParse({ ...checkoutPayload, items: [] }).success).toBe(false);
+      expect(checkoutSessionSchema.safeParse({ ...checkoutPayload, items: [] }).success).toBe(
+        false
+      );
     });
   });
 
@@ -289,7 +305,9 @@ describe("Centralized Zod Validation Suite", () => {
         shippingMethodId: "standard",
       };
       expect(createOrderSchema.safeParse(orderPayload).success).toBe(true);
-      expect(createOrderSchema.safeParse({ ...orderPayload, paymentMethod: "crypto" }).success).toBe(false);
+      expect(
+        createOrderSchema.safeParse({ ...orderPayload, paymentMethod: "crypto" }).success
+      ).toBe(false);
     });
 
     it("createPaymentIntentSchema uppercases ISO currency code", () => {
@@ -302,7 +320,9 @@ describe("Centralized Zod Validation Suite", () => {
     });
 
     it("stripeWebhookHeaderSchema requires stripe-signature", () => {
-      expect(stripeWebhookHeaderSchema.safeParse({ "stripe-signature": "t=123,v1=abc" }).success).toBe(true);
+      expect(
+        stripeWebhookHeaderSchema.safeParse({ "stripe-signature": "t=123,v1=abc" }).success
+      ).toBe(true);
       expect(stripeWebhookHeaderSchema.safeParse({}).success).toBe(false);
     });
   });
@@ -367,19 +387,15 @@ describe("Centralized Zod Validation Suite", () => {
       expect(adjustStockSchema.safeParse(validCorrection).success).toBe(true);
 
       // Rejects negative quantity
-      expect(
-        adjustStockSchema.safeParse({ ...validIncrease, quantity: -5 }).success
-      ).toBe(false);
+      expect(adjustStockSchema.safeParse({ ...validIncrease, quantity: -5 }).success).toBe(false);
 
       // Rejects empty reason
-      expect(
-        adjustStockSchema.safeParse({ ...validIncrease, reason: "" }).success
-      ).toBe(false);
+      expect(adjustStockSchema.safeParse({ ...validIncrease, reason: "" }).success).toBe(false);
 
       // Rejects invalid type
-      expect(
-        adjustStockSchema.safeParse({ ...validIncrease, type: "unsupported" }).success
-      ).toBe(false);
+      expect(adjustStockSchema.safeParse({ ...validIncrease, type: "unsupported" }).success).toBe(
+        false
+      );
     });
 
     it("reserveStockSchema and releaseReservationSchema enforce positive quantities", () => {
@@ -393,7 +409,9 @@ describe("Centralized Zod Validation Suite", () => {
       expect(commitReservationSchema.safeParse(validReserve).success).toBe(true);
 
       expect(reserveStockSchema.safeParse({ ...validReserve, quantity: 0 }).success).toBe(false);
-      expect(reserveStockSchema.safeParse({ ...validReserve, referenceId: "" }).success).toBe(false);
+      expect(reserveStockSchema.safeParse({ ...validReserve, referenceId: "" }).success).toBe(
+        false
+      );
     });
 
     it("updateThresholdSchema accepts valid non-negative thresholds", () => {
@@ -484,8 +502,12 @@ describe("Centralized Zod Validation Suite", () => {
         items: [{ productId: "prod-1", quantity: 2, weightGrams: 500 }],
       };
       expect(calculateShippingSchema.safeParse(validCalc).success).toBe(true);
-      expect(calculateShippingSchema.safeParse({ ...validCalc, subtotal: -10 }).success).toBe(false);
-      expect(calculateShippingSchema.safeParse({ ...validCalc, destinationPostalCode: "1" }).success).toBe(false);
+      expect(calculateShippingSchema.safeParse({ ...validCalc, subtotal: -10 }).success).toBe(
+        false
+      );
+      expect(
+        calculateShippingSchema.safeParse({ ...validCalc, destinationPostalCode: "1" }).success
+      ).toBe(false);
     });
 
     it("createShipmentSchema and updateShipmentTrackingSchema validate carrier tracking lifecycle", () => {
@@ -550,7 +572,9 @@ describe("Centralized Zod Validation Suite", () => {
       expect(createNotificationSchema.safeParse(notif).success).toBe(true);
       expect(createNotificationSchema.safeParse({ ...notif, title: "" }).success).toBe(false);
 
-      expect(markNotificationReadSchema.safeParse({ notificationId: "notif-01" }).success).toBe(true);
+      expect(markNotificationReadSchema.safeParse({ notificationId: "notif-01" }).success).toBe(
+        true
+      );
       expect(markNotificationReadSchema.safeParse({ notificationId: "" }).success).toBe(false);
     });
 
@@ -615,7 +639,9 @@ describe("Centralized Zod Validation Suite", () => {
       expect(createRoleSchema.safeParse(validRole).success).toBe(true);
 
       // Rejects uppercase characters in role slug
-      expect(createRoleSchema.safeParse({ ...validRole, name: "Catalog_Manager" }).success).toBe(false);
+      expect(createRoleSchema.safeParse({ ...validRole, name: "Catalog_Manager" }).success).toBe(
+        false
+      );
 
       // Rejects empty permissions
       expect(createRoleSchema.safeParse({ ...validRole, permissions: [] }).success).toBe(false);
@@ -649,7 +675,9 @@ describe("Centralized Zod Validation Suite", () => {
       expect(assignRolesSchema.safeParse({ roleIds: ["role-1"] }).success).toBe(true);
       expect(assignRolesSchema.safeParse({ roleIds: [] }).success).toBe(false);
 
-      expect(assignPermissionsSchema.safeParse({ permissions: ["products:read"] }).success).toBe(true);
+      expect(assignPermissionsSchema.safeParse({ permissions: ["products:read"] }).success).toBe(
+        true
+      );
     });
   });
 

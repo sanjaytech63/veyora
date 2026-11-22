@@ -96,15 +96,15 @@ export const catalogApi = {
     }
   },
 
-  getRelatedProducts: async (productId: string, categoryId?: string, limit = 4): Promise<Product[]> => {
+  getRelatedProducts: async (
+    productId: string,
+    categoryId?: string,
+    limit = 4
+  ): Promise<Product[]> => {
     try {
       const all = await catalogApi.getProducts({ categoryId, limit: 16 });
       return all
-        .filter(
-          (p) =>
-            p.id !== productId &&
-            (p as unknown as { _id?: string })._id !== productId
-        )
+        .filter((p) => p.id !== productId && (p as unknown as { _id?: string })._id !== productId)
         .slice(0, limit);
     } catch {
       return [];
@@ -179,10 +179,7 @@ export const catalogApi = {
       const cats = await catalogApi.getCategories();
       return (
         cats.find(
-          (c) =>
-            c.slug === slug ||
-            c.id === slug ||
-            (c as unknown as { _id?: string })._id === slug
+          (c) => c.slug === slug || c.id === slug || (c as unknown as { _id?: string })._id === slug
         ) || null
       );
     } catch {

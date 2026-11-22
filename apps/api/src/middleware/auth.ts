@@ -9,11 +9,7 @@ import { hasPermission } from "../modules/rbac/permission-registry";
 /**
  * Enforce valid Bearer Access Token and active, unrevoked session
  */
-export async function requireAuth(
-  req: Request,
-  _res: Response,
-  next: NextFunction
-): Promise<void> {
+export async function requireAuth(req: Request, _res: Response, next: NextFunction): Promise<void> {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -59,11 +55,7 @@ export async function requireAuth(
  * Optional Authentication: identifies authenticated user if valid token present,
  * otherwise resolves or assigns a guest identifier (x-guest-id or cookie).
  */
-export async function optionalAuth(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
+export async function optionalAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith("Bearer ")) {
@@ -91,7 +83,9 @@ export async function optionalAuth(
     }
 
     // Resolve or assign guest ID if unauthenticated
-    const headerGuestId = (req.headers["x-guest-id"] as string) || (req.cookies && (req.cookies as Record<string, string>)["guest_id"]);
+    const headerGuestId =
+      (req.headers["x-guest-id"] as string) ||
+      (req.cookies && (req.cookies as Record<string, string>)["guest_id"]);
     if (headerGuestId && headerGuestId.trim()) {
       req.guestId = headerGuestId.trim();
     } else if (!req.user) {

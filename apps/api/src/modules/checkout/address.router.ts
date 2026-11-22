@@ -2,11 +2,7 @@ import { Router } from "express";
 import { addressController } from "./controllers/address.controller";
 import { optionalAuth } from "../../middleware/auth";
 import { validate } from "../../middleware/validate-request";
-import {
-  createAddressSchema,
-  updateAddressSchema,
-  addressParamSchema,
-} from "@veyora/validators";
+import { createAddressSchema, updateAddressSchema, addressParamSchema } from "@veyora/validators";
 
 const router = Router();
 

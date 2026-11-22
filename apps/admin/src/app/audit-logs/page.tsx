@@ -99,12 +99,16 @@ export default function AuditLogsPage() {
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
               Security & Administrative Audit Trail
             </h1>
-            <Badge variant="outline" className="border-primary/40 text-primary font-mono text-[11px]">
+            <Badge
+              variant="outline"
+              className="border-primary/40 text-primary font-mono text-[11px]"
+            >
               Compliance & Security
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            Immutable chronicle of administrative interventions, role modifications, and staff actions.
+            Immutable chronicle of administrative interventions, role modifications, and staff
+            actions.
           </p>
         </div>
 
@@ -205,7 +209,9 @@ export default function AuditLogsPage() {
                 <TableCell colSpan={7} className="h-40 text-center text-muted-foreground">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <History className="h-8 w-8 text-muted-foreground" />
-                    <span className="text-xs font-semibold">No audit events logged matching query</span>
+                    <span className="text-xs font-semibold">
+                      No audit events logged matching query
+                    </span>
                   </div>
                 </TableCell>
               </TableRow>
@@ -254,7 +260,10 @@ export default function AuditLogsPage() {
 
                     <TableCell className="text-xs font-mono text-muted-foreground">
                       {log.resourceId ? (
-                        <span className="truncate max-w-[150px] inline-block" title={log.resourceId}>
+                        <span
+                          className="truncate max-w-[150px] inline-block"
+                          title={log.resourceId}
+                        >
                           {log.resourceId}
                         </span>
                       ) : (
@@ -324,9 +333,12 @@ export default function AuditLogsPage() {
                   <span className="font-mono font-bold text-primary">{inspectLog.action}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground block text-[11px]">Resource / Target:</span>
+                  <span className="text-muted-foreground block text-[11px]">
+                    Resource / Target:
+                  </span>
                   <span className="font-mono text-foreground">
-                    {inspectLog.resource} {inspectLog.resourceId ? `(${inspectLog.resourceId})` : ""}
+                    {inspectLog.resource}{" "}
+                    {inspectLog.resourceId ? `(${inspectLog.resourceId})` : ""}
                   </span>
                 </div>
               </div>
@@ -334,7 +346,9 @@ export default function AuditLogsPage() {
               <div className="space-y-1.5">
                 <span className="text-xs font-bold text-foreground">Event Diff & Payload:</span>
                 <pre className="p-3 bg-muted/60 rounded-xl border border-border/80 text-[11px] font-mono max-h-56 overflow-y-auto text-foreground whitespace-pre-wrap">
-                  {inspectLog.details ? JSON.stringify(inspectLog.details, null, 2) : "No details recorded."}
+                  {inspectLog.details
+                    ? JSON.stringify(inspectLog.details, null, 2)
+                    : "No details recorded."}
                 </pre>
               </div>
 

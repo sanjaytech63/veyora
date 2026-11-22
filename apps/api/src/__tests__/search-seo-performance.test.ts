@@ -136,16 +136,13 @@ vi.mock("../modules/catalog/models/product.model", () => ({
 
         if (query?.categoryId) {
           items = items.filter(
-            (p) =>
-              (p.categoryId?._id || p.categoryId)?.toString() ===
-              query.categoryId.toString()
+            (p) => (p.categoryId?._id || p.categoryId)?.toString() === query.categoryId.toString()
           );
         }
 
         if (query?.brandId) {
           items = items.filter(
-            (p) =>
-              (p.brandId?._id || p.brandId)?.toString() === query.brandId.toString()
+            (p) => (p.brandId?._id || p.brandId)?.toString() === query.brandId.toString()
           );
         }
 
@@ -191,9 +188,10 @@ vi.mock("../modules/catalog/models/product.model", () => ({
                 );
               }
               if (condition.description?.$regex) {
-                return new RegExp(condition.description.$regex, condition.description.$options || "i").test(
-                  p.description
-                );
+                return new RegExp(
+                  condition.description.$regex,
+                  condition.description.$options || "i"
+                ).test(p.description);
               }
               if (condition.sku?.$regex) {
                 return new RegExp(condition.sku.$regex, condition.sku.$options || "i").test(p.sku);
@@ -216,15 +214,16 @@ vi.mock("../modules/catalog/models/product.model", () => ({
       if (query?.status) items = items.filter((p) => p.status === query.status);
       if (query?.categoryId) {
         items = items.filter(
-          (p) =>
-            (p.categoryId?._id || p.categoryId)?.toString() ===
-            query.categoryId.toString()
+          (p) => (p.categoryId?._id || p.categoryId)?.toString() === query.categoryId.toString()
         );
       }
       if (query?.stock?.$gt !== undefined) items = items.filter((p) => p.stock > query.stock.$gt);
-      if (query?.stock?.$lte !== undefined) items = items.filter((p) => p.stock <= query.stock.$lte);
-      if (query?.price?.$gte !== undefined) items = items.filter((p) => p.price >= query.price.$gte);
-      if (query?.price?.$lte !== undefined) items = items.filter((p) => p.price <= query.price.$lte);
+      if (query?.stock?.$lte !== undefined)
+        items = items.filter((p) => p.stock <= query.stock.$lte);
+      if (query?.price?.$gte !== undefined)
+        items = items.filter((p) => p.price >= query.price.$gte);
+      if (query?.price?.$lte !== undefined)
+        items = items.filter((p) => p.price <= query.price.$lte);
       if (query?.averageRating?.$gte !== undefined) {
         items = items.filter((p) => p.averageRating >= query.averageRating.$gte);
       }

@@ -3,7 +3,11 @@ import { z } from "zod";
 export const createPaymentIntentSchema = z.object({
   orderId: z.string().min(1, "Order ID is required").trim(),
   paymentProvider: z.enum(["stripe", "razorpay", "cod"]).default("razorpay"),
-  currency: z.string().length(3, "Currency must be a 3-letter ISO code").toUpperCase().default("INR"),
+  currency: z
+    .string()
+    .length(3, "Currency must be a 3-letter ISO code")
+    .toUpperCase()
+    .default("INR"),
 });
 
 export type CreatePaymentIntentInput = z.input<typeof createPaymentIntentSchema>;
@@ -12,7 +16,11 @@ export type CreatePaymentIntentData = z.output<typeof createPaymentIntentSchema>
 export const initiatePaymentSchema = z.object({
   orderId: z.string().min(1, "Order ID is required").trim(),
   provider: z.enum(["razorpay", "stripe", "cod"]).default("razorpay"),
-  currency: z.string().length(3, "Currency must be a 3-letter ISO code").toUpperCase().default("INR"),
+  currency: z
+    .string()
+    .length(3, "Currency must be a 3-letter ISO code")
+    .toUpperCase()
+    .default("INR"),
 });
 
 export type InitiatePaymentInput = z.input<typeof initiatePaymentSchema>;

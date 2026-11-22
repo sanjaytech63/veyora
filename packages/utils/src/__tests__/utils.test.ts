@@ -215,5 +215,39 @@ describe("@veyora/utils Package Tests", () => {
       expect(consoleDebugSpy).toHaveBeenCalledOnce();
       process.env["NODE_ENV"] = prevEnv;
     });
+
+    it("automatically redacts passwords, tokens, secrets, and credit cards from logs", () => {
+      logger.warn("SECURITY_AUDIT", "User submitted credentials", {
+        password: "SuperSecretPassword123!",
+        refreshToken: "eyJhbGciOi...",
+        otp: "992812",
+        creditCard: "4111-2222-3333-4444",
+        safeMeta: "safe-value",
+      });
+
+      expect(consoleWarnSpy).toHaveBeenCalledOnce();
+      const parsed = JSON.parse(consoleWarnSpy.mock.calls[0]?.[0] as string);
+      expect(parsed.meta.password).toBe("[REDACTED]");
+      expect(parsed.meta.refreshToken).toBe("[REDACTED]");
+      expect(parsed.meta.otp).toBe("[REDACTED]");
+      expect(parsed.meta.creditCard).toBe("[REDACTED]");
+      expect(parsed.meta.safeMeta).toBe("safe-value");
+    });
+
+    it("supports event-based object invocation and child loggers", () => {
+      const child = logger.child({ service: "@veyora/worker", queue: "email" });
+      child.info({
+        event: "email.dispatched",
+        recipient: "patron@veyora.com",
+        orderId: "ord-4412",
+      });
+
+      expect(consoleInfoSpy).toHaveBeenCalledOnce();
+      const parsed = JSON.parse(consoleInfoSpy.mock.calls[0]?.[0] as string);
+      expect(parsed.tag).toBe("email.dispatched");
+      expect(parsed.meta.service).toBe("@veyora/worker");
+      expect(parsed.meta.queue).toBe("email");
+      expect(parsed.meta.orderId).toBe("ord-4412");
+    });
   });
 });

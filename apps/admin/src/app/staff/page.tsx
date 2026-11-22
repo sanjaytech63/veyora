@@ -258,12 +258,16 @@ export default function StaffManagementPage() {
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
               Staff & Team Management
             </h1>
-            <Badge variant="outline" className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-mono text-[11px]">
+            <Badge
+              variant="outline"
+              className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-mono text-[11px]"
+            >
               Access Control
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            Enroll administrative team members, assign operational roles, and manage access security.
+            Enroll administrative team members, assign operational roles, and manage access
+            security.
           </p>
         </div>
 
@@ -399,13 +403,16 @@ export default function StaffManagementPage() {
                 <TableCell colSpan={7} className="h-40 text-center text-muted-foreground">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <ShieldAlert className="h-8 w-8 text-muted-foreground" />
-                    <span className="text-xs font-semibold">No staff members found matching criteria</span>
+                    <span className="text-xs font-semibold">
+                      No staff members found matching criteria
+                    </span>
                   </div>
                 </TableCell>
               </TableRow>
             ) : (
               filteredStaff.map((staff) => {
-                const initials = `${staff.firstName[0] || ""}${staff.lastName[0] || ""}`.toUpperCase();
+                const initials =
+                  `${staff.firstName[0] || ""}${staff.lastName[0] || ""}`.toUpperCase();
                 const isSuperadmin = staff.role === "superadmin";
 
                 return (
@@ -461,20 +468,28 @@ export default function StaffManagementPage() {
                             </Badge>
                           ))
                         ) : (
-                          <span className="text-[11px] text-muted-foreground italic">None assigned</span>
+                          <span className="text-[11px] text-muted-foreground italic">
+                            None assigned
+                          </span>
                         )}
                       </div>
                     </TableCell>
 
                     <TableCell>
                       <div className="flex items-center gap-1.5">
-                        <Badge variant="outline" className="font-mono text-[10px] border-border text-foreground">
+                        <Badge
+                          variant="outline"
+                          className="font-mono text-[10px] border-border text-foreground"
+                        >
                           {isSuperadmin
                             ? "Root (*)"
                             : `${staff.effectivePermissions.length} permissions`}
                         </Badge>
                         {staff.customPermissions.length > 0 && (
-                          <Badge variant="secondary" className="text-[9px] bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                          <Badge
+                            variant="secondary"
+                            className="text-[9px] bg-amber-500/10 text-amber-600 border border-amber-500/20"
+                          >
                             +{staff.customPermissions.length} custom
                           </Badge>
                         )}
@@ -669,7 +684,9 @@ export default function StaffManagementPage() {
                 >
                   <div className="font-bold text-xs flex items-center justify-between">
                     <span>Superadmin</span>
-                    {selectedRole === "superadmin" && <Shield className="h-4 w-4 text-purple-600" />}
+                    {selectedRole === "superadmin" && (
+                      <Shield className="h-4 w-4 text-purple-600" />
+                    )}
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
                     Full, root access across the entire platform ecosystem (*).
@@ -725,8 +742,12 @@ export default function StaffManagementPage() {
             {selectedRole === "admin" && (
               <details className="space-y-2 pt-2 border-t border-border group">
                 <summary className="text-xs font-bold text-muted-foreground cursor-pointer hover:text-foreground flex items-center justify-between py-1">
-                  <span>Additional Direct Custom Permissions ({selectedCustomPerms.length} granted)</span>
-                  <span className="text-[10px] font-mono text-primary font-normal">Click to expand</span>
+                  <span>
+                    Additional Direct Custom Permissions ({selectedCustomPerms.length} granted)
+                  </span>
+                  <span className="text-[10px] font-mono text-primary font-normal">
+                    Click to expand
+                  </span>
                 </summary>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-48 overflow-y-auto p-1 pt-2">
@@ -805,7 +826,9 @@ export default function StaffManagementPage() {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => statusTarget && executeToggleStatus(statusTarget, false, deactivationReason)}
+              onClick={() =>
+                statusTarget && executeToggleStatus(statusTarget, false, deactivationReason)
+              }
               disabled={updatingStatus}
               className="gap-2"
             >

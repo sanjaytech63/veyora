@@ -117,19 +117,11 @@ export class StaffService {
     if (query.search) {
       const term = query.search.trim();
       const regex = new RegExp(term, "i");
-      filter.$or = [
-        { email: regex },
-        { firstName: regex },
-        { lastName: regex },
-      ];
+      filter.$or = [{ email: regex }, { firstName: regex }, { lastName: regex }];
     }
 
     const [users, total] = await Promise.all([
-      User.find(filter)
-        .populate("assignedRoles")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit),
+      User.find(filter).populate("assignedRoles").sort({ createdAt: -1 }).skip(skip).limit(limit),
       User.countDocuments(filter),
     ]);
 
@@ -262,7 +254,11 @@ export class StaffService {
   /**
    * Update staff member details, assigned roles, and permissions
    */
-  public async updateStaff(actor: LogActor, id: string, input: UpdateStaffUserInput): Promise<StaffUserDto> {
+  public async updateStaff(
+    actor: LogActor,
+    id: string,
+    input: UpdateStaffUserInput
+  ): Promise<StaffUserDto> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new BadRequestError("Invalid staff ID format");
     }
@@ -424,10 +420,16 @@ export class StaffService {
     user.statusReason = statusReason || null;
     await user.save();
 
-    await auditLogService.log(actor, isActive ? "STAFF_ACTIVATED" : "STAFF_DEACTIVATED", "staff", id, {
-      email: user.email,
-      statusReason,
-    });
+    await auditLogService.log(
+      actor,
+      isActive ? "STAFF_ACTIVATED" : "STAFF_DEACTIVATED",
+      "staff",
+      id,
+      {
+        email: user.email,
+        statusReason,
+      }
+    );
 
     return this.formatStaffDto(user, user.assignedRoles);
   }
@@ -435,7 +437,10 @@ export class StaffService {
   /**
    * Delete or remove a staff user
    */
-  public async deleteStaff(actor: LogActor, id: string): Promise<{ success: boolean; message: string }> {
+  public async deleteStaff(
+    actor: LogActor,
+    id: string
+  ): Promise<{ success: boolean; message: string }> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new BadRequestError("Invalid staff ID format");
     }

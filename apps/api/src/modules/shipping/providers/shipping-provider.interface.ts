@@ -1,8 +1,4 @@
-import {
-  CarrierType,
-  ShipmentStatus,
-  TrackingEventDto,
-} from "@veyora/types";
+import { CarrierType, ShipmentStatus, TrackingEventDto } from "@veyora/types";
 
 export interface ProviderRateRequest {
   destinationPostalCode: string;

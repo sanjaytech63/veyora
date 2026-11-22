@@ -4,12 +4,7 @@ import { Session } from "../models/session.model";
 import { passwordService } from "./password.service";
 import { tokenService } from "./token.service";
 import { otpService } from "./otp.service";
-import {
-  AuthUser,
-  AuthTokens,
-  SessionInfo,
-  OtpType,
-} from "@veyora/types";
+import { AuthUser, AuthTokens, SessionInfo, OtpType } from "@veyora/types";
 import { RegisterInput, LoginInput, ResetPasswordInput } from "@veyora/validators";
 import {
   BadRequestError,
@@ -132,10 +127,7 @@ export class AuthService {
   /**
    * Resend OTP code for email verification or password reset
    */
-  async resendOtp(
-    email: string,
-    type: OtpType
-  ): Promise<{ message: string; otp: string }> {
+  async resendOtp(email: string, type: OtpType): Promise<{ message: string; otp: string }> {
     const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail });
 
@@ -150,10 +142,7 @@ export class AuthService {
     const otp = otpService.generateOtp();
     await otpService.saveOtp(normalizedEmail, otp, type);
 
-    logger.info(
-      { email: normalizedEmail, type },
-      "New OTP generated and dispatched."
-    );
+    logger.info({ email: normalizedEmail, type }, "New OTP generated and dispatched.");
 
     return {
       message: "Verification code sent successfully.",
@@ -181,10 +170,9 @@ export class AuthService {
     }
 
     if (!user.isEmailVerified) {
-      throw new UnauthorizedError(
-        "Please verify your email address before logging in.",
-        [{ field: "email", message: "Email not verified", code: "EMAIL_NOT_VERIFIED" }]
-      );
+      throw new UnauthorizedError("Please verify your email address before logging in.", [
+        { field: "email", message: "Email not verified", code: "EMAIL_NOT_VERIFIED" },
+      ]);
     }
 
     const familyId = crypto.randomUUID();
@@ -372,9 +360,7 @@ export class AuthService {
   /**
    * Request password reset OTP
    */
-  async forgotPassword(
-    email: string
-  ): Promise<{ message: string; otp?: string }> {
+  async forgotPassword(email: string): Promise<{ message: string; otp?: string }> {
     const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail });
 
@@ -389,14 +375,10 @@ export class AuthService {
     const otp = otpService.generateOtp();
     await otpService.saveOtp(normalizedEmail, otp, "PASSWORD_RESET");
 
-    logger.info(
-      { email: normalizedEmail },
-      "Password reset OTP generated."
-    );
+    logger.info({ email: normalizedEmail }, "Password reset OTP generated.");
 
     return {
-      message:
-        "If an account exists with this email address, a password reset code has been sent.",
+      message: "If an account exists with this email address, a password reset code has been sent.",
       otp, // Provided for dev/testing
     };
   }
@@ -435,10 +417,7 @@ export class AuthService {
   /**
    * Get active user sessions
    */
-  async getUserSessions(
-    userId: string,
-    currentSessionId?: string
-  ): Promise<SessionInfo[]> {
+  async getUserSessions(userId: string, currentSessionId?: string): Promise<SessionInfo[]> {
     const sessions = await Session.find({
       userId,
       isRevoked: false,

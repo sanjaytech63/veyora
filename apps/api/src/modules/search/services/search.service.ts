@@ -17,7 +17,8 @@ export class SearchService {
    * Helper to serialize Mongoose doc to Product DTO
    */
   private toProductDto(doc: any): ProductType {
-    const categoryDoc = doc.categoryId && typeof doc.categoryId === "object" ? doc.categoryId : undefined;
+    const categoryDoc =
+      doc.categoryId && typeof doc.categoryId === "object" ? doc.categoryId : undefined;
     const brandDoc = doc.brandId && typeof doc.brandId === "object" ? doc.brandId : undefined;
 
     return {
@@ -46,7 +47,11 @@ export class SearchService {
             updatedAt: categoryDoc.updatedAt?.toISOString?.() || new Date().toISOString(),
           }
         : undefined,
-      brandId: brandDoc ? brandDoc._id.toString() : doc.brandId ? doc.brandId.toString() : undefined,
+      brandId: brandDoc
+        ? brandDoc._id.toString()
+        : doc.brandId
+          ? doc.brandId.toString()
+          : undefined,
       brand: brandDoc
         ? {
             id: brandDoc._id.toString(),
@@ -65,8 +70,10 @@ export class SearchService {
       tags: doc.tags || [],
       averageRating: doc.averageRating || 0,
       reviewCount: doc.reviewCount || 0,
-      createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : new Date().toISOString(),
-      updatedAt: doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : new Date().toISOString(),
+      createdAt:
+        doc.createdAt instanceof Date ? doc.createdAt.toISOString() : new Date().toISOString(),
+      updatedAt:
+        doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : new Date().toISOString(),
     };
   }
 
@@ -407,10 +414,7 @@ export class SearchService {
     ]);
 
     const suggestions = Array.from(
-      new Set([
-        ...matchingProducts.map((p) => p.title),
-        ...matchingCategories.map((c) => c.name),
-      ])
+      new Set([...matchingProducts.map((p) => p.title), ...matchingCategories.map((c) => c.name)])
     ).slice(0, limit);
 
     const response: SearchSuggestionResponse = {

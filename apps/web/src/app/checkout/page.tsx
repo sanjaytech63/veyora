@@ -78,10 +78,7 @@ export default function CheckoutPage() {
 
   const { initiatePaymentAsync, verifyPaymentAsync } = usePayment();
 
-  const {
-    addresses,
-    createAddressAsync,
-  } = useAddresses();
+  const { addresses, createAddressAsync } = useAddresses();
 
   const [mounted, setMounted] = React.useState(false);
   const [completedOrder, setCompletedOrder] = React.useState<OrderDto | null>(null);
@@ -89,7 +86,9 @@ export default function CheckoutPage() {
   const [isProcessingPayment, setIsProcessingPayment] = React.useState(false);
   const [simulatedModalOpen, setSimulatedModalOpen] = React.useState(false);
   const [currentInitDto, setCurrentInitDto] = React.useState<PaymentOrderInitDto | null>(null);
-  const [verifiedPayment, setVerifiedPayment] = React.useState<PaymentVerificationResultDto | null>(null);
+  const [verifiedPayment, setVerifiedPayment] = React.useState<PaymentVerificationResultDto | null>(
+    null
+  );
 
   // Idempotency token per checkout session
   const [idempotencyKey, setIdempotencyKey] = React.useState<string>("");
@@ -163,7 +162,9 @@ export default function CheckoutPage() {
     e.preventDefault();
 
     if (!email) {
-      toast.error("Contact details required", { description: "Please provide a valid patron email address." });
+      toast.error("Contact details required", {
+        description: "Please provide a valid patron email address.",
+      });
       return;
     }
 
@@ -172,7 +173,9 @@ export default function CheckoutPage() {
     if (selectedAddressId !== "new") {
       const saved = addresses.find((a) => a.id === selectedAddressId);
       if (!saved) {
-        toast.error("Selected address not found", { description: "Please pick or enter a delivery address." });
+        toast.error("Selected address not found", {
+          description: "Please pick or enter a delivery address.",
+        });
         return;
       }
       resolvedShippingAddress = {
@@ -220,7 +223,13 @@ export default function CheckoutPage() {
 
     let resolvedBillingAddress: CreateAddressPayload | undefined;
     if (!sameAsShipping) {
-      if (!billingFirstName || !billingStreet || !billingCity || !billingState || !billingPostalCode) {
+      if (
+        !billingFirstName ||
+        !billingStreet ||
+        !billingCity ||
+        !billingState ||
+        !billingPostalCode
+      ) {
         toast.error("Incomplete billing address", {
           description: "Please complete all required billing address fields.",
         });
@@ -240,7 +249,8 @@ export default function CheckoutPage() {
     try {
       const order = await placeOrderAsync({
         customerEmail: email,
-        customerName: `${resolvedShippingAddress.firstName} ${resolvedShippingAddress.lastName}`.trim(),
+        customerName:
+          `${resolvedShippingAddress.firstName} ${resolvedShippingAddress.lastName}`.trim(),
         shippingAddress: resolvedShippingAddress,
         billingAddress: resolvedBillingAddress,
         sameAsShipping,
@@ -252,7 +262,8 @@ export default function CheckoutPage() {
       setPendingPaymentOrder(order);
       await launchPayment(order);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Unable to place order. Please check stock.";
+      const message =
+        err instanceof Error ? err.message : "Unable to place order. Please check stock.";
       toast.error("Checkout Request Declined", { description: message });
     }
   };
@@ -325,7 +336,9 @@ export default function CheckoutPage() {
 
         rzp.on("payment.failed", function (response: any) {
           toast.error("Payment Declined by Issuer", {
-            description: response.error?.description || "Payment failed. Please retry with another payment instrument.",
+            description:
+              response.error?.description ||
+              "Payment failed. Please retry with another payment instrument.",
           });
           setIsProcessingPayment(false);
         });
@@ -402,15 +415,19 @@ export default function CheckoutPage() {
             </h1>
             <p className="mx-auto max-w-md text-sm text-muted-foreground leading-relaxed">
               We have dispatched your verified receipt to{" "}
-              <strong className="text-foreground">{completedOrder.customerEmail}</strong>.
-              Payment has been cryptographically confirmed and our climate-controlled atelier has commenced tailored fulfillment.
+              <strong className="text-foreground">{completedOrder.customerEmail}</strong>. Payment
+              has been cryptographically confirmed and our climate-controlled atelier has commenced
+              tailored fulfillment.
             </p>
           </div>
 
           <div className="rounded-3xl border border-border/80 bg-card p-6 text-left space-y-4 max-w-md mx-auto text-xs shadow-sm">
             <div className="flex justify-between border-b border-border/60 pb-3">
               <span className="text-muted-foreground">Payment Verification</span>
-              <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] flex items-center gap-1">
+              <Badge
+                variant="outline"
+                className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] flex items-center gap-1"
+              >
                 <ShieldCheck className="h-3 w-3" />
                 <span>HMAC VERIFIED & SETTLED</span>
               </Badge>
@@ -461,7 +478,12 @@ export default function CheckoutPage() {
             <Button asChild size="lg" className="rounded-full px-8 text-xs font-semibold">
               <Link href="/orders">Inspect Order Status & Telemetry</Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="rounded-full px-8 text-xs font-semibold">
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="rounded-full px-8 text-xs font-semibold"
+            >
               <Link href="/shop">Continue Exploring Haute Couture</Link>
             </Button>
           </div>
@@ -481,7 +503,8 @@ export default function CheckoutPage() {
           <div className="space-y-2">
             <h1 className="text-2xl font-bold tracking-tight">Your shopping bag is empty</h1>
             <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-              Select garments from our seasonal collection before proceeding through atelier checkout.
+              Select garments from our seasonal collection before proceeding through atelier
+              checkout.
             </p>
           </div>
           <Button asChild className="rounded-full px-8 text-xs font-semibold">
@@ -513,9 +536,14 @@ export default function CheckoutPage() {
 
         {/* Validation Warning Alert if items unavailable */}
         {warnings && warnings.length > 0 && (
-          <Alert variant="destructive" className="rounded-2xl border-destructive/40 bg-destructive/10">
+          <Alert
+            variant="destructive"
+            className="rounded-2xl border-destructive/40 bg-destructive/10"
+          >
             <AlertTriangle className="h-4 w-4" />
-            <AlertTitle className="text-xs font-bold uppercase tracking-wider">Inventory Notice</AlertTitle>
+            <AlertTitle className="text-xs font-bold uppercase tracking-wider">
+              Inventory Notice
+            </AlertTitle>
             <AlertDescription className="text-xs space-y-1">
               {warnings.map((w, idx) => (
                 <p key={idx}>{w}</p>
@@ -535,7 +563,10 @@ export default function CheckoutPage() {
                     1. Contact Information
                   </h2>
                   {isAuthenticated && (
-                    <Badge variant="outline" className="text-[10px] font-mono border-primary/30 text-primary">
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] font-mono border-primary/30 text-primary"
+                    >
                       AUTHENTICATED PATRON
                     </Badge>
                   )}
@@ -556,7 +587,8 @@ export default function CheckoutPage() {
                       className="rounded-xl text-xs h-10"
                     />
                     <p className="text-[11px] text-muted-foreground">
-                      Order confirmation telemetry and climate shipment alerts will be dispatched here.
+                      Order confirmation telemetry and climate shipment alerts will be dispatched
+                      here.
                     </p>
                   </div>
 
@@ -606,25 +638,37 @@ export default function CheckoutPage() {
                           }`}
                           onClick={() => setSelectedAddressId(addr.id)}
                         >
-                          <RadioGroupItem value={addr.id} id={`addr-${addr.id}`} className="mt-0.5" />
-                          <Label htmlFor={`addr-${addr.id}`} className="cursor-pointer text-xs space-y-1 flex-1">
+                          <RadioGroupItem
+                            value={addr.id}
+                            id={`addr-${addr.id}`}
+                            className="mt-0.5"
+                          />
+                          <Label
+                            htmlFor={`addr-${addr.id}`}
+                            className="cursor-pointer text-xs space-y-1 flex-1"
+                          >
                             <div className="flex items-center justify-between">
                               <span className="font-semibold text-foreground">
                                 {addr.firstName} {addr.lastName}
                               </span>
                               {addr.isDefault && (
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-mono">
+                                <Badge
+                                  variant="secondary"
+                                  className="text-[10px] px-1.5 py-0 font-mono"
+                                >
                                   DEFAULT
                                 </Badge>
                               )}
                             </div>
                             <p className="text-muted-foreground text-[11px] leading-relaxed">
                               {addr.street}
-                              {addr.apartment ? `, ${addr.apartment}` : ""}, {addr.city}, {addr.state}{" "}
-                              {addr.postalCode}, {addr.country}
+                              {addr.apartment ? `, ${addr.apartment}` : ""}, {addr.city},{" "}
+                              {addr.state} {addr.postalCode}, {addr.country}
                             </p>
                             {addr.phone && (
-                              <p className="text-[10px] text-muted-foreground font-mono">Ph: {addr.phone}</p>
+                              <p className="text-[10px] text-muted-foreground font-mono">
+                                Ph: {addr.phone}
+                              </p>
                             )}
                           </Label>
                         </div>
@@ -639,7 +683,10 @@ export default function CheckoutPage() {
                         onClick={() => setSelectedAddressId("new")}
                       >
                         <RadioGroupItem value="new" id="addr-new" />
-                        <Label htmlFor="addr-new" className="cursor-pointer text-xs font-medium flex items-center gap-1.5">
+                        <Label
+                          htmlFor="addr-new"
+                          className="cursor-pointer text-xs font-medium flex items-center gap-1.5"
+                        >
                           <Plus className="h-3.5 w-3.5 text-primary" />
                           <span>Deliver to a New Atelier Destination</span>
                         </Label>
@@ -811,12 +858,19 @@ export default function CheckoutPage() {
                       >
                         <div className="flex items-center gap-3">
                           <RadioGroupItem value={opt.id} id={`opt-${opt.id}`} />
-                          <Label htmlFor={`opt-${opt.id}`} className="cursor-pointer text-xs space-y-0.5">
+                          <Label
+                            htmlFor={`opt-${opt.id}`}
+                            className="cursor-pointer text-xs space-y-0.5"
+                          >
                             <div className="font-semibold text-foreground flex items-center gap-1.5">
                               <span>{opt.name}</span>
-                              {opt.id === "express" && <Sparkles className="h-3 w-3 text-amber-500" />}
+                              {opt.id === "express" && (
+                                <Sparkles className="h-3 w-3 text-amber-500" />
+                              )}
                             </div>
-                            <div className="text-muted-foreground text-[11px]">{opt.description}</div>
+                            <div className="text-muted-foreground text-[11px]">
+                              {opt.description}
+                            </div>
                           </Label>
                         </div>
                         <span className="text-xs font-semibold tabular-nums text-foreground">
@@ -836,9 +890,16 @@ export default function CheckoutPage() {
                       >
                         <div className="flex items-center gap-3">
                           <RadioGroupItem value="standard" id="shipping-standard" />
-                          <Label htmlFor="shipping-standard" className="cursor-pointer text-xs space-y-0.5">
-                            <div className="font-semibold text-foreground">Carbon-Neutral Ground Courier</div>
-                            <div className="text-muted-foreground text-[11px]">3–5 business days with insured tracking</div>
+                          <Label
+                            htmlFor="shipping-standard"
+                            className="cursor-pointer text-xs space-y-0.5"
+                          >
+                            <div className="font-semibold text-foreground">
+                              Carbon-Neutral Ground Courier
+                            </div>
+                            <div className="text-muted-foreground text-[11px]">
+                              3–5 business days with insured tracking
+                            </div>
                           </Label>
                         </div>
                         <span className="text-xs font-semibold tabular-nums text-foreground">
@@ -856,15 +917,22 @@ export default function CheckoutPage() {
                       >
                         <div className="flex items-center gap-3">
                           <RadioGroupItem value="express" id="shipping-express" />
-                          <Label htmlFor="shipping-express" className="cursor-pointer text-xs space-y-0.5">
+                          <Label
+                            htmlFor="shipping-express"
+                            className="cursor-pointer text-xs space-y-0.5"
+                          >
                             <div className="font-semibold text-foreground flex items-center gap-1.5">
                               <span>Atelier Priority Air Express</span>
                               <Sparkles className="h-3 w-3 text-amber-500" />
                             </div>
-                            <div className="text-muted-foreground text-[11px]">1–2 business days prioritized handling</div>
+                            <div className="text-muted-foreground text-[11px]">
+                              1–2 business days prioritized handling
+                            </div>
                           </Label>
                         </div>
-                        <span className="text-xs font-semibold tabular-nums text-foreground">$25.00</span>
+                        <span className="text-xs font-semibold tabular-nums text-foreground">
+                          $25.00
+                        </span>
                       </div>
                     </>
                   )}
@@ -993,7 +1061,11 @@ export default function CheckoutPage() {
               <Button
                 type="submit"
                 size="lg"
-                disabled={isPlacingOrder || isProcessingPayment || (validation !== undefined && !isCheckoutValid)}
+                disabled={
+                  isPlacingOrder ||
+                  isProcessingPayment ||
+                  (validation !== undefined && !isCheckoutValid)
+                }
                 className="w-full rounded-2xl font-bold text-sm shadow-lg shadow-primary/20 h-13"
               >
                 {isPlacingOrder || isProcessingPayment ? (
@@ -1088,7 +1160,9 @@ export default function CheckoutPage() {
                     <span>Insured Courier Delivery</span>
                     <span className="tabular-nums">
                       {shippingFee === 0 ? (
-                        <span className="text-emerald-600 dark:text-emerald-400 font-medium">Complimentary</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                          Complimentary
+                        </span>
                       ) : (
                         `$${shippingFee.toFixed(2)}`
                       )}
@@ -1138,16 +1212,22 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Gateway Order ID:</span>
-                  <span className="font-mono text-foreground">{currentInitDto?.gatewayOrderId}</span>
+                  <span className="font-mono text-foreground">
+                    {currentInitDto?.gatewayOrderId}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Total Settlement:</span>
-                  <span className="font-bold text-foreground tabular-nums">${currentInitDto?.amount.toFixed(2)}</span>
+                  <span className="font-bold text-foreground tabular-nums">
+                    ${currentInitDto?.amount.toFixed(2)}
+                  </span>
                 </div>
               </div>
 
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                This transaction will be cryptographically verified with constant-time HMAC-SHA256 signature verification on the Veyora API server before the order transitions to confirmed.
+                This transaction will be cryptographically verified with constant-time HMAC-SHA256
+                signature verification on the Veyora API server before the order transitions to
+                confirmed.
               </p>
             </div>
 

@@ -49,9 +49,7 @@ export function createApp(): Application {
 
   // 4. CORS Whitelist
   const configuredOrigins =
-    env.CORS_ORIGIN === "*"
-      ? ["*"]
-      : env.CORS_ORIGIN.split(",").map((o) => o.trim());
+    env.CORS_ORIGIN === "*" ? ["*"] : env.CORS_ORIGIN.split(",").map((o) => o.trim());
 
   app.use(
     cors({

@@ -26,7 +26,9 @@ test.describe("E2E — Customer Registration Flow", () => {
     await expect(page.getByText(/invalid email/i)).toBeVisible();
   });
 
-  test("successfully submits valid registration and redirects to OTP verification", async ({ page }) => {
+  test("successfully submits valid registration and redirects to OTP verification", async ({
+    page,
+  }) => {
     // Mock registration endpoint
     await page.route("**/api/v1/auth/register", async (route) => {
       await route.fulfill({

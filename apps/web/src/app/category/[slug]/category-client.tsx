@@ -49,7 +49,10 @@ export function CategoryClient({ initialCategory }: CategoryClientProps) {
     <div className="py-8 md:py-12 space-y-10">
       <Container size="xl" className="space-y-8">
         {/* Breadcrumb Trail */}
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-muted-foreground">
+        <nav
+          aria-label="Breadcrumb"
+          className="flex items-center gap-2 text-xs text-muted-foreground"
+        >
           <Link href="/" className="hover:text-foreground transition-colors">
             Home
           </Link>
@@ -71,7 +74,8 @@ export function CategoryClient({ initialCategory }: CategoryClientProps) {
               {initialCategory.name}
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-              {initialCategory.description || "Discover verified models and accessories crafted with precision."}
+              {initialCategory.description ||
+                "Discover verified models and accessories crafted with precision."}
             </p>
           </div>
         </div>
@@ -106,7 +110,10 @@ export function CategoryClient({ initialCategory }: CategoryClientProps) {
 
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <label htmlFor="cat-instock-toggle" className="text-xs text-muted-foreground cursor-pointer">
+              <label
+                htmlFor="cat-instock-toggle"
+                className="text-xs text-muted-foreground cursor-pointer"
+              >
                 In Stock Only
               </label>
               <Switch

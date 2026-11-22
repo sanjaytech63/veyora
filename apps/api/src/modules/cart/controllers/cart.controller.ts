@@ -48,11 +48,7 @@ export class CartController {
 
   public async removeItem(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const cart = await cartService.removeItem(
-        req.user?.id,
-        req.guestId,
-        req.params["itemId"]!
-      );
+      const cart = await cartService.removeItem(req.user?.id, req.guestId, req.params["itemId"]!);
       res.status(200).json({
         success: true,
         data: cart,

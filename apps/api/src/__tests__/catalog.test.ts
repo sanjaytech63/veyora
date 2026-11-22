@@ -270,14 +270,17 @@ vi.mock("../modules/catalog/models/product.model", () => ({
         }
         if (filter?.$or) {
           const searchStr = (filter.$or[0]?.title?.$regex || "").toLowerCase();
-          items = items.filter((p) =>
-            p.title.toLowerCase().includes(searchStr) ||
-            p.description.toLowerCase().includes(searchStr)
+          items = items.filter(
+            (p) =>
+              p.title.toLowerCase().includes(searchStr) ||
+              p.description.toLowerCase().includes(searchStr)
           );
         }
         return items.map((p) => {
           const cat = mockCategories.find((c) => c._id.toString() === p.categoryId.toString());
-          const brand = p.brandId ? mockBrands.find((b) => b._id.toString() === p.brandId?.toString()) : null;
+          const brand = p.brandId
+            ? mockBrands.find((b) => b._id.toString() === p.brandId?.toString())
+            : null;
           return {
             ...p,
             categoryId: cat || p.categoryId,
@@ -311,7 +314,9 @@ vi.mock("../modules/catalog/models/product.model", () => ({
         });
         if (!found) return null;
         const cat = mockCategories.find((c) => c._id.toString() === found.categoryId.toString());
-        const brand = found.brandId ? mockBrands.find((b) => b._id.toString() === found.brandId?.toString()) : null;
+        const brand = found.brandId
+          ? mockBrands.find((b) => b._id.toString() === found.brandId?.toString())
+          : null;
         return {
           ...found,
           categoryId: cat || found.categoryId,
@@ -325,7 +330,9 @@ vi.mock("../modules/catalog/models/product.model", () => ({
         const found = mockProducts.find((p) => p._id.toString() === idStr);
         if (!found) return null;
         const cat = mockCategories.find((c) => c._id.toString() === found.categoryId.toString());
-        const brand = found.brandId ? mockBrands.find((b) => b._id.toString() === found.brandId?.toString()) : null;
+        const brand = found.brandId
+          ? mockBrands.find((b) => b._id.toString() === found.brandId?.toString())
+          : null;
         return {
           ...found,
           categoryId: cat || found.categoryId,
@@ -476,9 +483,7 @@ describe("Catalog Module Integration Tests", () => {
     });
 
     it("should block non-admin users from creating categories", async () => {
-      const unauth = await request(app)
-        .post("/api/v1/admin/categories")
-        .send({ name: "Audio" });
+      const unauth = await request(app).post("/api/v1/admin/categories").send({ name: "Audio" });
       expect(unauth.status).toBe(401);
 
       const forbidden = await request(app)

@@ -26,7 +26,8 @@ export class WishlistService {
 
     if (!wishlist) {
       wishlist = new Wishlist({
-        userId: userId && mongoose.Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : null,
+        userId:
+          userId && mongoose.Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : null,
         guestId: guestId || null,
         items: [],
       });
@@ -79,7 +80,9 @@ export class WishlistService {
       const product = productMap.get(item.productId.toString());
       if (!product) continue;
 
-      const categoryName = product.categoryId ? categoryMap.get(product.categoryId.toString()) : undefined;
+      const categoryName = product.categoryId
+        ? categoryMap.get(product.categoryId.toString())
+        : undefined;
       const isAvailable = product.status === "active" && product.stock > 0;
 
       itemsDto.push({
@@ -136,9 +139,7 @@ export class WishlistService {
     const wishlist = await this.getOrCreateWishlist(userId, guestId);
 
     // Prevent duplicate additions (idempotent)
-    const exists = wishlist.items.some(
-      (item) => item.productId.toString() === productId
-    );
+    const exists = wishlist.items.some((item) => item.productId.toString() === productId);
 
     if (!exists) {
       wishlist.items.unshift({
@@ -160,9 +161,7 @@ export class WishlistService {
     productId: string
   ): Promise<WishlistDto> {
     const wishlist = await this.getOrCreateWishlist(userId, guestId);
-    wishlist.items = wishlist.items.filter(
-      (item) => item.productId.toString() !== productId
-    );
+    wishlist.items = wishlist.items.filter((item) => item.productId.toString() !== productId);
     await wishlist.save();
     return this.toWishlistDto(wishlist);
   }

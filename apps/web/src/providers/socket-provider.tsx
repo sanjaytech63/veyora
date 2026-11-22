@@ -35,7 +35,8 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const socketUrl = process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:4000";
+    const socketUrl =
+      process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:4000";
 
     const newSocket = io(socketUrl, {
       withCredentials: true,
@@ -68,12 +69,9 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     );
 
     // 2. Listen for unread count updates
-    newSocket.on(
-      SOCKET_EVENTS.SERVER_TO_CLIENT.NOTIFICATION_UNREAD_COUNT,
-      () => {
-        queryClient.invalidateQueries({ queryKey: ["notifications-unread-count"] });
-      }
-    );
+    newSocket.on(SOCKET_EVENTS.SERVER_TO_CLIENT.NOTIFICATION_UNREAD_COUNT, () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications-unread-count"] });
+    });
 
     // 3. Listen for order status transitions
     newSocket.on(
@@ -107,9 +105,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated, user, queryClient]);
 
   return (
-    <SocketContext.Provider value={{ socket, isConnected }}>
-      {children}
-    </SocketContext.Provider>
+    <SocketContext.Provider value={{ socket, isConnected }}>{children}</SocketContext.Provider>
   );
 }
 

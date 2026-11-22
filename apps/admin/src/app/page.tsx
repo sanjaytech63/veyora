@@ -39,18 +39,39 @@ import { TopProductsChart } from "@/components/dashboard/top-products-chart";
 import { CustomerGrowthChart } from "@/components/dashboard/customer-growth-chart";
 import { AnalyticsPeriod, OrderStatus } from "@veyora/types";
 
-const ORDER_STATUS_BADGE_VARIANTS: Record<
-  OrderStatus,
-  { label: string; className: string }
-> = {
-  pending: { label: "Pending", className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" },
-  confirmed: { label: "Confirmed", className: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20" },
-  processing: { label: "Processing", className: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20" },
-  shipped: { label: "Shipped", className: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20" },
-  delivered: { label: "Delivered", className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" },
-  cancelled: { label: "Cancelled", className: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20" },
-  refund_pending: { label: "Refund Pending", className: "bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20" },
-  refunded: { label: "Refunded", className: "bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 border-neutral-500/20" },
+const ORDER_STATUS_BADGE_VARIANTS: Record<OrderStatus, { label: string; className: string }> = {
+  pending: {
+    label: "Pending",
+    className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+  },
+  confirmed: {
+    label: "Confirmed",
+    className: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+  },
+  processing: {
+    label: "Processing",
+    className: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
+  },
+  shipped: {
+    label: "Shipped",
+    className: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
+  },
+  delivered: {
+    label: "Delivered",
+    className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+  },
+  cancelled: {
+    label: "Cancelled",
+    className: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+  },
+  refund_pending: {
+    label: "Refund Pending",
+    className: "bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20",
+  },
+  refunded: {
+    label: "Refunded",
+    className: "bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 border-neutral-500/20",
+  },
 };
 
 export default function AdminHomePage() {
@@ -60,7 +81,12 @@ export default function AdminHomePage() {
   const [customEnd, setCustomEnd] = React.useState<string | undefined>();
 
   // Fetch comprehensive master analytics
-  const { data: dashboardData, isLoading, isFetching, refetch } = useQuery({
+  const {
+    data: dashboardData,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useQuery({
     queryKey: ["admin-dashboard", period, customStart, customEnd],
     queryFn: () =>
       adminAnalyticsApi.getDashboard({
@@ -85,8 +111,7 @@ export default function AdminHomePage() {
     setCustomEnd(new Date(end).toISOString());
   };
 
-  const formatCurrency = (amount: number) =>
-    `₹${Number(amount || 0).toLocaleString("en-IN")}`;
+  const formatCurrency = (amount: number) => `₹${Number(amount || 0).toLocaleString("en-IN")}`;
 
   const revenue = dashboardData?.revenue;
   const orders = dashboardData?.orders;
@@ -126,7 +151,11 @@ export default function AdminHomePage() {
             Sync Metrics
           </Button>
 
-          <Button asChild size="sm" className="h-9 gap-1.5 rounded-xl text-xs font-semibold shadow-xs">
+          <Button
+            asChild
+            size="sm"
+            className="h-9 gap-1.5 rounded-xl text-xs font-semibold shadow-xs"
+          >
             <Link href="/products/new">
               <Plus className="h-3.5 w-3.5" />
               Add Garment
@@ -332,7 +361,9 @@ export default function AdminHomePage() {
 
             <Card className="lg:col-span-4 rounded-2xl border-border/80 shadow-xs">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold text-foreground">Fulfillment Status</CardTitle>
+                <CardTitle className="text-sm font-bold text-foreground">
+                  Fulfillment Status
+                </CardTitle>
                 <p className="text-xs text-muted-foreground">
                   Order status distribution across atelier lifecycle.
                 </p>
@@ -349,7 +380,9 @@ export default function AdminHomePage() {
           <div className="grid gap-6 lg:grid-cols-12">
             <Card className="lg:col-span-6 rounded-2xl border-border/80 shadow-xs">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold text-foreground">Top Garments by Revenue</CardTitle>
+                <CardTitle className="text-sm font-bold text-foreground">
+                  Top Garments by Revenue
+                </CardTitle>
                 <p className="text-xs text-muted-foreground">
                   Highest volume revenue generators during this period.
                 </p>
@@ -361,7 +394,9 @@ export default function AdminHomePage() {
 
             <Card className="lg:col-span-6 rounded-2xl border-border/80 shadow-xs">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold text-foreground">Bestseller Inventory Matrix</CardTitle>
+                <CardTitle className="text-sm font-bold text-foreground">
+                  Bestseller Inventory Matrix
+                </CardTitle>
                 <p className="text-xs text-muted-foreground">
                   Performance breakdown and current atelier stock levels.
                 </p>
@@ -382,9 +417,13 @@ export default function AdminHomePage() {
                         <TableRow key={p.productId} className="border-border/60">
                           <TableCell className="text-xs font-medium max-w-[180px] truncate">
                             {p.title}
-                            <div className="text-[10px] text-muted-foreground font-mono">{p.sku}</div>
+                            <div className="text-[10px] text-muted-foreground font-mono">
+                              {p.sku}
+                            </div>
                           </TableCell>
-                          <TableCell className="text-xs text-right font-semibold">{p.unitsSold}</TableCell>
+                          <TableCell className="text-xs text-right font-semibold">
+                            {p.unitsSold}
+                          </TableCell>
                           <TableCell className="text-xs text-right font-extrabold text-emerald-600 dark:text-emerald-400">
                             {formatCurrency(p.totalRevenue)}
                           </TableCell>
@@ -395,8 +434,8 @@ export default function AdminHomePage() {
                                 p.currentStock > 10
                                   ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
                                   : p.currentStock > 0
-                                  ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                                  : "bg-rose-500/10 text-rose-600 border-rose-500/20"
+                                    ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                                    : "bg-rose-500/10 text-rose-600 border-rose-500/20"
                               }`}
                             >
                               {p.currentStock} left
@@ -406,7 +445,10 @@ export default function AdminHomePage() {
                       ))}
                       {(!products?.topSelling || products.topSelling.length === 0) && (
                         <TableRow>
-                          <TableCell colSpan={4} className="text-center py-6 text-xs text-muted-foreground">
+                          <TableCell
+                            colSpan={4}
+                            className="text-center py-6 text-xs text-muted-foreground"
+                          >
                             No sales records available.
                           </TableCell>
                         </TableRow>
@@ -424,7 +466,9 @@ export default function AdminHomePage() {
           <div className="grid gap-6 lg:grid-cols-12">
             <Card className="lg:col-span-6 rounded-2xl border-border/80 shadow-xs">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold text-foreground">New Client Acquisition</CardTitle>
+                <CardTitle className="text-sm font-bold text-foreground">
+                  New Client Acquisition
+                </CardTitle>
                 <p className="text-xs text-muted-foreground">
                   Daily customer registration trajectory across this window.
                 </p>
@@ -451,7 +495,9 @@ export default function AdminHomePage() {
                       <TableRow className="border-border/60">
                         <TableHead className="text-xs font-semibold">Client</TableHead>
                         <TableHead className="text-xs font-semibold text-right">Orders</TableHead>
-                        <TableHead className="text-xs font-semibold text-right">Total Spent</TableHead>
+                        <TableHead className="text-xs font-semibold text-right">
+                          Total Spent
+                        </TableHead>
                         <TableHead className="text-xs font-semibold text-right">AOV</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -462,7 +508,9 @@ export default function AdminHomePage() {
                             {c.name}
                             <div className="text-[10px] text-muted-foreground">{c.email}</div>
                           </TableCell>
-                          <TableCell className="text-xs text-right font-semibold">{c.orderCount}</TableCell>
+                          <TableCell className="text-xs text-right font-semibold">
+                            {c.orderCount}
+                          </TableCell>
                           <TableCell className="text-xs text-right font-extrabold text-emerald-600 dark:text-emerald-400">
                             {formatCurrency(c.totalSpent)}
                           </TableCell>
@@ -473,7 +521,10 @@ export default function AdminHomePage() {
                       ))}
                       {(!customers?.topCustomers || customers.topCustomers.length === 0) && (
                         <TableRow>
-                          <TableCell colSpan={4} className="text-center py-6 text-xs text-muted-foreground">
+                          <TableCell
+                            colSpan={4}
+                            className="text-center py-6 text-xs text-muted-foreground"
+                          >
                             No customer order records found.
                           </TableCell>
                         </TableRow>
@@ -500,7 +551,12 @@ export default function AdminHomePage() {
                 Live transactional orders placed across all digital atelier channels.
               </p>
             </div>
-            <Button variant="ghost" size="sm" asChild className="gap-1 rounded-xl text-xs font-semibold">
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="gap-1 rounded-xl text-xs font-semibold"
+            >
               <Link href="/orders">
                 View All Orders
                 <ArrowRight className="h-3 w-3" />
@@ -533,7 +589,9 @@ export default function AdminHomePage() {
                       </TableCell>
                       <TableCell className="text-xs">
                         <div className="font-medium text-foreground">{order.customerName}</div>
-                        <div className="text-[10px] text-muted-foreground">{order.customerEmail}</div>
+                        <div className="text-[10px] text-muted-foreground">
+                          {order.customerEmail}
+                        </div>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
                         {order.itemsSummary}
@@ -542,12 +600,20 @@ export default function AdminHomePage() {
                         {formatCurrency(order.total)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={`rounded-lg text-[10px] font-semibold border ${badge.className}`}>
+                        <Badge
+                          variant="outline"
+                          className={`rounded-lg text-[10px] font-semibold border ${badge.className}`}
+                        >
                           {badge.label}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" asChild className="h-7 w-7 p-0 rounded-lg">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          asChild
+                          className="h-7 w-7 p-0 rounded-lg"
+                        >
                           <Link href={`/orders/${order.id}`}>
                             <ExternalLink className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
                           </Link>
@@ -558,7 +624,10 @@ export default function AdminHomePage() {
                 })}
                 {recentOrders.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-xs text-muted-foreground">
+                    <TableCell
+                      colSpan={6}
+                      className="text-center py-8 text-xs text-muted-foreground"
+                    >
                       No customer orders placed yet.
                     </TableCell>
                   </TableRow>
@@ -579,7 +648,12 @@ export default function AdminHomePage() {
                 Garments at or below critical threshold.
               </p>
             </div>
-            <Button variant="ghost" size="sm" asChild className="gap-1 rounded-xl text-xs font-semibold">
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="gap-1 rounded-xl text-xs font-semibold"
+            >
               <Link href="/inventory">
                 Inventory
                 <ArrowRight className="h-3 w-3" />
@@ -597,10 +671,17 @@ export default function AdminHomePage() {
 
             <div className="divide-y divide-border/60 max-h-[350px] overflow-y-auto">
               {(inventory?.lowStockAlerts || []).map((alert) => (
-                <div key={alert.sku} className="p-3 flex items-center justify-between hover:bg-muted/20">
+                <div
+                  key={alert.sku}
+                  className="p-3 flex items-center justify-between hover:bg-muted/20"
+                >
                   <div className="space-y-0.5 max-w-[190px]">
-                    <div className="text-xs font-bold text-foreground truncate">{alert.productTitle}</div>
-                    <div className="text-[10px] text-muted-foreground font-mono">SKU: {alert.sku}</div>
+                    <div className="text-xs font-bold text-foreground truncate">
+                      {alert.productTitle}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground font-mono">
+                      SKU: {alert.sku}
+                    </div>
                   </div>
                   <div className="text-right space-y-0.5">
                     <Badge
@@ -613,7 +694,9 @@ export default function AdminHomePage() {
                     >
                       {alert.available === 0 ? "Out of Stock" : `${alert.available} units`}
                     </Badge>
-                    <div className="text-[10px] text-muted-foreground">Thresh: {alert.lowStockThreshold}</div>
+                    <div className="text-[10px] text-muted-foreground">
+                      Thresh: {alert.lowStockThreshold}
+                    </div>
                   </div>
                 </div>
               ))}

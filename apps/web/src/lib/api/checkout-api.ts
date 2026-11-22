@@ -7,7 +7,9 @@ import {
 } from "@veyora/types";
 
 export const checkoutApi = {
-  validateCheckout(shippingMethod: "standard" | "express" = "standard"): Promise<CheckoutValidationDto> {
+  validateCheckout(
+    shippingMethod: "standard" | "express" = "standard"
+  ): Promise<CheckoutValidationDto> {
     return apiClient.get<CheckoutValidationDto>("/checkout/validate", {
       params: { shippingMethod },
     });

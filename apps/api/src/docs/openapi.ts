@@ -272,7 +272,8 @@ export const openApiSpec = {
       get: {
         tags: ["Catalog - Storefront"],
         summary: "List Products",
-        description: "Browse published products with pagination, category/brand filters, and search query.",
+        description:
+          "Browse published products with pagination, category/brand filters, and search query.",
         parameters: [
           { name: "page", in: "query", schema: { type: "integer", default: 1 } },
           { name: "limit", in: "query", schema: { type: "integer", default: 20 } },
@@ -281,7 +282,14 @@ export const openApiSpec = {
           { name: "brandId", in: "query", schema: { type: "string" } },
           { name: "minPrice", in: "query", schema: { type: "number" } },
           { name: "maxPrice", in: "query", schema: { type: "number" } },
-          { name: "sort", in: "query", schema: { type: "string", enum: ["newest", "price_asc", "price_desc", "popular", "rating"] } },
+          {
+            name: "sort",
+            in: "query",
+            schema: {
+              type: "string",
+              enum: ["newest", "price_asc", "price_desc", "popular", "rating"],
+            },
+          },
         ],
         responses: {
           "200": {
@@ -294,9 +302,7 @@ export const openApiSpec = {
       get: {
         tags: ["Catalog - Storefront"],
         summary: "Get Product by ID or Slug",
-        parameters: [
-          { name: "idOrSlug", in: "path", required: true, schema: { type: "string" } },
-        ],
+        parameters: [{ name: "idOrSlug", in: "path", required: true, schema: { type: "string" } }],
         responses: {
           "200": { description: "Product details with variants and attributes" },
           "404": { description: "Product not found" },
@@ -348,7 +354,9 @@ export const openApiSpec = {
         security: [{ BearerAuth: [] }],
         requestBody: {
           required: true,
-          content: { "application/json": { schema: { $ref: "#/components/schemas/CreateProductRequest" } } },
+          content: {
+            "application/json": { schema: { $ref: "#/components/schemas/CreateProductRequest" } },
+          },
         },
         responses: {
           "201": { description: "Product created" },
@@ -363,7 +371,9 @@ export const openApiSpec = {
         security: [{ BearerAuth: [] }],
         requestBody: {
           required: true,
-          content: { "application/json": { schema: { $ref: "#/components/schemas/CreateCategoryRequest" } } },
+          content: {
+            "application/json": { schema: { $ref: "#/components/schemas/CreateCategoryRequest" } },
+          },
         },
         responses: {
           "201": { description: "Category created" },
@@ -377,7 +387,9 @@ export const openApiSpec = {
         security: [{ BearerAuth: [] }],
         requestBody: {
           required: true,
-          content: { "application/json": { schema: { $ref: "#/components/schemas/CreateBrandRequest" } } },
+          content: {
+            "application/json": { schema: { $ref: "#/components/schemas/CreateBrandRequest" } },
+          },
         },
         responses: {
           "201": { description: "Brand created" },
@@ -393,7 +405,11 @@ export const openApiSpec = {
           { name: "page", in: "query", schema: { type: "integer", default: 1 } },
           { name: "limit", in: "query", schema: { type: "integer", default: 20 } },
           { name: "search", in: "query", schema: { type: "string" } },
-          { name: "status", in: "query", schema: { type: "string", enum: ["all", "in_stock", "low_stock", "out_of_stock"] } },
+          {
+            name: "status",
+            in: "query",
+            schema: { type: "string", enum: ["all", "in_stock", "low_stock", "out_of_stock"] },
+          },
           { name: "lowStockOnly", in: "query", schema: { type: "boolean" } },
         ],
         responses: {

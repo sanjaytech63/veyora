@@ -61,7 +61,8 @@ export class QueueRegistry {
    */
   public async addEmailJob(payload: EmailJobPayload, opts?: JobsOptions): Promise<string> {
     const queue = this.getQueue<EmailJobPayload>(QUEUES.EMAIL);
-    const jobId = payload.idempotencyKey || `email:${payload.type}:${payload.recipient}:${Date.now()}`;
+    const jobId =
+      payload.idempotencyKey || `email:${payload.type}:${payload.recipient}:${Date.now()}`;
     const job = await queue.add(payload.type, payload, {
       jobId,
       ...DEFAULT_QUEUE_OPTIONS,
@@ -73,9 +74,13 @@ export class QueueRegistry {
   /**
    * Enqueue Notification Job with Idempotency
    */
-  public async addNotificationJob(payload: NotificationJobPayload, opts?: JobsOptions): Promise<string> {
+  public async addNotificationJob(
+    payload: NotificationJobPayload,
+    opts?: JobsOptions
+  ): Promise<string> {
     const queue = this.getQueue<NotificationJobPayload>(QUEUES.NOTIFICATIONS);
-    const jobId = payload.idempotencyKey || `notification:${payload.userId}:${payload.type}:${Date.now()}`;
+    const jobId =
+      payload.idempotencyKey || `notification:${payload.userId}:${payload.type}:${Date.now()}`;
     const job = await queue.add(payload.type, payload, {
       jobId,
       ...DEFAULT_QUEUE_OPTIONS,

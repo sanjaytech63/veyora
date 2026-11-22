@@ -95,7 +95,11 @@ export function SearchClient() {
   const { data: allBrands = [] } = useBrands();
 
   // Execute advanced search
-  const { data: searchResult, isLoading, isFetching } = useSearchCatalog({
+  const {
+    data: searchResult,
+    isLoading,
+    isFetching,
+  } = useSearchCatalog({
     q: activeQuery || undefined,
     categoryId: selectedCategory === "all" ? undefined : selectedCategory,
     brandId: selectedBrand === "all" ? undefined : selectedBrand,
@@ -467,7 +471,8 @@ export function SearchClient() {
             Search Veyora Atelier
           </h1>
           <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-            Discover handcrafted minimalist couture, acoustic listening gear, mechanical instruments, and tactile desk accessories.
+            Discover handcrafted minimalist couture, acoustic listening gear, mechanical
+            instruments, and tactile desk accessories.
           </p>
 
           {/* Interactive Search Box & Autocomplete */}
@@ -848,11 +853,7 @@ export function SearchClient() {
                   <div className="flex items-center gap-1">
                     {Array.from({ length: meta.totalPages }, (_, i) => i + 1)
                       .filter((p) => {
-                        return (
-                          p === 1 ||
-                          p === meta.totalPages ||
-                          (p >= page - 1 && p <= page + 1)
-                        );
+                        return p === 1 || p === meta.totalPages || (p >= page - 1 && p <= page + 1);
                       })
                       .map((p, idx, arr) => {
                         const prev = arr[idx - 1];

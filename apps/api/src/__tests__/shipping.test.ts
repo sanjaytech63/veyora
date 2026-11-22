@@ -38,10 +38,7 @@ vi.mock("../modules/auth/models/session.model", () => ({
   Session: {
     findById: vi.fn((id: any) => {
       const idStr = id?.toString ? id.toString() : String(id);
-      if (
-        idStr === mockAdminSessionId.toString() ||
-        idStr === mockCustomerSessionId.toString()
-      ) {
+      if (idStr === mockAdminSessionId.toString() || idStr === mockCustomerSessionId.toString()) {
         return Promise.resolve({
           _id: new mongoose.Types.ObjectId(idStr),
           isRevoked: false,
@@ -285,14 +282,12 @@ describe("Phase O — Veyora Shipping & Order Fulfillment Integration Tests", ()
   // 1. RATE CALCULATION TESTS
   describe("POST /api/v1/shipping/calculate-rates", () => {
     it("should calculate standard and express shipping quotes with free threshold eligibility", async () => {
-      const res = await request(app)
-        .post("/api/v1/shipping/calculate-rates")
-        .send({
-          destinationPostalCode: "400026",
-          destinationCountry: "IN",
-          destinationState: "Maharashtra",
-          subtotal: 2500, // Above ₹1,999 free threshold
-        });
+      const res = await request(app).post("/api/v1/shipping/calculate-rates").send({
+        destinationPostalCode: "400026",
+        destinationCountry: "IN",
+        destinationState: "Maharashtra",
+        subtotal: 2500, // Above ₹1,999 free threshold
+      });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -306,14 +301,12 @@ describe("Phase O — Veyora Shipping & Order Fulfillment Integration Tests", ()
     });
 
     it("should apply standard delivery charge when subtotal is below free shipping threshold", async () => {
-      const res = await request(app)
-        .post("/api/v1/shipping/calculate-rates")
-        .send({
-          destinationPostalCode: "400026",
-          destinationCountry: "IN",
-          destinationState: "Maharashtra",
-          subtotal: 999, // Below ₹1,999 free threshold
-        });
+      const res = await request(app).post("/api/v1/shipping/calculate-rates").send({
+        destinationPostalCode: "400026",
+        destinationCountry: "IN",
+        destinationState: "Maharashtra",
+        subtotal: 999, // Below ₹1,999 free threshold
+      });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -325,12 +318,10 @@ describe("Phase O — Veyora Shipping & Order Fulfillment Integration Tests", ()
     });
 
     it("should reject invalid destination postal codes or negative subtotals", async () => {
-      const res = await request(app)
-        .post("/api/v1/shipping/calculate-rates")
-        .send({
-          destinationPostalCode: "A", // too short
-          subtotal: -50,
-        });
+      const res = await request(app).post("/api/v1/shipping/calculate-rates").send({
+        destinationPostalCode: "A", // too short
+        subtotal: -50,
+      });
 
       expect(res.status).toBe(422);
       expect(res.body.success).toBe(false);

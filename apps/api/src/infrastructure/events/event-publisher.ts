@@ -45,7 +45,16 @@ export class EventPublisher {
   /**
    * Emit real-time order update to user and admin operational rooms
    */
-  public publishOrderUpdate(order: { id: string; orderNumber: string; status: string; userId?: string | null; total?: number }, eventType: string = "updated"): void {
+  public publishOrderUpdate(
+    order: {
+      id: string;
+      orderNumber: string;
+      status: string;
+      userId?: string | null;
+      total?: number;
+    },
+    eventType: string = "updated"
+  ): void {
     const io = socketServer.getIO();
     if (!io) return;
 
@@ -70,13 +79,25 @@ export class EventPublisher {
     }
     io.to(SOCKET_ROOMS.adminOrders).emit(SOCKET_EVENTS.SERVER_TO_CLIENT.ORDER_UPDATED, payload);
 
-    logger.debug({ orderId: order.id, status: order.status }, "Published order event to socket rooms");
+    logger.debug(
+      { orderId: order.id, status: order.status },
+      "Published order event to socket rooms"
+    );
   }
 
   /**
    * Emit real-time payment update to user and admin rooms
    */
-  public publishPaymentUpdate(payment: { id: string; orderId: string; status: string; amount: number; userId?: string | null }, eventType: string = "updated"): void {
+  public publishPaymentUpdate(
+    payment: {
+      id: string;
+      orderId: string;
+      status: string;
+      amount: number;
+      userId?: string | null;
+    },
+    eventType: string = "updated"
+  ): void {
     const io = socketServer.getIO();
     if (!io) return;
 
@@ -96,16 +117,19 @@ export class EventPublisher {
       );
     }
 
-    io.to(SOCKET_ROOMS.adminPayments).emit(
-      SOCKET_EVENTS.SERVER_TO_CLIENT.PAYMENT_UPDATED,
-      payload
-    );
+    io.to(SOCKET_ROOMS.adminPayments).emit(SOCKET_EVENTS.SERVER_TO_CLIENT.PAYMENT_UPDATED, payload);
   }
 
   /**
    * Emit real-time shipment dispatch/tracking update
    */
-  public publishShipmentUpdate(shipment: { id: string; trackingNumber: string; orderId: string; status: string; userId?: string | null }): void {
+  public publishShipmentUpdate(shipment: {
+    id: string;
+    trackingNumber: string;
+    orderId: string;
+    status: string;
+    userId?: string | null;
+  }): void {
     const io = socketServer.getIO();
     if (!io) return;
 
@@ -124,10 +148,7 @@ export class EventPublisher {
       );
     }
 
-    io.to(SOCKET_ROOMS.adminOrders).emit(
-      SOCKET_EVENTS.SERVER_TO_CLIENT.SHIPMENT_UPDATED,
-      payload
-    );
+    io.to(SOCKET_ROOMS.adminOrders).emit(SOCKET_EVENTS.SERVER_TO_CLIENT.SHIPMENT_UPDATED, payload);
   }
 }
 

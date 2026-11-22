@@ -98,7 +98,10 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
     <div className="py-8 md:py-12 space-y-16 pb-20 md:pb-12">
       <Container size="xl" className="space-y-12">
         {/* Breadcrumb Trail */}
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+        <nav
+          aria-label="Breadcrumb"
+          className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap"
+        >
           <Link href="/" className="hover:text-foreground transition-colors">
             Home
           </Link>
@@ -143,7 +146,12 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
                       <Star
                         key={i}
                         className={`h-3.5 w-3.5 ${
-                          i < Math.round(product.averageRating && product.averageRating > 0 ? product.averageRating : 5)
+                          i <
+                          Math.round(
+                            product.averageRating && product.averageRating > 0
+                              ? product.averageRating
+                              : 5
+                          )
                             ? "fill-amber-400 text-amber-400"
                             : "text-muted/60"
                         }`}
@@ -178,7 +186,10 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
                 </div>
 
                 {isDiscounted && (
-                  <Badge variant="destructive" className="rounded-full px-2.5 py-0.5 text-xs font-semibold">
+                  <Badge
+                    variant="destructive"
+                    className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                  >
                     Save {discountPercent}%
                   </Badge>
                 )}
@@ -186,14 +197,16 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
             </div>
 
             {/* Description */}
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {product.description}
-            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
 
             {/* Live Stock Status Indicator */}
             <div className="rounded-2xl border border-border/60 bg-muted/20 p-3.5 flex items-center justify-between">
               <span className="text-xs font-semibold text-foreground">Availability</span>
-              <StockBadge stock={currentStock} trackQuantity={product.trackQuantity} showTextDetail={true} />
+              <StockBadge
+                stock={currentStock}
+                trackQuantity={product.trackQuantity}
+                showTextDetail={true}
+              />
             </div>
 
             {/* Interactive Variant Selectors */}
@@ -233,7 +246,9 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
                     size="icon"
                     className="h-9 w-9 rounded-xl"
                     onClick={() => setQuantity((q) => Math.min(currentStock || 99, q + 1))}
-                    disabled={currentStock <= 0 || (product.trackQuantity && quantity >= currentStock)}
+                    disabled={
+                      currentStock <= 0 || (product.trackQuantity && quantity >= currentStock)
+                    }
                     aria-label="Increase quantity"
                   >
                     <Plus className="h-3.5 w-3.5" />
@@ -292,18 +307,12 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
             </div>
 
             {/* Product Accordion (Specs, Shipping, Materials) */}
-            <ProductAccordion
-              attributes={product.attributes || []}
-              sku={currentSku}
-            />
+            <ProductAccordion attributes={product.attributes || []} sku={currentSku} />
           </div>
         </div>
 
         {/* Customer Reviews & Feedback Section */}
-        <ProductReviews
-          productId={product.id}
-          productTitle={product.title}
-        />
+        <ProductReviews productId={product.id} productTitle={product.title} />
 
         {/* Related Products Recommendation Grid */}
         {relatedProducts.length > 0 && (

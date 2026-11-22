@@ -17,14 +17,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint-and-typecheck:
-    name: Lint & Typecheck
+  quality-gate:
+    name: Code Quality & Linting
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 24
         uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -33,10 +33,29 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run ESLint
-        run: npm run lint
+      - name: Run ESLint check
+        run: npm run lint:check
 
-      - name: Run TypeScript typecheck
+      - name: Run Prettier format check
+        run: npm run format:check
+
+  typecheck:
+    name: TypeScript Strict Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run monorepo typecheck
         run: npm run typecheck
 
   test-suite:
@@ -46,7 +65,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 24
         uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -59,18 +78,26 @@ jobs:
         run: npm run test
 
   build:
-    name: Monorepo Production Build
-    needs: [lint-and-typecheck, test-suite]
+    name: Production Monorepo Build
+    needs: [quality-gate, typecheck, test-suite]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 24
         uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: "npm"
+
+      - name: Cache Turborepo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${ runner.os }}-turbo-
 
       - name: Install dependencies
         run: npm ci
@@ -86,7 +113,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 24
         uses: actions/setup-node@v4
         with:
           node-version: 24

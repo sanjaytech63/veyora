@@ -377,7 +377,11 @@ export default function AdminCouponsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold font-serif">
-                ${totalDiscountDistributed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                $
+                {totalDiscountDistributed.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </div>
               <p className="text-xs text-muted-foreground mt-1">In customer savings granted</p>
             </CardContent>
@@ -462,14 +466,19 @@ export default function AdminCouponsPage() {
                       <TableCell>
                         <div className="flex items-center gap-1.5">
                           {isPercentage ? (
-                            <Badge variant="outline" className="gap-1 border-primary/30 text-primary bg-primary/5">
+                            <Badge
+                              variant="outline"
+                              className="gap-1 border-primary/30 text-primary bg-primary/5"
+                            >
                               <Percent className="h-3 w-3" />
                               {coupon.discountValue}% OFF
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="gap-1 border-emerald-500/30 text-emerald-600 bg-emerald-500/5">
-                              <DollarSign className="h-3 w-3" />
-                              ${coupon.discountValue} OFF
+                            <Badge
+                              variant="outline"
+                              className="gap-1 border-emerald-500/30 text-emerald-600 bg-emerald-500/5"
+                            >
+                              <DollarSign className="h-3 w-3" />${coupon.discountValue} OFF
                             </Badge>
                           )}
                           {isPercentage && coupon.maxDiscountAmount && (
@@ -560,10 +569,16 @@ export default function AdminCouponsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-40">
                             <DropdownMenuLabel className="text-xs">Management</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => openAnalytics(coupon)} className="gap-2">
+                            <DropdownMenuItem
+                              onClick={() => openAnalytics(coupon)}
+                              className="gap-2"
+                            >
                               <BarChart2 className="h-4 w-4" /> Analytics
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openEditDialog(coupon)} className="gap-2">
+                            <DropdownMenuItem
+                              onClick={() => openEditDialog(coupon)}
+                              className="gap-2"
+                            >
                               <Edit className="h-4 w-4" /> Edit Code
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
@@ -592,7 +607,8 @@ export default function AdminCouponsPage() {
             <DialogHeader>
               <DialogTitle className="font-serif text-xl">Issue New Privilege Code</DialogTitle>
               <DialogDescription>
-                Configure server-enforced promotional terms, customer spend requirements, and usage quotas.
+                Configure server-enforced promotional terms, customer spend requirements, and usage
+                quotas.
               </DialogDescription>
             </DialogHeader>
 
@@ -639,7 +655,10 @@ export default function AdminCouponsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="discountValue">
-                    {formDiscountType === "percentage" ? "Percentage (% off)" : "Fixed Amount ($ off)"} *
+                    {formDiscountType === "percentage"
+                      ? "Percentage (% off)"
+                      : "Fixed Amount ($ off)"}{" "}
+                    *
                   </Label>
                   <Input
                     id="discountValue"
@@ -729,11 +748,7 @@ export default function AdminCouponsPage() {
                     Enable this promotion for immediate customer checkout redemption.
                   </p>
                 </div>
-                <Switch
-                  id="isActive"
-                  checked={formIsActive}
-                  onCheckedChange={setFormIsActive}
-                />
+                <Switch id="isActive" checked={formIsActive} onCheckedChange={setFormIsActive} />
               </div>
             </div>
 
@@ -764,7 +779,8 @@ export default function AdminCouponsPage() {
                 Edit Privilege Code: {selectedCoupon?.code}
               </DialogTitle>
               <DialogDescription>
-                Modify active rules, spend caps, and expiry dates. Code identifier cannot be altered once issued.
+                Modify active rules, spend caps, and expiry dates. Code identifier cannot be altered
+                once issued.
               </DialogDescription>
             </DialogHeader>
 
@@ -1025,7 +1041,8 @@ export default function AdminCouponsPage() {
               <span className="font-mono font-semibold text-foreground">
                 {selectedCoupon?.code}
               </span>
-              ? This action cannot be reversed and future checkout attempts with this code will fail.
+              ? This action cannot be reversed and future checkout attempts with this code will
+              fail.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">

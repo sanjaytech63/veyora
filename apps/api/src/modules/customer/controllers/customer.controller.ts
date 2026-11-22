@@ -8,7 +8,9 @@ export class CustomerController {
    */
   public async listCustomers(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const paginated = await customerService.listCustomers(req.query as unknown as AdminCustomerListQuery);
+      const paginated = await customerService.listCustomers(
+        req.query as unknown as AdminCustomerListQuery
+      );
       res.status(200).json({
         success: true,
         data: paginated,
@@ -57,7 +59,11 @@ export class CustomerController {
   /**
    * Admin: Get customer saved addresses
    */
-  public async getCustomerAddresses(req: Request, res: Response, next: NextFunction): Promise<void> {
+  public async getCustomerAddresses(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const addresses = await customerService.getCustomerAddresses(req.params.id as string);
       res.status(200).json({
@@ -73,7 +79,11 @@ export class CustomerController {
   /**
    * Admin: Update customer active status (activate/suspend) with reason
    */
-  public async updateCustomerStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+  public async updateCustomerStatus(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const adminUser = {
         id: req.user?.id || "admin",
@@ -81,7 +91,11 @@ export class CustomerController {
         role: req.user?.role || "admin",
       };
 
-      const updated = await customerService.updateCustomerStatus(req.params.id as string, req.body, adminUser);
+      const updated = await customerService.updateCustomerStatus(
+        req.params.id as string,
+        req.body,
+        adminUser
+      );
       res.status(200).json({
         success: true,
         data: updated,
@@ -103,7 +117,11 @@ export class CustomerController {
         role: req.user?.role || "admin",
       };
 
-      const updated = await customerService.updateCustomerNotes(req.params.id as string, req.body, adminUser);
+      const updated = await customerService.updateCustomerNotes(
+        req.params.id as string,
+        req.body,
+        adminUser
+      );
       res.status(200).json({
         success: true,
         data: updated,

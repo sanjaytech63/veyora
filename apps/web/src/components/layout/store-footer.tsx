@@ -16,7 +16,8 @@ export function StoreFooter() {
     e.preventDefault();
     if (!email) return;
     toast.success("Subscribed to Veyora Haute Couture Previews", {
-      description: "You will receive exclusive invitations to upcoming festive drops and seasonal edits.",
+      description:
+        "You will receive exclusive invitations to upcoming festive drops and seasonal edits.",
     });
     setEmail("");
   };
@@ -35,7 +36,8 @@ export function StoreFooter() {
             </Link>
 
             <p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
-              Contemporary Indian couture and modern ready-to-wear. Crafted from handwoven Chanderi silks, pure mulmul cotton, and heritage Banarasi brocades.
+              Contemporary Indian couture and modern ready-to-wear. Crafted from handwoven Chanderi
+              silks, pure mulmul cotton, and heritage Banarasi brocades.
             </p>
 
             {/* Haute Couture Newsletter */}
@@ -52,7 +54,11 @@ export function StoreFooter() {
                   className="rounded-xl text-xs h-9 bg-background"
                   required
                 />
-                <Button type="submit" size="sm" className="rounded-xl px-4 text-xs h-9 font-semibold">
+                <Button
+                  type="submit"
+                  size="sm"
+                  className="rounded-xl px-4 text-xs h-9 font-semibold"
+                >
                   <span>Join</span>
                   <ArrowRight className="h-3 w-3 ml-1" />
                 </Button>
@@ -77,7 +83,10 @@ export function StoreFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/category/ethnic-wear" className="hover:text-foreground transition-colors">
+                <Link
+                  href="/category/ethnic-wear"
+                  className="hover:text-foreground transition-colors"
+                >
                   Festive Lehengas &amp; Ghagras
                 </Link>
               </li>
@@ -92,7 +101,10 @@ export function StoreFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/category/accessories" className="hover:text-foreground transition-colors">
+                <Link
+                  href="/category/accessories"
+                  className="hover:text-foreground transition-colors"
+                >
                   Embroidered Dupattas
                 </Link>
               </li>
@@ -173,7 +185,8 @@ export function StoreFooter() {
 
         <div className="border-t border-border/60 pt-8 flex flex-col md:flex-row items-center justify-between text-[11px] text-muted-foreground gap-4">
           <p>
-            &copy; {new Date().getFullYear()} {SERVICES.NAME} Fashion Atelier. Contemporary Indian Couture &amp; Modern Apparel.
+            &copy; {new Date().getFullYear()} {SERVICES.NAME} Fashion Atelier. Contemporary Indian
+            Couture &amp; Modern Apparel.
           </p>
           <div className="flex items-center gap-6">
             <span>Privacy Policy</span>

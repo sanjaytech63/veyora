@@ -44,15 +44,9 @@ router.post(
   authController.adminLogin.bind(authController)
 );
 
-router.post(
-  "/refresh",
-  authController.refreshTokens.bind(authController)
-);
+router.post("/refresh", authController.refreshTokens.bind(authController));
 
-router.post(
-  "/logout",
-  authController.logout.bind(authController)
-);
+router.post("/logout", authController.logout.bind(authController));
 
 router.post(
   "/forgot-password",
@@ -67,17 +61,9 @@ router.post(
 );
 
 // Protected Authentication Endpoints
-router.get(
-  "/me",
-  requireAuth,
-  authController.getMe.bind(authController)
-);
+router.get("/me", requireAuth, authController.getMe.bind(authController));
 
-router.get(
-  "/sessions",
-  requireAuth,
-  authController.getSessions.bind(authController)
-);
+router.get("/sessions", requireAuth, authController.getSessions.bind(authController));
 
 router.delete(
   "/sessions/:sessionId",

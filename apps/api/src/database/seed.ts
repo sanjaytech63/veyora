@@ -22,7 +22,10 @@ const ADMIN_PERMISSIONS: UserPermission[] = [
 ];
 
 export async function runDatabaseSeed(): Promise<void> {
-  logger.info({ uri: env.MONGODB_URI }, "Connecting to MongoDB for Veyora Fashion database seeding...");
+  logger.info(
+    { uri: env.MONGODB_URI },
+    "Connecting to MongoDB for Veyora Fashion database seeding..."
+  );
   await mongoose.connect(env.MONGODB_URI);
 
   try {
@@ -81,7 +84,8 @@ export async function runDatabaseSeed(): Promise<void> {
       {
         name: "Veyora Atelier",
         slug: "veyora-atelier",
-        description: "Bespoke contemporary tailoring, handcrafted festive silhouettes and luxury Indian couture.",
+        description:
+          "Bespoke contemporary tailoring, handcrafted festive silhouettes and luxury Indian couture.",
         logo: "https://placehold.co/200x80/09090b/fafafa?text=VEYORA+ATELIER",
         website: "https://veyora.com",
         status: "active" as const,
@@ -89,7 +93,8 @@ export async function runDatabaseSeed(): Promise<void> {
       {
         name: "Studio Jaipur",
         slug: "studio-jaipur",
-        description: "Artisanal hand-block prints, pure mulmul cotton, and heritage Rajasthani craftsmanship.",
+        description:
+          "Artisanal hand-block prints, pure mulmul cotton, and heritage Rajasthani craftsmanship.",
         logo: "https://placehold.co/200x80/09090b/fafafa?text=STUDIO+JAIPUR",
         website: "https://studiojaipur.design",
         status: "active" as const,
@@ -97,7 +102,8 @@ export async function runDatabaseSeed(): Promise<void> {
       {
         name: "Élan Heritage",
         slug: "elan-heritage",
-        description: "Regal Banarasi silk brocades, hand-woven zari work, and timeless bridal heirlooms.",
+        description:
+          "Regal Banarasi silk brocades, hand-woven zari work, and timeless bridal heirlooms.",
         logo: "https://placehold.co/200x80/09090b/fafafa?text=ELAN+HERITAGE",
         website: "https://elanheritage.in",
         status: "active" as const,
@@ -105,7 +111,8 @@ export async function runDatabaseSeed(): Promise<void> {
       {
         name: "Kora Minimal",
         slug: "kora-minimal",
-        description: "Organic European linen co-ord sets, breathable daily tunics, and modern monochrome cuts.",
+        description:
+          "Organic European linen co-ord sets, breathable daily tunics, and modern monochrome cuts.",
         logo: "https://placehold.co/200x80/09090b/fafafa?text=KORA+MINIMAL",
         website: "https://koraminimal.com",
         status: "active" as const,
@@ -128,7 +135,8 @@ export async function runDatabaseSeed(): Promise<void> {
       {
         name: "Kurtis & Kurti Sets",
         slug: "kurtis",
-        description: "Handcrafted straight kurtis, Anarkali sets with organza dupattas, and everyday office tunics.",
+        description:
+          "Handcrafted straight kurtis, Anarkali sets with organza dupattas, and everyday office tunics.",
         image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=800&q=80",
         order: 1,
         status: "active" as const,
@@ -136,7 +144,8 @@ export async function runDatabaseSeed(): Promise<void> {
       {
         name: "Ethnic & Festive Wear",
         slug: "ethnic-wear",
-        description: "Regal wedding lehengas, Rajasthani ghagras, traditional salwar suits, and celebratory ensembles.",
+        description:
+          "Regal wedding lehengas, Rajasthani ghagras, traditional salwar suits, and celebratory ensembles.",
         image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80",
         order: 2,
         status: "active" as const,
@@ -144,7 +153,8 @@ export async function runDatabaseSeed(): Promise<void> {
       {
         name: "Sarees & Drapes",
         slug: "sarees",
-        description: "Handwoven pure Banarasi silk, Chanderi zari brocades, and modern lightweight organza sarees.",
+        description:
+          "Handwoven pure Banarasi silk, Chanderi zari brocades, and modern lightweight organza sarees.",
         image: "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=800&q=80",
         order: 3,
         status: "active" as const,
@@ -152,7 +162,8 @@ export async function runDatabaseSeed(): Promise<void> {
       {
         name: "Dresses & Western Wear",
         slug: "dresses",
-        description: "Fluid silk maxi dresses, tailored jumpsuits, wrap tunics, and contemporary evening wear.",
+        description:
+          "Fluid silk maxi dresses, tailored jumpsuits, wrap tunics, and contemporary evening wear.",
         image: "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=800&q=80",
         order: 4,
         status: "active" as const,
@@ -160,7 +171,8 @@ export async function runDatabaseSeed(): Promise<void> {
       {
         name: "Co-ords & Loungewear",
         slug: "co-ords",
-        description: "Pure cotton pajama sets, breathable linen co-ords, and effortless relaxed resort wear.",
+        description:
+          "Pure cotton pajama sets, breathable linen co-ords, and effortless relaxed resort wear.",
         image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800&q=80",
         order: 5,
         status: "active" as const,
@@ -168,7 +180,8 @@ export async function runDatabaseSeed(): Promise<void> {
       {
         name: "Dupattas & Accessories",
         slug: "accessories",
-        description: "Artisanal hand-embroidered mirror-work dupattas, pure silk stoles, and handcrafted potlis.",
+        description:
+          "Artisanal hand-embroidered mirror-work dupattas, pure silk stoles, and handcrafted potlis.",
         image: "https://images.unsplash.com/photo-1601924994987-69e26d50dc26?w=800&q=80",
         order: 6,
         status: "active" as const,
@@ -252,7 +265,8 @@ export async function runDatabaseSeed(): Promise<void> {
         tags: ["kurti", "kurti-set", "festive", "new-arrivals", "best-seller", "chanderi"],
         seo: {
           metaTitle: "Chanderi Silk Kurti Set with Organza Dupatta — Veyora Atelier",
-          metaDescription: "Exquisite handwoven Chanderi silk kurti set with gota patti hand embroidery and scalloped organza dupatta.",
+          metaDescription:
+            "Exquisite handwoven Chanderi silk kurti set with gota patti hand embroidery and scalloped organza dupatta.",
           keywords: ["kurti set", "chanderi silk", "ethnic wear", "festive clothing"],
         },
       },
@@ -738,8 +752,7 @@ export async function runDatabaseSeed(): Promise<void> {
       if (p.variants && p.variants.length > 0) {
         for (const variant of p.variants) {
           const varDoc = product.variants.find((v) => v.sku === variant.sku) as
-            | (typeof product.variants[number] & { _id?: mongoose.Types.ObjectId })
-            | undefined;
+            ((typeof product.variants)[number] & { _id?: mongoose.Types.ObjectId }) | undefined;
           const varDocId = varDoc?._id ?? null;
           const varOnHand = variant.stock || 15;
           const varInv = await Inventory.findOneAndUpdate(
@@ -783,7 +796,10 @@ export async function runDatabaseSeed(): Promise<void> {
         }
       }
     }
-    logger.info({ count: productsToSeed.length }, "Seeded fashion products and variant inventories");
+    logger.info(
+      { count: productsToSeed.length },
+      "Seeded fashion products and variant inventories"
+    );
 
     // 5. Seed Initial Curated Product Reviews
     const customerUser = await User.findOne({ email: "customer@veyora.local" });

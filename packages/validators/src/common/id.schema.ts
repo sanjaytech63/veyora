@@ -19,7 +19,10 @@ export type MongoIdInput = z.infer<typeof mongoIdSchema>;
 export const slugSchema = z
   .string()
   .min(1, "Slug cannot be empty")
-  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must only contain lowercase alphanumeric characters and hyphens")
+  .regex(
+    /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+    "Slug must only contain lowercase alphanumeric characters and hyphens"
+  )
   .trim();
 
 export type SlugInput = z.infer<typeof slugSchema>;

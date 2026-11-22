@@ -35,7 +35,9 @@ export default function ShopPage() {
   const [selectedCategory, setSelectedCategory] = React.useState<string>("all");
   const [selectedBrand, setSelectedBrand] = React.useState<string>("all");
   const [inStockOnly, setInStockOnly] = React.useState(false);
-  const [sortBy, setSortBy] = React.useState<"newest" | "price_asc" | "price_desc" | "title">("newest");
+  const [sortBy, setSortBy] = React.useState<"newest" | "price_asc" | "price_desc" | "title">(
+    "newest"
+  );
   const [page, setPage] = React.useState(1);
   const [mobileFiltersOpen, setMobileFiltersOpen] = React.useState(false);
 
@@ -97,7 +99,8 @@ export default function ShopPage() {
             Explore Clothing &amp; Haute Couture
           </h1>
           <p className="text-sm text-muted-foreground max-w-2xl">
-            Browse our complete collection of Indian and contemporary fashion, handcrafted kurtis, festive lehengas, everyday essentials, and modern silhouettes.
+            Browse our complete collection of Indian and contemporary fashion, handcrafted kurtis,
+            festive lehengas, everyday essentials, and modern silhouettes.
           </p>
         </div>
 
@@ -136,9 +139,7 @@ export default function ShopPage() {
                 <Button variant="outline" size="sm" className="lg:hidden rounded-xl gap-2">
                   <SlidersHorizontal className="h-4 w-4" />
                   Filters
-                  {hasActiveFilters && (
-                    <span className="flex h-2 w-2 rounded-full bg-primary" />
-                  )}
+                  {hasActiveFilters && <span className="flex h-2 w-2 rounded-full bg-primary" />}
                 </Button>
               </DrawerTrigger>
               <DrawerContent className="p-6 max-h-[85vh]">
@@ -211,10 +212,7 @@ export default function ShopPage() {
                   >
                     Reset All
                   </Button>
-                  <Button
-                    className="flex-1 rounded-xl"
-                    onClick={() => setMobileFiltersOpen(false)}
-                  >
+                  <Button className="flex-1 rounded-xl" onClick={() => setMobileFiltersOpen(false)}>
                     Show Results
                   </Button>
                 </div>
@@ -253,7 +251,8 @@ export default function ShopPage() {
             <span className="text-xs text-muted-foreground">Active Filters:</span>
             {selectedCategory !== "all" && (
               <Badge variant="secondary" className="gap-1.5 rounded-full px-3 py-1 text-xs">
-                Category: {categories.find((c) => c.id === selectedCategory)?.name || selectedCategory}
+                Category:{" "}
+                {categories.find((c) => c.id === selectedCategory)?.name || selectedCategory}
                 <Button
                   type="button"
                   variant="ghost"

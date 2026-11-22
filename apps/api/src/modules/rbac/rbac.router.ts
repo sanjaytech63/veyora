@@ -1,6 +1,11 @@
 import { Router } from "express";
 import { rbacController } from "./controllers/rbac.controller";
-import { requireAuth, requireRole, requirePermission, requireAnyPermission } from "../../middleware/auth";
+import {
+  requireAuth,
+  requireRole,
+  requirePermission,
+  requireAnyPermission,
+} from "../../middleware/auth";
 import { validate } from "../../middleware/validate-request";
 import {
   createRoleSchema,

@@ -127,7 +127,11 @@ export class CheckoutController {
     }
   }
 
-  public async adminUpdateOrderStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+  public async adminUpdateOrderStatus(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const adminUser = {
         id: req.user?.id || "admin",
@@ -139,7 +143,8 @@ export class CheckoutController {
       const carrier = body.trackingCarrier || body.tracking?.carrier || body.carrier;
       const trackingNumber = body.trackingNumber || body.tracking?.trackingNumber;
       const trackingUrl = body.trackingUrl || body.tracking?.trackingUrl;
-      const estimatedDeliveryDate = body.estimatedDeliveryDate || body.tracking?.estimatedDeliveryDate;
+      const estimatedDeliveryDate =
+        body.estimatedDeliveryDate || body.tracking?.estimatedDeliveryDate;
       const reason = body.reason || body.notes;
 
       const order = await checkoutService.updateOrderStatus(

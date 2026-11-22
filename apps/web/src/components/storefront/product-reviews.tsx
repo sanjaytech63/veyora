@@ -2,7 +2,15 @@
 
 import * as React from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Star, ShieldCheck, ThumbsUp, MessageSquare, PenLine, RefreshCw, CheckCircle2 } from "lucide-react";
+import {
+  Star,
+  ShieldCheck,
+  ThumbsUp,
+  MessageSquare,
+  PenLine,
+  RefreshCw,
+  CheckCircle2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -48,8 +56,12 @@ export function ProductReviews({ productId, productTitle }: ProductReviewsProps)
   });
   const [page, setPage] = React.useState(1);
   const [totalPages, setTotalPages] = React.useState(1);
-  const [selectedRatingFilter, setSelectedRatingFilter] = React.useState<number | undefined>(undefined);
-  const [sortBy, setSortBy] = React.useState<"newest" | "highest" | "lowest" | "most_helpful">("newest");
+  const [selectedRatingFilter, setSelectedRatingFilter] = React.useState<number | undefined>(
+    undefined
+  );
+  const [sortBy, setSortBy] = React.useState<"newest" | "highest" | "lowest" | "most_helpful">(
+    "newest"
+  );
   const [isLoading, setIsLoading] = React.useState(true);
 
   // Submission Dialog State
@@ -123,7 +135,8 @@ export function ProductReviews({ productId, productTitle }: ProductReviewsProps)
       });
 
       toast.success("Review Submitted for Curation", {
-        description: "Thank you for sharing your experience! Your review will be published upon curation.",
+        description:
+          "Thank you for sharing your experience! Your review will be published upon curation.",
       });
 
       setReviewModalOpen(false);
@@ -206,8 +219,8 @@ export function ProductReviews({ productId, productTitle }: ProductReviewsProps)
               ))}
             </div>
             <div className="text-xs text-muted-foreground">
-              Based on{" "}
-              <span className="font-semibold text-foreground">{totalReviews}</span> client rating
+              Based on <span className="font-semibold text-foreground">{totalReviews}</span> client
+              rating
               {totalReviews === 1 ? "" : "s"}
             </div>
             {totalReviews > 0 && (
@@ -300,7 +313,8 @@ export function ProductReviews({ productId, productTitle }: ProductReviewsProps)
           </div>
 
           <div className="text-xs text-muted-foreground">
-            Showing {reviews.length} of {totalReviews} approved review{totalReviews === 1 ? "" : "s"}
+            Showing {reviews.length} of {totalReviews} approved review
+            {totalReviews === 1 ? "" : "s"}
           </div>
         </div>
 
@@ -343,12 +357,13 @@ export function ProductReviews({ productId, productTitle }: ProductReviewsProps)
               });
 
               // Initials avatar
-              const initials = review.customerName
-                .split(" ")
-                .map((n) => n[0])
-                .slice(0, 2)
-                .join("")
-                .toUpperCase() || "VC";
+              const initials =
+                review.customerName
+                  .split(" ")
+                  .map((n) => n[0])
+                  .slice(0, 2)
+                  .join("")
+                  .toUpperCase() || "VC";
 
               return (
                 <div
@@ -418,9 +433,7 @@ export function ProductReviews({ productId, productTitle }: ProductReviewsProps)
                       }`}
                     >
                       <ThumbsUp className="h-3 w-3" />
-                      <span>
-                        Helpful ({review.helpfulCount || 0})
-                      </span>
+                      <span>Helpful ({review.helpfulCount || 0})</span>
                     </button>
                   </div>
                 </div>
@@ -466,7 +479,8 @@ export function ProductReviews({ productId, productTitle }: ProductReviewsProps)
                 Write a Product Review
               </DialogTitle>
               <DialogDescription className="text-xs">
-                Reviewing <span className="font-semibold text-foreground">{productTitle}</span>. Your perspective assists patrons across our collective atelier.
+                Reviewing <span className="font-semibold text-foreground">{productTitle}</span>.
+                Your perspective assists patrons across our collective atelier.
               </DialogDescription>
             </DialogHeader>
 
@@ -543,7 +557,8 @@ export function ProductReviews({ productId, productTitle }: ProductReviewsProps)
               <div className="rounded-xl p-3 bg-muted/40 border border-border/60 text-[11px] text-muted-foreground flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
                 <span>
-                  Patrons with a delivered order will automatically receive an exclusive <strong className="text-foreground">Verified Buyer</strong> badge.
+                  Patrons with a delivered order will automatically receive an exclusive{" "}
+                  <strong className="text-foreground">Verified Buyer</strong> badge.
                 </span>
               </div>
             </div>
@@ -587,12 +602,14 @@ export function ProductReviews({ productId, productTitle }: ProductReviewsProps)
               Sign In to Review Garments
             </DialogTitle>
             <DialogDescription className="text-xs">
-              To ensure all testimonials reflect authentic client experiences, please sign in to your Veyora account.
+              To ensure all testimonials reflect authentic client experiences, please sign in to
+              your Veyora account.
             </DialogDescription>
           </DialogHeader>
 
           <div className="py-2 text-xs text-muted-foreground">
-            Once signed in, you will be able to share your feedback and join our community of fashion connoisseurs.
+            Once signed in, you will be able to share your feedback and join our community of
+            fashion connoisseurs.
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">

@@ -14,8 +14,7 @@ export const adminCouponsApi = {
       params: query as Record<string, string | number | boolean | undefined | null>,
     }),
 
-  getCoupon: (id: string): Promise<CouponDto> =>
-    apiClient.get<CouponDto>(`/admin/coupons/${id}`),
+  getCoupon: (id: string): Promise<CouponDto> => apiClient.get<CouponDto>(`/admin/coupons/${id}`),
 
   createCoupon: (payload: CreateCouponPayload): Promise<CouponDto> =>
     apiClient.post<CouponDto>("/admin/coupons", payload),
@@ -26,8 +25,7 @@ export const adminCouponsApi = {
   toggleCouponStatus: (id: string): Promise<CouponDto> =>
     apiClient.patch<CouponDto>(`/admin/coupons/${id}/toggle-status`),
 
-  deleteCoupon: (id: string): Promise<void> =>
-    apiClient.delete<void>(`/admin/coupons/${id}`),
+  deleteCoupon: (id: string): Promise<void> => apiClient.delete<void>(`/admin/coupons/${id}`),
 
   getCouponAnalytics: (id: string): Promise<CouponAnalyticsDto> =>
     apiClient.get<CouponAnalyticsDto>(`/admin/coupons/${id}/analytics`),

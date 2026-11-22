@@ -61,7 +61,10 @@ export const createProductSchema = z.object({
   slug: z
     .string()
     .min(2)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must only contain lowercase alphanumeric characters and hyphens")
+    .regex(
+      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      "Slug must only contain lowercase alphanumeric characters and hyphens"
+    )
     .optional(),
   description: z.string().min(10, "Description must be at least 10 characters").trim(),
   price: z.coerce.number().positive("Price must be greater than 0"),

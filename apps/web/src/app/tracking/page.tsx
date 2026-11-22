@@ -120,7 +120,8 @@ export default function TrackingPage() {
           Track Your Delivery
         </h1>
         <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          Enter your Airway Bill (AWB) or Shipment Number to view real-time transit updates from our courier partners.
+          Enter your Airway Bill (AWB) or Shipment Number to view real-time transit updates from our
+          courier partners.
         </p>
       </div>
 
@@ -157,8 +158,8 @@ export default function TrackingPage() {
           <AlertCircle className="h-6 w-6 text-destructive mx-auto" />
           <p className="text-sm font-semibold text-foreground">No Shipment Found</p>
           <p className="text-xs text-muted-foreground">
-            We could not locate any active shipment with identifier &ldquo;{activeTrackingNumber}&rdquo;.
-            Please verify your AWB tracking number or contact our concierge.
+            We could not locate any active shipment with identifier &ldquo;{activeTrackingNumber}
+            &rdquo;. Please verify your AWB tracking number or contact our concierge.
           </p>
         </div>
       )}
@@ -265,7 +266,8 @@ export default function TrackingPage() {
               <span>Destination</span>
             </span>
             <p className="text-muted-foreground">
-              {shipment.shippingAddress.city}, {shipment.shippingAddress.state} {shipment.shippingAddress.postalCode}, {shipment.shippingAddress.country}
+              {shipment.shippingAddress.city}, {shipment.shippingAddress.state}{" "}
+              {shipment.shippingAddress.postalCode}, {shipment.shippingAddress.country}
             </p>
           </div>
         </div>

@@ -3,13 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useUIStore } from "@/stores/ui-store";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetClose,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, X, Sparkles, Shirt, Layers, Crown, Flame, Gem } from "lucide-react";
 import { SERVICES } from "@veyora/config";
@@ -34,7 +28,10 @@ export function MobileNav() {
         <SheetHeader className="flex flex-row items-center justify-between border-b pb-4">
           <SheetTitle className="flex items-center gap-2 text-base font-bold">
             <ShoppingBag className="h-5 w-5 text-primary" />
-            <span>{SERVICES.NAME} <span className="text-xs font-normal text-muted-foreground">Fashion</span></span>
+            <span>
+              {SERVICES.NAME}{" "}
+              <span className="text-xs font-normal text-muted-foreground">Fashion</span>
+            </span>
           </SheetTitle>
           <SheetClose asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">

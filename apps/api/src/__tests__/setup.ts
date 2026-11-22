@@ -10,9 +10,11 @@ vi.mock("bullmq", () => ({
   Queue: vi.fn().mockImplementation((name: string, options: any) => ({
     name,
     options,
-    add: vi.fn().mockImplementation((jobName: string, data: any, opts: any) =>
-      Promise.resolve({ id: opts?.jobId || `mock_job_${Date.now()}`, name: jobName, data, opts })
-    ),
+    add: vi
+      .fn()
+      .mockImplementation((jobName: string, data: any, opts: any) =>
+        Promise.resolve({ id: opts?.jobId || `mock_job_${Date.now()}`, name: jobName, data, opts })
+      ),
     close: vi.fn().mockResolvedValue(undefined),
   })),
   Worker: vi.fn().mockImplementation(() => ({
@@ -87,4 +89,3 @@ vi.mock("../modules/notification/models/notification.model", () => {
 
   return { NotificationModel: MockNotification };
 });
-

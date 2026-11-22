@@ -1,6 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { reviewService } from "../services/review.service";
-import { CreateReviewInput, ModerateReviewInput, ReviewQueryInput, AdminReviewQueryInput } from "@veyora/validators";
+import {
+  CreateReviewInput,
+  ModerateReviewInput,
+  ReviewQueryInput,
+  AdminReviewQueryInput,
+} from "@veyora/validators";
 
 export class ReviewController {
   /**

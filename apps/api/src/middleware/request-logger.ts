@@ -1,6 +1,7 @@
 import pinoHttp from "pino-http";
 import { logger } from "../config/logger";
 import { Request, Response } from "express";
+import { redactSensitiveData } from "@veyora/utils";
 
 export const requestLogger = pinoHttp({
   logger,
@@ -24,8 +25,8 @@ export const requestLogger = pinoHttp({
       id: req.id,
       method: req.method,
       url: req.url,
-      query: req.query,
-      params: req.params,
+      query: redactSensitiveData(req.query),
+      params: redactSensitiveData(req.params),
       remoteAddress: req.ip,
     }),
     res: (res: Response) => ({

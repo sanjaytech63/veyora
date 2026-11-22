@@ -119,7 +119,8 @@ export default function CustomerOrderDetailPage() {
           <div className="space-y-1">
             <h1 className="text-xl font-bold">Order Not Found</h1>
             <p className="text-xs text-muted-foreground">
-              We could not find the requested order telemetry. It may belong to another session or has been removed.
+              We could not find the requested order telemetry. It may belong to another session or
+              has been removed.
             </p>
           </div>
           <Button asChild className="rounded-full px-6 text-xs font-semibold">
@@ -183,11 +184,17 @@ export default function CustomerOrderDetailPage() {
             <p className="text-[11px] text-muted-foreground flex items-center gap-2">
               <Calendar className="h-3 w-3" />
               <span>
-                Placed on {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                Placed on{" "}
+                {new Date(order.createdAt).toLocaleDateString("en-IN", {
                   day: "numeric",
                   month: "long",
                   year: "numeric",
-                })} at {new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                })}{" "}
+                at{" "}
+                {new Date(order.createdAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </span>
             </p>
           </div>
@@ -214,14 +221,17 @@ export default function CustomerOrderDetailPage() {
                 const isPassed = activeStep >= idx;
                 const isCurrent = activeStep === idx;
                 return (
-                  <div key={step.status} className="flex flex-col items-center text-center space-y-2 relative">
+                  <div
+                    key={step.status}
+                    className="flex flex-col items-center text-center space-y-2 relative"
+                  >
                     <div
                       className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold transition-all ${
                         isCurrent
                           ? "bg-primary text-primary-foreground ring-4 ring-primary/20 scale-105"
                           : isPassed
-                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
-                          : "bg-muted text-muted-foreground"
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                            : "bg-muted text-muted-foreground"
                       }`}
                     >
                       {isPassed && !isCurrent ? (
@@ -232,7 +242,11 @@ export default function CustomerOrderDetailPage() {
                     </div>
                     <span
                       className={`text-[11px] font-medium ${
-                        isCurrent ? "text-primary font-bold" : isPassed ? "text-foreground" : "text-muted-foreground"
+                        isCurrent
+                          ? "text-primary font-bold"
+                          : isPassed
+                            ? "text-foreground"
+                            : "text-muted-foreground"
                       }`}
                     >
                       {step.label}
@@ -252,7 +266,9 @@ export default function CustomerOrderDetailPage() {
               <span>This order was cancelled</span>
             </div>
             {order.cancelReason && (
-              <p className="text-muted-foreground">Reason provided: &ldquo;{order.cancelReason}&rdquo;</p>
+              <p className="text-muted-foreground">
+                Reason provided: &ldquo;{order.cancelReason}&rdquo;
+              </p>
             )}
             {order.cancelledAt && (
               <p className="text-[10px] text-muted-foreground font-mono">
@@ -335,8 +351,11 @@ export default function CustomerOrderDetailPage() {
                 </p>
                 <p className="text-muted-foreground leading-relaxed">
                   {order.shippingAddress.street}
-                  {order.shippingAddress.apartment && `, ${order.shippingAddress.apartment}`}<br />
-                  {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.postalCode}<br />
+                  {order.shippingAddress.apartment && `, ${order.shippingAddress.apartment}`}
+                  <br />
+                  {order.shippingAddress.city}, {order.shippingAddress.state}{" "}
+                  {order.shippingAddress.postalCode}
+                  <br />
                   {order.shippingAddress.country}
                 </p>
                 {order.shippingAddress.phone && (
@@ -356,8 +375,11 @@ export default function CustomerOrderDetailPage() {
                 </p>
                 <p className="text-muted-foreground leading-relaxed">
                   {order.billingAddress.street}
-                  {order.billingAddress.apartment && `, ${order.billingAddress.apartment}`}<br />
-                  {order.billingAddress.city}, {order.billingAddress.state} {order.billingAddress.postalCode}<br />
+                  {order.billingAddress.apartment && `, ${order.billingAddress.apartment}`}
+                  <br />
+                  {order.billingAddress.city}, {order.billingAddress.state}{" "}
+                  {order.billingAddress.postalCode}
+                  <br />
                   {order.billingAddress.country}
                 </p>
               </div>
@@ -373,7 +395,10 @@ export default function CustomerOrderDetailPage() {
               <div className="space-y-3 text-xs">
                 {order.statusHistory && order.statusHistory.length > 0 ? (
                   order.statusHistory.map((step, idx) => (
-                    <div key={idx} className="flex items-start gap-3 border-b border-border/50 pb-3 last:border-b-0 last:pb-0">
+                    <div
+                      key={idx}
+                      className="flex items-start gap-3 border-b border-border/50 pb-3 last:border-b-0 last:pb-0"
+                    >
                       <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">
                         {idx + 1}
                       </div>
@@ -387,7 +412,9 @@ export default function CustomerOrderDetailPage() {
                           </span>
                         </div>
                         {step.reason && (
-                          <p className="text-[11px] text-muted-foreground italic">&ldquo;{step.reason}&rdquo;</p>
+                          <p className="text-[11px] text-muted-foreground italic">
+                            &ldquo;{step.reason}&rdquo;
+                          </p>
                         )}
                       </div>
                     </div>
@@ -439,21 +466,37 @@ export default function CustomerOrderDetailPage() {
                 {order.tracking?.estimatedDeliveryDate && (
                   <div className="flex justify-between">
                     <span>Estimated Arrival</span>
-                    <span className="font-medium text-foreground">{order.tracking.estimatedDeliveryDate}</span>
+                    <span className="font-medium text-foreground">
+                      {order.tracking.estimatedDeliveryDate}
+                    </span>
                   </div>
                 )}
 
                 {order.tracking?.trackingNumber && (
                   <div className="pt-2 flex flex-col gap-2">
-                    <Button asChild size="sm" variant="default" className="w-full rounded-xl text-xs">
+                    <Button
+                      asChild
+                      size="sm"
+                      variant="default"
+                      className="w-full rounded-xl text-xs"
+                    >
                       <Link href={`/tracking`}>
                         <Truck className="h-3.5 w-3.5 mr-1.5" />
                         <span>Track Parcel Live</span>
                       </Link>
                     </Button>
                     {order.tracking.trackingUrl && (
-                      <Button asChild size="sm" variant="outline" className="w-full rounded-xl text-xs">
-                        <a href={order.tracking.trackingUrl} target="_blank" rel="noopener noreferrer">
+                      <Button
+                        asChild
+                        size="sm"
+                        variant="outline"
+                        className="w-full rounded-xl text-xs"
+                      >
+                        <a
+                          href={order.tracking.trackingUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           <span>External Carrier Portal</span>
                           <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
                         </a>
@@ -487,7 +530,11 @@ export default function CustomerOrderDetailPage() {
 
                 <div className="flex justify-between text-muted-foreground">
                   <span>Courier Delivery</span>
-                  <span>{order.shippingCost === 0 ? "Complimentary" : `$${order.shippingCost.toFixed(2)}`}</span>
+                  <span>
+                    {order.shippingCost === 0
+                      ? "Complimentary"
+                      : `$${order.shippingCost.toFixed(2)}`}
+                  </span>
                 </div>
 
                 <div className="flex justify-between text-muted-foreground">

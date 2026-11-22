@@ -72,7 +72,9 @@ export function CartDrawer() {
                 <Sparkles className="h-3 w-3 text-amber-500" />
                 {amountToFreeShipping > 0 ? (
                   <>
-                    Add <strong className="text-foreground">${amountToFreeShipping.toFixed(2)}</strong> for free express shipping
+                    Add{" "}
+                    <strong className="text-foreground">${amountToFreeShipping.toFixed(2)}</strong>{" "}
+                    for free express shipping
                   </>
                 ) : (
                   <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
@@ -116,7 +118,8 @@ export function CartDrawer() {
               Your bag is currently empty
             </h3>
             <p className="mt-1.5 max-w-xs text-xs text-muted-foreground leading-relaxed">
-              Explore our handcrafted Indian silks, embroidered bridal ensembles, and contemporary luxury kurtis.
+              Explore our handcrafted Indian silks, embroidered bridal ensembles, and contemporary
+              luxury kurtis.
             </p>
             <Button
               asChild
@@ -209,7 +212,10 @@ export function CartDrawer() {
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 rounded-md p-0"
-                        disabled={isUpdatingQuantity || (item.maxStock !== undefined && item.quantity >= item.maxStock)}
+                        disabled={
+                          isUpdatingQuantity ||
+                          (item.maxStock !== undefined && item.quantity >= item.maxStock)
+                        }
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
                         aria-label="Increase quantity"
                       >
@@ -240,7 +246,9 @@ export function CartDrawer() {
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between font-medium text-muted-foreground">
                 <span>Subtotal</span>
-                <span className="text-foreground font-semibold tabular-nums">${subtotal.toFixed(2)}</span>
+                <span className="text-foreground font-semibold tabular-nums">
+                  ${subtotal.toFixed(2)}
+                </span>
               </div>
               {totals.discount > 0 && (
                 <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-medium">
@@ -252,7 +260,9 @@ export function CartDrawer() {
                 <span>Shipping</span>
                 <span>
                   {totals.shipping === 0 ? (
-                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Free Express</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                      Free Express
+                    </span>
                   ) : (
                     `$${totals.shipping.toFixed(2)}`
                   )}

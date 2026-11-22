@@ -170,4 +170,5 @@ couponSchema.virtual("status").get(function (this: ICoupon): CouponStatus {
 });
 
 export const Coupon: mongoose.Model<ICoupon> =
-  (mongoose.models.Coupon as mongoose.Model<ICoupon>) || mongoose.model<ICoupon>("Coupon", couponSchema);
+  (mongoose.models.Coupon as mongoose.Model<ICoupon>) ||
+  mongoose.model<ICoupon>("Coupon", couponSchema);

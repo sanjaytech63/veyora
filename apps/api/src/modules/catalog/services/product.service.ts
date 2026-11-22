@@ -2,7 +2,12 @@ import { Product, IProduct } from "../models/product.model";
 import { Category } from "../models/category.model";
 import { Brand } from "../models/brand.model";
 import { CreateProductInput, UpdateProductInput, ProductQueryInput } from "@veyora/validators";
-import { Product as ProductType, Category as CategoryType, Brand as BrandType, CatalogStats } from "@veyora/types";
+import {
+  Product as ProductType,
+  Category as CategoryType,
+  Brand as BrandType,
+  CatalogStats,
+} from "@veyora/types";
 import { ConflictError, NotFoundError, slugify } from "@veyora/utils";
 import mongoose from "mongoose";
 import { catalogCacheService } from "./catalog-cache.service";
@@ -256,11 +261,7 @@ export class ProductService {
       .populate("categoryId")
       .populate("brandId")) as unknown as PopulatedProductDoc | null;
 
-    return this.toProductDto(
-      product,
-      populated?.categoryId,
-      populated?.brandId ?? undefined
-    );
+    return this.toProductDto(product, populated?.categoryId, populated?.brandId ?? undefined);
   }
 
   async deleteProduct(id: string, hardDelete = false): Promise<void> {
@@ -371,9 +372,7 @@ export class ProductService {
     ]);
 
     const result = {
-      items: products.map((p) =>
-        this.toProductDto(p, p.categoryId, p.brandId ?? undefined)
-      ),
+      items: products.map((p) => this.toProductDto(p, p.categoryId, p.brandId ?? undefined)),
       total,
       page,
       limit,

@@ -1,9 +1,5 @@
 import { apiClient } from "./api-client";
-import {
-  CalculateShippingPayload,
-  CalculateShippingResult,
-  ShipmentDto,
-} from "@veyora/types";
+import { CalculateShippingPayload, CalculateShippingResult, ShipmentDto } from "@veyora/types";
 
 export const shippingApi = {
   calculateRates: (payload: CalculateShippingPayload): Promise<CalculateShippingResult> =>

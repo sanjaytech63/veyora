@@ -37,7 +37,12 @@ export class PaymentService {
   ): Promise<PaymentOrderInitDto> {
     const isObjectId = mongoose.Types.ObjectId.isValid(orderIdOrNumber);
     const orderQuery: Record<string, any> = isObjectId
-      ? { $or: [{ _id: new Types.ObjectId(orderIdOrNumber) }, { orderNumber: orderIdOrNumber.toUpperCase() }] }
+      ? {
+          $or: [
+            { _id: new Types.ObjectId(orderIdOrNumber) },
+            { orderNumber: orderIdOrNumber.toUpperCase() },
+          ],
+        }
       : { orderNumber: orderIdOrNumber.toUpperCase() };
 
     const order = await Order.findOne(orderQuery);
@@ -53,7 +58,9 @@ export class PaymentService {
     }
 
     if (order.status === "cancelled" || order.status === "refunded") {
-      throw new BadRequestError(`Cannot initiate payment for order in terminal status "${order.status}".`);
+      throw new BadRequestError(
+        `Cannot initiate payment for order in terminal status "${order.status}".`
+      );
     }
 
     // Check if order already has a successful payment
@@ -145,7 +152,12 @@ export class PaymentService {
   ): Promise<PaymentVerificationResultDto> {
     const isObjectId = mongoose.Types.ObjectId.isValid(payload.orderId);
     const orderQuery: Record<string, any> = isObjectId
-      ? { $or: [{ _id: new Types.ObjectId(payload.orderId) }, { orderNumber: payload.orderId.toUpperCase() }] }
+      ? {
+          $or: [
+            { _id: new Types.ObjectId(payload.orderId) },
+            { orderNumber: payload.orderId.toUpperCase() },
+          ],
+        }
       : { orderNumber: payload.orderId.toUpperCase() };
 
     const order = await Order.findOne(orderQuery);
@@ -293,7 +305,10 @@ export class PaymentService {
     // 3. Idempotency Check: reject duplicate processing
     const existingEvent = await WebhookEvent.findOne({ eventId });
     if (existingEvent) {
-      logger.info("WEBHOOK", "Webhook event already processed (idempotent ACK).", { eventId, eventType });
+      logger.info("WEBHOOK", "Webhook event already processed (idempotent ACK).", {
+        eventId,
+        eventType,
+      });
       return { success: true, message: "Webhook already processed.", duplicate: true };
     }
 
@@ -311,7 +326,8 @@ export class PaymentService {
     // 5. Handle Provider Events
     try {
       if (eventType === "order.paid" || eventType === "payment.captured") {
-        const paymentEntity = eventPayload.payload?.payment?.entity || eventPayload.payload?.order?.entity;
+        const paymentEntity =
+          eventPayload.payload?.payment?.entity || eventPayload.payload?.order?.entity;
         const gatewayOrderId = paymentEntity?.order_id || paymentEntity?.id;
         const gatewayPaymentId = paymentEntity?.id;
 
@@ -346,7 +362,8 @@ export class PaymentService {
             payment.status = "failed";
             payment.error = {
               code: paymentEntity?.error_code || "PAYMENT_FAILED",
-              description: paymentEntity?.error_description || "Payment failed via gateway webhook.",
+              description:
+                paymentEntity?.error_description || "Payment failed via gateway webhook.",
               timestamp: new Date(),
             };
             await payment.save();
@@ -359,7 +376,9 @@ export class PaymentService {
           const payment = await Payment.findOne({ gatewayPaymentId });
           if (payment) {
             const refundAmount = Number(refundEntity.amount) / 100;
-            const existingRefund = payment.refunds.find((r) => r.gatewayRefundId === refundEntity.id);
+            const existingRefund = payment.refunds.find(
+              (r) => r.gatewayRefundId === refundEntity.id
+            );
             if (!existingRefund) {
               payment.refunds.push({
                 refundId: `ref_${crypto.randomBytes(6).toString("hex")}`,
@@ -423,7 +442,12 @@ export class PaymentService {
   ): Promise<PaymentRefundDto> {
     const isObjectId = mongoose.Types.ObjectId.isValid(orderIdOrNumber);
     const orderQuery: Record<string, any> = isObjectId
-      ? { $or: [{ _id: new Types.ObjectId(orderIdOrNumber) }, { orderNumber: orderIdOrNumber.toUpperCase() }] }
+      ? {
+          $or: [
+            { _id: new Types.ObjectId(orderIdOrNumber) },
+            { orderNumber: orderIdOrNumber.toUpperCase() },
+          ],
+        }
       : { orderNumber: orderIdOrNumber.toUpperCase() };
 
     const order = await Order.findOne(orderQuery);
@@ -518,7 +542,12 @@ export class PaymentService {
   ): Promise<PaymentDetailsDto> {
     const isObjectId = mongoose.Types.ObjectId.isValid(orderIdOrNumber);
     const orderQuery: Record<string, any> = isObjectId
-      ? { $or: [{ _id: new Types.ObjectId(orderIdOrNumber) }, { orderNumber: orderIdOrNumber.toUpperCase() }] }
+      ? {
+          $or: [
+            { _id: new Types.ObjectId(orderIdOrNumber) },
+            { orderNumber: orderIdOrNumber.toUpperCase() },
+          ],
+        }
       : { orderNumber: orderIdOrNumber.toUpperCase() };
 
     const order = await Order.findOne(orderQuery);

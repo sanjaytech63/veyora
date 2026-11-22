@@ -1,15 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-} from "recharts";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { TopSellingProductDto } from "@veyora/types";
 
 interface TopProductsChartProps {
@@ -29,7 +21,9 @@ export function TopProductsChart({ data, isLoading }: TopProductsChartProps) {
   if (!data || data.length === 0) {
     return (
       <div className="flex h-[280px] w-full items-center justify-center rounded-2xl border border-dashed border-border/80">
-        <span className="text-xs text-muted-foreground">No product sales recorded in this interval.</span>
+        <span className="text-xs text-muted-foreground">
+          No product sales recorded in this interval.
+        </span>
       </div>
     );
   }
@@ -39,12 +33,13 @@ export function TopProductsChart({ data, isLoading }: TopProductsChartProps) {
   return (
     <div className="h-[280px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          data={data}
-          layout="vertical"
-          margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" className="dark:stroke-neutral-800" />
+        <BarChart data={data} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+          <CartesianGrid
+            strokeDasharray="3 3"
+            horizontal={false}
+            stroke="#e5e7eb"
+            className="dark:stroke-neutral-800"
+          />
           <XAxis
             type="number"
             tickLine={false}
@@ -81,7 +76,9 @@ export function TopProductsChart({ data, isLoading }: TopProductsChartProps) {
                       </div>
                       <div className="flex justify-between gap-4 text-xs">
                         <span className="text-muted-foreground">Current Stock:</span>
-                        <span className="font-semibold text-foreground">{p.currentStock} in atelier</span>
+                        <span className="font-semibold text-foreground">
+                          {p.currentStock} in atelier
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -90,12 +87,7 @@ export function TopProductsChart({ data, isLoading }: TopProductsChartProps) {
               return null;
             }}
           />
-          <Bar
-            dataKey="totalRevenue"
-            fill="#6366f1"
-            radius={[0, 6, 6, 0]}
-            barSize={18}
-          />
+          <Bar dataKey="totalRevenue" fill="#6366f1" radius={[0, 6, 6, 0]} barSize={18} />
         </BarChart>
       </ResponsiveContainer>
     </div>

@@ -1,0 +1,67 @@
+name: Veyora Continuous Delivery (Template)
+
+# Trigger deployment on push to main branch after CI passes
+on:
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: "Deployment Environment Target"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - staging
+          - production
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-containers:
+    name: Build & Deploy Container Images
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run verification checks
+        run: |
+          npm run typecheck
+          npm run lint:check
+          npm run format:check
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Note: Wire secrets when production container registry (e.g. AWS ECR / GHCR) is provisioned
+      - name: Docker Meta Definition
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository_owner }}/veyora-api
+            ghcr.io/${{ github.repository_owner }}/veyora-worker
+            ghcr.io/${{ github.repository_owner }}/veyora-web
+            ghcr.io/${{ github.repository_owner }}/veyora-admin
+          tags: |
+            type=sha,format=long
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Document CD Deployment State
+        run: |
+          echo "Production CD Pipeline configured and ready for container registry credentials."
+          echo "Services covered: [API, Worker, Storefront Web, Admin Console]"

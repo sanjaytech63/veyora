@@ -47,7 +47,10 @@ export default function SingleCollectionPage() {
     <div className="py-8 md:py-12 space-y-12">
       <Container size="xl" className="space-y-10">
         {/* Breadcrumb Trail */}
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-muted-foreground">
+        <nav
+          aria-label="Breadcrumb"
+          className="flex items-center gap-2 text-xs text-muted-foreground"
+        >
           <Link href="/" className="hover:text-foreground transition-colors">
             Home
           </Link>

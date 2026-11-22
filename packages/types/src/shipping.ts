@@ -4,20 +4,9 @@
 
 import { AddressDto } from "./address";
 
-export type ShippingMethodType =
-  | "standard"
-  | "express"
-  | "overnight"
-  | "white_glove"
-  | "custom";
+export type ShippingMethodType = "standard" | "express" | "overnight" | "white_glove" | "custom";
 
-export type CarrierType =
-  | "delhivery"
-  | "shiprocket"
-  | "bluedart"
-  | "fedex"
-  | "dhl"
-  | "custom";
+export type CarrierType = "delhivery" | "shiprocket" | "bluedart" | "fedex" | "dhl" | "custom";
 
 export type ShipmentStatus =
   | "pending"

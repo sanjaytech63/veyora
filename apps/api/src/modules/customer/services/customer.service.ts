@@ -31,7 +31,9 @@ export class CustomerService {
   public toCustomerDto(user: IUser, stats?: CustomerStats): CustomerDto {
     const ordersCount = stats?.ordersCount ?? 0;
     const totalSpent = stats?.totalSpent ?? 0;
-    const averageOrderValue = stats?.averageOrderValue ?? (ordersCount > 0 ? Math.round((totalSpent / ordersCount) * 100) / 100 : 0);
+    const averageOrderValue =
+      stats?.averageOrderValue ??
+      (ordersCount > 0 ? Math.round((totalSpent / ordersCount) * 100) / 100 : 0);
 
     return {
       id: user._id.toString(),
@@ -66,7 +68,9 @@ export class CustomerService {
       performerRole: activity.performerRole,
       details: activity.details || undefined,
       reason: activity.reason || null,
-      timestamp: activity.createdAt ? new Date(activity.createdAt).toISOString() : new Date().toISOString(),
+      timestamp: activity.createdAt
+        ? new Date(activity.createdAt).toISOString()
+        : new Date().toISOString(),
     };
   }
 
@@ -85,12 +89,7 @@ export class CustomerService {
     if (query?.search && query.search.trim()) {
       const term = query.search.trim();
       const regex = new RegExp(term, "i");
-      filter.$or = [
-        { firstName: regex },
-        { lastName: regex },
-        { email: regex },
-        { phone: regex },
-      ];
+      filter.$or = [{ firstName: regex }, { lastName: regex }, { email: regex }, { phone: regex }];
     }
 
     // Status filter
@@ -134,9 +133,13 @@ export class CustomerService {
 
     // In-memory sort if requested by aggregate metric
     if (query?.sortBy === "ordersCount") {
-      items.sort((a, b) => (query.sortOrder === "asc" ? a.ordersCount - b.ordersCount : b.ordersCount - a.ordersCount));
+      items.sort((a, b) =>
+        query.sortOrder === "asc" ? a.ordersCount - b.ordersCount : b.ordersCount - a.ordersCount
+      );
     } else if (query?.sortBy === "totalSpent") {
-      items.sort((a, b) => (query.sortOrder === "asc" ? a.totalSpent - b.totalSpent : b.totalSpent - a.totalSpent));
+      items.sort((a, b) =>
+        query.sortOrder === "asc" ? a.totalSpent - b.totalSpent : b.totalSpent - a.totalSpent
+      );
     }
 
     return {
@@ -165,7 +168,10 @@ export class CustomerService {
     const stats = await this.getCustomerStats(user._id);
 
     // Fetch customer's saved addresses
-    const addresses = await Address.find({ userId: user._id }).sort({ isDefault: -1, createdAt: -1 });
+    const addresses = await Address.find({ userId: user._id }).sort({
+      isDefault: -1,
+      createdAt: -1,
+    });
     const addressDtos = addresses.map((a: IAddress) => checkoutService.toAddressDto(a));
 
     // Fetch customer's recent orders
@@ -228,7 +234,10 @@ export class CustomerService {
       throw new NotFoundError("Customer not found.");
     }
 
-    const addresses = await Address.find({ userId: user._id }).sort({ isDefault: -1, createdAt: -1 });
+    const addresses = await Address.find({ userId: user._id }).sort({
+      isDefault: -1,
+      createdAt: -1,
+    });
     return addresses.map((a: IAddress) => checkoutService.toAddressDto(a));
   }
 
@@ -268,7 +277,9 @@ export class CustomerService {
         previousStatus: previousStatus ? "active" : "inactive",
         newStatus: payload.isActive ? "active" : "inactive",
       },
-      reason: payload.reason || (payload.isActive ? "Customer account re-activated." : "Customer account suspended."),
+      reason:
+        payload.reason ||
+        (payload.isActive ? "Customer account re-activated." : "Customer account suspended."),
     });
 
     const stats = await this.getCustomerStats(user._id);
@@ -342,8 +353,13 @@ export class CustomerService {
     }
     totalSpent = Math.round(totalSpent * 100) / 100;
     const averageOrderValue =
-      nonCancelledOrders.length > 0 ? Math.round((totalSpent / nonCancelledOrders.length) * 100) / 100 : 0;
-    const lastOrderAt = orders.length > 0 && orders[0]?.createdAt ? new Date(orders[0].createdAt).toISOString() : null;
+      nonCancelledOrders.length > 0
+        ? Math.round((totalSpent / nonCancelledOrders.length) * 100) / 100
+        : 0;
+    const lastOrderAt =
+      orders.length > 0 && orders[0]?.createdAt
+        ? new Date(orders[0].createdAt).toISOString()
+        : null;
 
     return {
       ordersCount,
@@ -356,7 +372,9 @@ export class CustomerService {
   /**
    * Internal Helper: Batch calculate customer stats
    */
-  private async batchGetCustomerStats(userIds: Types.ObjectId[]): Promise<Map<string, CustomerStats>> {
+  private async batchGetCustomerStats(
+    userIds: Types.ObjectId[]
+  ): Promise<Map<string, CustomerStats>> {
     const statsMap = new Map<string, CustomerStats>();
     if (userIds.length === 0) return statsMap;
 

@@ -82,9 +82,7 @@ export class InventoryService {
     if (!product) return;
 
     if (doc.variantId) {
-      const variant = product.variants?.find(
-        (v) => v.sku.toUpperCase() === doc.sku.toUpperCase()
-      );
+      const variant = product.variants?.find((v) => v.sku.toUpperCase() === doc.sku.toUpperCase());
       if (variant) {
         variant.stock = doc.onHand;
       }
@@ -175,8 +173,12 @@ export class InventoryService {
       inventory = await Inventory.create({
         productId: product._id,
         productTitle: product.title,
-        variantId: variant ? (variant as unknown as { _id?: mongoose.Types.ObjectId })._id ?? null : null,
-        variantName: variant ? [variant.color, variant.size].filter(Boolean).join(" / ") : undefined,
+        variantId: variant
+          ? ((variant as unknown as { _id?: mongoose.Types.ObjectId })._id ?? null)
+          : null,
+        variantName: variant
+          ? [variant.color, variant.size].filter(Boolean).join(" / ")
+          : undefined,
         sku,
         onHand: 0,
         reserved: 0,
@@ -370,11 +372,7 @@ export class InventoryService {
     return this.toInventoryDto(item);
   }
 
-  async getMovements(
-    skuOrId: string,
-    page = 1,
-    limit = 20
-  ): Promise<PaginatedMovements> {
+  async getMovements(skuOrId: string, page = 1, limit = 20): Promise<PaginatedMovements> {
     const isObjectId = mongoose.Types.ObjectId.isValid(skuOrId);
     const filter = isObjectId
       ? { $or: [{ inventoryId: skuOrId }, { sku: skuOrId.toUpperCase() }] }
@@ -399,27 +397,22 @@ export class InventoryService {
   }
 
   async getInventoryStats(): Promise<InventoryStats> {
-    const [
-      totalTrackedItems,
-      inStockCount,
-      lowStockCount,
-      outOfStockCount,
-      aggregation,
-    ] = await Promise.all([
-      Inventory.countDocuments(),
-      Inventory.countDocuments({ status: "in_stock" }),
-      Inventory.countDocuments({ status: "low_stock" }),
-      Inventory.countDocuments({ status: "out_of_stock" }),
-      Inventory.aggregate([
-        {
-          $group: {
-            _id: null,
-            totalUnitsOnHand: { $sum: "$onHand" },
-            totalUnitsReserved: { $sum: "$reserved" },
+    const [totalTrackedItems, inStockCount, lowStockCount, outOfStockCount, aggregation] =
+      await Promise.all([
+        Inventory.countDocuments(),
+        Inventory.countDocuments({ status: "in_stock" }),
+        Inventory.countDocuments({ status: "low_stock" }),
+        Inventory.countDocuments({ status: "out_of_stock" }),
+        Inventory.aggregate([
+          {
+            $group: {
+              _id: null,
+              totalUnitsOnHand: { $sum: "$onHand" },
+              totalUnitsReserved: { $sum: "$reserved" },
+            },
           },
-        },
-      ]),
-    ]);
+        ]),
+      ]);
 
     const totals = aggregation[0] || { totalUnitsOnHand: 0, totalUnitsReserved: 0 };
 

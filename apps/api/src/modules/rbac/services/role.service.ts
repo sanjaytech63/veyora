@@ -26,7 +26,8 @@ export class RoleService {
       {
         name: "admin",
         displayName: "Administrator",
-        description: "Comprehensive administration access across products, orders, inventory, and promotions.",
+        description:
+          "Comprehensive administration access across products, orders, inventory, and promotions.",
         permissions: [
           "products:read",
           "products:write",
@@ -88,7 +89,8 @@ export class RoleService {
       {
         name: "inventory_specialist",
         displayName: "Inventory Specialist",
-        description: "Oversees atelier garment stocks, warehouse counts, and inventory replenishments.",
+        description:
+          "Oversees atelier garment stocks, warehouse counts, and inventory replenishments.",
         permissions: ["inventory:read", "inventory:write", "products:read"],
         isSystem: false,
       },
@@ -102,7 +104,11 @@ export class RoleService {
     ];
 
     for (const r of defaultRoles) {
-      await Role.findOneAndUpdate({ name: r.name }, { $setOnInsert: r }, { upsert: true, new: true });
+      await Role.findOneAndUpdate(
+        { name: r.name },
+        { $setOnInsert: r },
+        { upsert: true, new: true }
+      );
     }
   }
 
@@ -244,7 +250,9 @@ export class RoleService {
     // System roles protection
     if (role.isSystem && role.name === "superadmin" && input.permissions) {
       if (!input.permissions.includes("*")) {
-        throw new ForbiddenError("Cannot revoke root wildcard permission from Superadmin system role");
+        throw new ForbiddenError(
+          "Cannot revoke root wildcard permission from Superadmin system role"
+        );
       }
     }
 
@@ -310,7 +318,10 @@ export class RoleService {
   /**
    * Delete custom administrative role
    */
-  public async deleteRole(actor: LogActor, id: string): Promise<{ success: boolean; message: string }> {
+  public async deleteRole(
+    actor: LogActor,
+    id: string
+  ): Promise<{ success: boolean; message: string }> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new BadRequestError("Invalid role ID format");
     }

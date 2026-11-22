@@ -54,7 +54,8 @@ export function AdminNav({ collapsed = false }: { collapsed?: boolean }) {
     <nav className="grid items-start gap-1 px-2 text-sm font-medium">
       {adminNavItems.map((item) => {
         const Icon = item.icon;
-        const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+        const isActive =
+          pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
 
         return (
           <Link
@@ -62,7 +63,8 @@ export function AdminNav({ collapsed = false }: { collapsed?: boolean }) {
             href={item.href}
             className={cn(
               "flex items-center gap-3 rounded-xl px-3 py-2.5 text-muted-foreground transition-all hover:text-foreground hover:bg-accent/60",
-              isActive && "bg-primary text-primary-foreground font-semibold hover:bg-primary hover:text-primary-foreground",
+              isActive &&
+                "bg-primary text-primary-foreground font-semibold hover:bg-primary hover:text-primary-foreground",
               collapsed && "justify-center px-2"
             )}
             title={collapsed ? item.title : undefined}

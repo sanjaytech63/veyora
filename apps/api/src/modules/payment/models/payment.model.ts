@@ -114,14 +114,7 @@ const paymentSchema = new Schema<IPayment>(
     },
     status: {
       type: String,
-      enum: [
-        "pending",
-        "processing",
-        "successful",
-        "failed",
-        "refunded",
-        "partially_refunded",
-      ],
+      enum: ["pending", "processing", "successful", "failed", "refunded", "partially_refunded"],
       default: "pending",
       index: true,
     },

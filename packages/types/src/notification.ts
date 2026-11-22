@@ -2,12 +2,7 @@
  * Notification Domain Types for Veyora
  */
 
-export type NotificationType =
-  | "order"
-  | "payment"
-  | "shipping"
-  | "account"
-  | "system";
+export type NotificationType = "order" | "payment" | "shipping" | "account" | "system";
 
 export interface NotificationDto {
   id: string;

@@ -162,5 +162,4 @@ shipmentSchema.index({ orderId: 1, createdAt: -1 });
 shipmentSchema.index({ carrier: 1, status: 1 });
 
 export const ShipmentModel: Model<IShipmentDoc> =
-  mongoose.models["Shipment"] ||
-  mongoose.model<IShipmentDoc>("Shipment", shipmentSchema);
+  mongoose.models["Shipment"] || mongoose.model<IShipmentDoc>("Shipment", shipmentSchema);

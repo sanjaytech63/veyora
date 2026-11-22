@@ -21,8 +21,7 @@ const workerNotificationSchema = new Schema(
 );
 
 const WorkerNotificationModel: Model<any> =
-  mongoose.models["Notification"] ||
-  mongoose.model("Notification", workerNotificationSchema);
+  mongoose.models["Notification"] || mongoose.model("Notification", workerNotificationSchema);
 
 export async function processNotificationJob(
   job: Job<NotificationJobPayload>
