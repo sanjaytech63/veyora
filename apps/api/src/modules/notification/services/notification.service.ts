@@ -137,6 +137,29 @@ export class NotificationService {
   }
 
   /**
+   * Get single notification by ID (with strict ownership check)
+   */
+  public async getNotificationById(
+    userId: string,
+    notificationId: string
+  ): Promise<NotificationDto> {
+    if (!Types.ObjectId.isValid(notificationId) || !Types.ObjectId.isValid(userId)) {
+      throw new BadRequestError("Invalid identifier format");
+    }
+
+    const notification = await NotificationModel.findOne({
+      _id: new Types.ObjectId(notificationId),
+      userId: new Types.ObjectId(userId),
+    });
+
+    if (!notification) {
+      throw new NotFoundError(`Notification not found with ID: ${notificationId}`);
+    }
+
+    return this.toNotificationDto(notification);
+  }
+
+  /**
    * Mark single notification as read (with strict ownership check)
    */
   public async markAsRead(userId: string, notificationId: string): Promise<NotificationDto> {
@@ -156,6 +179,39 @@ export class NotificationService {
     if (!notification.isRead) {
       notification.isRead = true;
       notification.readAt = new Date();
+      await notification.save();
+
+      // Emit updated count
+      const count = await NotificationModel.countDocuments({
+        userId: new Types.ObjectId(userId),
+        isRead: false,
+      });
+      eventPublisher.publishUnreadCount(userId, count);
+    }
+
+    return this.toNotificationDto(notification);
+  }
+
+  /**
+   * Mark single notification as unread (with strict ownership check)
+   */
+  public async markAsUnread(userId: string, notificationId: string): Promise<NotificationDto> {
+    if (!Types.ObjectId.isValid(notificationId) || !Types.ObjectId.isValid(userId)) {
+      throw new BadRequestError("Invalid identifier format");
+    }
+
+    const notification = await NotificationModel.findOne({
+      _id: new Types.ObjectId(notificationId),
+      userId: new Types.ObjectId(userId),
+    });
+
+    if (!notification) {
+      throw new NotFoundError(`Notification not found with ID: ${notificationId}`);
+    }
+
+    if (notification.isRead) {
+      notification.isRead = false;
+      notification.readAt = null;
       await notification.save();
 
       // Emit updated count

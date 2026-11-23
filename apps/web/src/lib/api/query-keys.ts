@@ -64,6 +64,14 @@ export const profileKeys = {
   completion: () => ["profile", "completion"] as const,
 };
 
+export const notificationKeys = {
+  all: ["notifications"] as const,
+  list: (filters?: Record<string, unknown>) =>
+    ["notifications", "list", ...(filters ? [filters] : [])] as const,
+  unreadCount: () => ["notifications", "unread-count"] as const,
+  detail: (id: string) => ["notifications", "detail", id] as const,
+};
+
 export function createEntityKeyFactory(entityName: string) {
   return {
     all: [entityName] as const,

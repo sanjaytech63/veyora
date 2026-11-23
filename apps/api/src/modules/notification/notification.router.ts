@@ -22,19 +22,31 @@ router.get(
   notificationController.getUnreadCount.bind(notificationController)
 );
 
-// 3. Mark single notification as read
+// 3. Get single notification detail (with strict ownership check)
+router.get(
+  "/notifications/:id",
+  notificationController.getNotification.bind(notificationController)
+);
+
+// 4. Mark single notification as read
 router.patch(
   "/notifications/:id/read",
   notificationController.markAsRead.bind(notificationController)
 );
 
-// 4. Mark all user notifications as read
+// 5. Mark single notification as unread
+router.patch(
+  "/notifications/:id/unread",
+  notificationController.markAsUnread.bind(notificationController)
+);
+
+// 6. Mark all user notifications as read
 router.patch(
   "/notifications/read-all",
   notificationController.markAllAsRead.bind(notificationController)
 );
 
-// 5. Delete notification
+// 7. Delete notification
 router.delete(
   "/notifications/:id",
   notificationController.deleteNotification.bind(notificationController)

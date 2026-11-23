@@ -611,6 +611,77 @@ describe("Phase P — Veyora Notifications, Background Workers & Socket.IO Test 
       expect(res.body.success).toBe(true);
       expect(res.body.message).toContain("deleted successfully");
     });
+
+    it("getNotification should return notification when owned by user", async () => {
+      const notif = await notificationService.createNotification({
+        userId: customerUserId.toString(),
+        type: "order",
+        title: "Order Detail Notice",
+        message: "Your order details are confirmed",
+      });
+
+      const req: any = {
+        user: { id: customerUserId.toString() },
+        params: { id: notif.id },
+      };
+      const res = createMockRes();
+      const next = vi.fn();
+
+      await notificationController.getNotification(req, res, next);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.id).toBe(notif.id);
+      expect(res.body.data.title).toBe("Order Detail Notice");
+    });
+
+    it("getNotification should forward 404 when notification belongs to another user", async () => {
+      const notif = await notificationService.createNotification({
+        userId: otherCustomerUserId.toString(),
+        type: "order",
+        title: "Other User Notice",
+        message: "Forbidden",
+      });
+
+      const req: any = {
+        user: { id: customerUserId.toString() },
+        params: { id: notif.id },
+      };
+      const res = createMockRes();
+      const next = vi.fn();
+
+      await notificationController.getNotification(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining("Notification not found"),
+        })
+      );
+    });
+
+    it("markAsUnread should mark a read notification back as unread", async () => {
+      const notif = await notificationService.createNotification({
+        userId: customerUserId.toString(),
+        type: "shipping",
+        title: "Delivered Package",
+        message: "Package arrived at reception",
+      });
+      await notificationService.markAsRead(customerUserId.toString(), notif.id);
+
+      const req: any = {
+        user: { id: customerUserId.toString() },
+        params: { id: notif.id },
+      };
+      const res = createMockRes();
+      const next = vi.fn();
+
+      await notificationController.markAsUnread(req, res, next);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.isRead).toBe(false);
+      expect(res.body.data.readAt).toBeNull();
+    });
   });
 
   // =========================================================================

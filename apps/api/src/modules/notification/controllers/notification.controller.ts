@@ -22,6 +22,13 @@ export class NotificationController {
           limit: result.limit,
           totalPages: result.totalPages,
         },
+        meta: {
+          total: result.total,
+          unreadCount: result.unreadCount,
+          page: result.page,
+          limit: result.limit,
+          totalPages: result.totalPages,
+        },
       });
     } catch (error) {
       next(error);
@@ -46,6 +53,24 @@ export class NotificationController {
   }
 
   /**
+   * GET /api/v1/notifications/:id
+   */
+  public async getNotification(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user!.id;
+      const { id } = req.params;
+      const result = await notificationService.getNotificationById(userId, id as string);
+
+      res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * PATCH /api/v1/notifications/:id/read
    */
   public async markAsRead(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -58,6 +83,25 @@ export class NotificationController {
         success: true,
         data: result,
         message: "Notification marked as read",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * PATCH /api/v1/notifications/:id/unread
+   */
+  public async markAsUnread(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user!.id;
+      const { id } = req.params;
+      const result = await notificationService.markAsUnread(userId, id as string);
+
+      res.status(200).json({
+        success: true,
+        data: result,
+        message: "Notification marked as unread",
       });
     } catch (error) {
       next(error);
