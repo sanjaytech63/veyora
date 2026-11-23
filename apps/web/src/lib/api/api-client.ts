@@ -187,6 +187,14 @@ export class ApiClient {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
+    if (fetchOptions.signal) {
+      if (fetchOptions.signal.aborted) {
+        controller.abort();
+      } else {
+        fetchOptions.signal.addEventListener("abort", () => controller.abort(), { once: true });
+      }
+    }
+
     try {
       let response = await fetch(url, {
         credentials: "include",
@@ -241,6 +249,9 @@ export class ApiClient {
         throw error;
       }
       if (error instanceof Error && error.name === "AbortError") {
+        if (fetchOptions.signal?.aborted) {
+          throw new ApiClientError("Request aborted by client", 499, "CLIENT_ABORTED");
+        }
         throw new ApiClientError("Request timeout exceeded", 408, "TIMEOUT");
       }
       throw new ApiClientError(
