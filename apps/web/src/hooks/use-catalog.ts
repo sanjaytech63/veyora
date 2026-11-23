@@ -90,7 +90,7 @@ export function useCollection(slug: string) {
 export function useSearch(query: string) {
   return useQuery<Product[]>({
     queryKey: catalogKeys.search(query),
-    queryFn: () => catalogApi.searchProducts(query),
+    queryFn: ({ signal }) => catalogApi.searchProducts(query, signal),
     enabled: query.trim().length > 1,
     staleTime: 1000 * 60 * 2,
   });
@@ -99,7 +99,7 @@ export function useSearch(query: string) {
 export function useSearchCatalog(params?: Partial<SearchQueryInput>) {
   return useQuery<SearchResponse>({
     queryKey: catalogKeys.searchAdvanced(params as Record<string, unknown>),
-    queryFn: () => catalogApi.searchCatalog(params),
+    queryFn: ({ signal }) => catalogApi.searchCatalog(params, signal),
     staleTime: 1000 * 60 * 2,
   });
 }
@@ -107,7 +107,7 @@ export function useSearchCatalog(params?: Partial<SearchQueryInput>) {
 export function useSearchSuggestions(query: string) {
   return useQuery<SearchSuggestionResponse>({
     queryKey: catalogKeys.suggestions(query),
-    queryFn: () => catalogApi.getSuggestions(query),
+    queryFn: ({ signal }) => catalogApi.getSuggestions(query, signal),
     enabled: query.trim().length > 0,
     staleTime: 1000 * 60 * 5,
   });

@@ -16,10 +16,14 @@ export interface ProductsResponse {
 }
 
 export const catalogApi = {
-  getProducts: async (params?: Partial<ProductQueryInput>): Promise<Product[]> => {
+  getProducts: async (
+    params?: Partial<ProductQueryInput>,
+    signal?: AbortSignal
+  ): Promise<Product[]> => {
     try {
       const data = await apiClient.get<Product[]>("/products", {
         params: params as Record<string, string | number | boolean | undefined | null>,
+        signal,
       });
       return Array.isArray(data) ? data : [];
     } catch {
@@ -27,13 +31,17 @@ export const catalogApi = {
     }
   },
 
-  getProductsWithMeta: async (params?: Partial<ProductQueryInput>): Promise<ProductsResponse> => {
+  getProductsWithMeta: async (
+    params?: Partial<ProductQueryInput>,
+    signal?: AbortSignal
+  ): Promise<ProductsResponse> => {
     const page = Number(params?.page) || 1;
     const limit = Number(params?.limit) || 12;
 
     try {
       const response = await apiClient.getWithMeta<Product[]>("/products", {
         params: params as Record<string, string | number | boolean | undefined | null>,
+        signal,
       });
 
       if (response && Array.isArray(response.data)) {
@@ -112,19 +120,23 @@ export const catalogApi = {
     }
   },
 
-  searchProducts: async (query: string): Promise<Product[]> => {
+  searchProducts: async (query: string, signal?: AbortSignal): Promise<Product[]> => {
     if (!query.trim()) return [];
     try {
-      return await catalogApi.getProducts({ search: query, limit: 20 });
+      return await catalogApi.getProducts({ search: query, limit: 20 }, signal);
     } catch {
       return [];
     }
   },
 
-  searchCatalog: async (params?: Partial<SearchQueryInput>): Promise<SearchResponse> => {
+  searchCatalog: async (
+    params?: Partial<SearchQueryInput>,
+    signal?: AbortSignal
+  ): Promise<SearchResponse> => {
     try {
       const response = await apiClient.getWithMeta<Product[]>("/search", {
         params: params as Record<string, string | number | boolean | undefined | null>,
+        signal,
       });
       return {
         items: Array.isArray(response.data) ? response.data : [],
@@ -154,11 +166,12 @@ export const catalogApi = {
     }
   },
 
-  getSuggestions: async (q: string): Promise<SearchSuggestionResponse> => {
+  getSuggestions: async (q: string, signal?: AbortSignal): Promise<SearchSuggestionResponse> => {
     if (!q.trim()) return { suggestions: [], products: [], categories: [] };
     try {
       const data = await apiClient.get<SearchSuggestionResponse>("/search/suggestions", {
         params: { q },
+        signal,
       });
       return data || { suggestions: [], products: [], categories: [] };
     } catch {
