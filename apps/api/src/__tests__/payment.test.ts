@@ -319,6 +319,8 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("PAYMENT_ORDER_CREATED");
+      expect(res.body.message).toBe("Payment order initiated successfully.");
       expect(res.body.data.orderId).toBe(testOrder._id.toString());
       expect(res.body.data.orderNumber).toBe(testOrder.orderNumber);
       expect(res.body.data.amount).toBe(1575);
@@ -344,6 +346,8 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
         });
 
       expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("ORDER_NOT_FOUND");
       expect(mockPayments.length).toBe(0);
     });
 
@@ -358,6 +362,8 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
         });
 
       expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("PAYMENT_ORDER_CREATION_FAILED");
       expect(res.body.message).toContain("terminal status");
     });
 
@@ -380,6 +386,8 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
         });
 
       expect(res.status).toBe(409);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("PAYMENT_ALREADY_SETTLED");
       expect(res.body.message).toContain("already been settled");
     });
   });
@@ -424,6 +432,8 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("PAYMENT_VERIFIED");
+      expect(res.body.message).toBe("Payment verified successfully.");
       expect(res.body.data.status).toBe("successful");
 
       // Verify payment DB record
@@ -453,6 +463,8 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
         });
 
       expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("PAYMENT_SIGNATURE_INVALID");
       expect(res.body.message).toContain("Invalid gateway signature");
 
       // Payment record must be marked as failed with security error
@@ -490,6 +502,8 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
 
       expect(retryRes.status).toBe(200);
       expect(retryRes.body.success).toBe(true);
+      expect(retryRes.body.code).toBe("PAYMENT_RETRY_INITIATED");
+      expect(retryRes.body.message).toBe("Payment retry initiated successfully.");
       expect(retryRes.body.data.gatewayOrderId).toBeDefined();
       expect(firstGatewayOrderId).toBeDefined();
 
@@ -548,6 +562,8 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("PAYMENT_WEBHOOK_PROCESSED");
+      expect(res.body.status).toBe("ok");
       expect(res.body.duplicate).toBeUndefined();
 
       // Payment marked successful
@@ -591,6 +607,7 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
         .send(rawBody);
 
       expect(res1.status).toBe(200);
+      expect(res1.body.code).toBe("PAYMENT_WEBHOOK_PROCESSED");
       expect(res1.body.duplicate).toBeUndefined();
       const statusHistoryLength = testOrder.statusHistory.length;
 
@@ -602,6 +619,8 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
         .send(rawBody);
 
       expect(res2.status).toBe(200);
+      expect(res2.body.code).toBe("PAYMENT_WEBHOOK_IGNORED");
+      expect(res2.body.status).toBe("ok");
       expect(res2.body.duplicate).toBe(true);
       expect(res2.body.message).toContain("already processed");
 
@@ -636,6 +655,7 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
         .send(rawBody);
 
       expect(res.status).toBe(200);
+      expect(res.body.code).toBe("PAYMENT_WEBHOOK_PROCESSED");
 
       const payment = mockPayments.find((p) => p.gatewayOrderId === gatewayOrderId);
       expect(payment.status).toBe("failed");
@@ -654,6 +674,8 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
         .send(rawBody);
 
       expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("PAYMENT_WEBHOOK_SIGNATURE_INVALID");
       expect(res.body.message).toContain("Invalid webhook signature");
     });
   });
@@ -702,6 +724,8 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("REFUND_PROCESSED");
+      expect(res.body.message).toBe("Refund processed successfully.");
       expect(res.body.data.amount).toBe(1575);
       expect(res.body.data.status).toBe("processed");
 
@@ -724,6 +748,8 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
         });
 
       expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("REFUND_PROCESSED");
       expect(res.body.data.amount).toBe(500);
 
       expect(paymentRecord.status).toBe("partially_refunded");
@@ -749,6 +775,8 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
         });
 
       expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("REFUND_ALREADY_PROCESSED");
       expect(res.body.message).toContain("already been fully refunded");
     });
 
@@ -761,6 +789,8 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
         });
 
       expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("FORBIDDEN");
     });
   });
 
@@ -792,6 +822,8 @@ describe("Phase K — Veyora Payment Integration Tests", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("PAYMENT_DETAILS_FETCHED");
+      expect(res.body.message).toBe("Payment details retrieved successfully.");
       expect(res.body.data.orderId).toBe(testOrder._id.toString());
       expect(res.body.data.orderNumber).toBe(testOrder.orderNumber);
       expect(res.body.data.status).toBe("successful");

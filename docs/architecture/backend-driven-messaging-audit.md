@@ -1063,6 +1063,43 @@ The entire Express Checkout and Orders domain (`apps/api/src/modules/checkout/ch
 
 ---
 
-## 21. Architecture Signoff & Next Steps
+## 21. Task 09 Express Razorpay Payments Migration
 
-This architectural contract and implementation provide the complete foundation for Veyora's transition to a backend-driven messaging system. All shared contracts, API response infrastructure, authentication controllers, catalog endpoints, cart endpoints, wishlist endpoints, customer address endpoints, and checkout/orders endpoints are verified with automated tests and ready for subsequent domain controller migrations (Task 09: Razorpay payments) and frontend toast notification integration.
+The entire Express Payment domain (`apps/api/src/modules/payment`) was migrated to the canonical `sendSuccess` helper and standardized domain error codes in Task 09:
+
+### 21.1 Controller Standardization
+
+- Migrated all Customer & Storefront Payment routes to `sendSuccess(res, { statusCode, code, message, data })`:
+  - `POST /api/v1/payments/initiate`: `initiatePayment` (`PAYMENT_ORDER_CREATED`, 200 OK)
+  - `POST /api/v1/payments/verify`: `verifyPayment` (`PAYMENT_VERIFIED`, 200 OK)
+  - `POST /api/v1/payments/retry`: `retryPayment` (`PAYMENT_RETRY_INITIATED`, 200 OK)
+  - `GET /api/v1/payments/status/:orderId`: `getPaymentStatus` (`PAYMENT_DETAILS_FETCHED`, 200 OK)
+- Migrated Administrator Refund Governance to `sendSuccess(res, { statusCode, code, message, data })`:
+  - `POST /api/v1/admin/payments/:orderId/refund`: `adminRefundPayment` (`REFUND_PROCESSED`, 200 OK)
+- Standardized Webhook Ingestion with Protocol-Compliant Response:
+  - `POST /api/v1/payments/webhook/razorpay`: `handleRazorpayWebhook` (`PAYMENT_WEBHOOK_PROCESSED` / `PAYMENT_WEBHOOK_IGNORED`, 200 OK with `{ status: "ok", success: true }`)
+
+### 21.2 Service Domain Errors & Stable Codes
+
+- Services throw `BadRequestError`, `ConflictError`, `NotFoundError`, and `UnauthorizedError` with domain-specific stable machine-readable codes:
+  - `ORDER_NOT_FOUND` (404 Not Found) when order ID is invalid or caller fails patron ownership check.
+  - `PAYMENT_ORDER_CREATION_FAILED` (400 Bad Request) when attempting payment on an already cancelled or refunded order.
+  - `PAYMENT_ALREADY_SETTLED` (409 Conflict) when order already has a successful settlement record.
+  - `PAYMENT_NOT_FOUND` (404 Not Found) when payment record is missing.
+  - `PAYMENT_SIGNATURE_INVALID` (400 Bad Request) on cryptographic HMAC-SHA256 signature mismatch.
+  - `PAYMENT_WEBHOOK_SIGNATURE_INVALID` (401 Unauthorized) when webhook HMAC validation fails against raw body.
+  - `REFUND_CREATION_FAILED` (400 Bad Request) when missing gateway payment ID.
+  - `REFUND_ALREADY_PROCESSED` (400 Bad Request) when order has already been fully refunded.
+
+### 21.3 Payment & Security Integrity Preserved
+
+- **Cryptographic Signature Verification:** Strict server-side HMAC-SHA256 signature verification protects against frontend tampering; unverified success claims are rejected.
+- **Webhook Raw-Body Preservation & Idempotency:** Webhook requests verify signatures against raw payload buffers. Duplicate events are acknowledged with `PAYMENT_WEBHOOK_IGNORED` and `duplicate: true` without repeating order transitions or email dispatch.
+- **Authoritative Financial Reconciliation:** Order amounts are strictly derived from persisted order records; client amount spoofing is rejected.
+- **Refund Boundary Governance:** Validates remaining refundable balance before dispatching gateway refund requests, transitioning payment to `partially_refunded` or `refunded`.
+
+---
+
+## 22. Architecture Signoff & Next Steps
+
+This architectural contract and implementation provide the complete foundation for Veyora's transition to a backend-driven messaging system. All shared contracts, API response infrastructure, authentication controllers, catalog endpoints, cart endpoints, wishlist endpoints, customer address endpoints, checkout/orders endpoints, and payment endpoints are verified with automated tests (134 passing tests) and ready for subsequent domain controller migrations and frontend toast notification integration.
