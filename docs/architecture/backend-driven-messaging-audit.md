@@ -1309,3 +1309,9 @@ Final gate completed:
 - `npm run format:check` — passed.
 - `npm run test` — passed with exit code 0 across the monorepo workspace test suite.
 - `npm run build` — passed for shared packages, API, worker, Web, and Admin.
+
+## 31. Production Newsletter Subscription (Task 17)
+
+The newsletter footer no longer simulates success. It submits consented subscriptions to `POST /api/v1/newsletter/subscribe`, persists normalized unique subscriptions with an atomic upsert, and uses the existing canonical API and Web notification infrastructure.
+
+Subscriptions remain `pending`. The existing email worker is simulated rather than provider-backed, so Task 17 does not create verification or unsubscribe emails and does not mark subscriptions active or claim delivery.

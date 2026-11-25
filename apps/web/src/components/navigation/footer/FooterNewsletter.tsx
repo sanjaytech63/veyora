@@ -6,13 +6,17 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, LoaderCircle, CheckCircle2 } from "lucide-react";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
+import { newsletterApi } from "@/lib/api/newsletter-api";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 
 const newsletterSchema = z.object({
   email: z.string().trim().email("Please enter a valid email address"),
+  consent: z.literal(true),
 });
 
 export function FooterNewsletter({ className }: { className?: string }) {
   const [email, setEmail] = React.useState("");
+  const [consent, setConsent] = React.useState(false);
   const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
@@ -20,7 +24,7 @@ export function FooterNewsletter({ className }: { className?: string }) {
     e.preventDefault();
     setErrorMessage(null);
 
-    const validation = newsletterSchema.safeParse({ email });
+    const validation = newsletterSchema.safeParse({ email, consent });
     if (!validation.success) {
       setErrorMessage(validation.error.issues[0]?.message || "Invalid email address");
       return;
@@ -28,14 +32,21 @@ export function FooterNewsletter({ className }: { className?: string }) {
 
     setStatus("loading");
 
-    // Simulate async newsletter dispatch (in future can be connected to marketing worker)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      setStatus("success");
-      setEmail("");
-    } catch {
+      const result = await newsletterApi.subscribe({
+        email: validation.data.email,
+        consent: true,
+      });
+      if (notifyApiSuccess(result)) {
+        setStatus("success");
+        setEmail("");
+        setConsent(false);
+      } else {
+        setStatus("idle");
+      }
+    } catch (error) {
       setStatus("error");
-      setErrorMessage("Could not complete subscription. Please try again.");
+      notifyApiError(error, "Could not complete subscription. Please try again.");
     }
   };
 
@@ -87,6 +98,19 @@ export function FooterNewsletter({ className }: { className?: string }) {
             )}
           </Button>
         </div>
+        <label className="flex items-start gap-2 text-[11px] text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={consent}
+            onChange={(event) => {
+              setConsent(event.target.checked);
+              if (errorMessage) setErrorMessage(null);
+            }}
+            disabled={status === "loading"}
+            className="mt-0.5 h-3.5 w-3.5 rounded border-border"
+          />
+          <span>I agree to receive occasional newsletter and private preview emails.</span>
+        </label>
 
         {errorMessage && (
           <p className="text-[11px] text-destructive font-medium pl-1">{errorMessage}</p>

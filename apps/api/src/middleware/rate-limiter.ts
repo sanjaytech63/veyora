@@ -120,3 +120,10 @@ export const couponRateLimiter = createLimiter(
   "COUPON_RATE_LIMIT_EXCEEDED",
   "Too many coupon validation attempts. Please try again later."
 );
+
+export const newsletterRateLimiter = createLimiter(
+  15 * 60 * 1000,
+  20,
+  "RATE_LIMIT_EXCEEDED",
+  "Too many newsletter requests. Please try again shortly."
+);

@@ -21,3 +21,4 @@ export * from "./rbac";
 export * from "./search";
 export * from "./profile";
 export * from "./system";
+export * from "./newsletter";
