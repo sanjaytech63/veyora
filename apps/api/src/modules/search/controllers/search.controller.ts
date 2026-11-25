@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { searchService } from "../services/search.service";
 import { SearchQueryInput, SearchSuggestionQueryInput } from "@veyora/validators";
+import { sendSuccess } from "../../../utils/response";
 
 export class SearchController {
   /**
@@ -11,12 +12,16 @@ export class SearchController {
       const query = req.query as unknown as SearchQueryInput;
       const result = await searchService.search(query);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "SEARCH_RESULTS_FETCHED",
+        message: "Catalog search results retrieved successfully.",
         data: result.items,
-        meta: result.meta,
-        facets: result.facets,
-        query: result.query,
+        meta: result.meta as unknown as Record<string, unknown>,
+        extra: {
+          facets: result.facets,
+          query: result.query,
+        },
       });
     } catch (error) {
       next(error);
@@ -32,8 +37,10 @@ export class SearchController {
       const limit = query.limit ? Number(query.limit) : 5;
       const result = await searchService.getSuggestions(query.q, limit);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "SEARCH_SUGGESTIONS_FETCHED",
+        message: "Search suggestions retrieved successfully.",
         data: result,
       });
     } catch (error) {

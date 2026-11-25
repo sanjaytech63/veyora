@@ -13,6 +13,7 @@ export interface SendSuccessOptions<T = unknown> {
     pagination?: ApiPaginationMeta;
     [key: string]: unknown;
   };
+  extra?: Record<string, unknown>;
 }
 
 /**
@@ -58,7 +59,7 @@ export function sendSuccess<T = unknown>(
     const reqId: string = rawReqId ? String(rawReqId) : "unknown";
     const timestamp = opts.meta?.timestamp || new Date().toISOString();
 
-    const responsePayload: ApiSuccessResponse<T> = {
+    const responsePayload: ApiSuccessResponse<T> & Record<string, unknown> = {
       success: true,
       code: opts.code,
       message: opts.message,
@@ -69,6 +70,7 @@ export function sendSuccess<T = unknown>(
         ...(opts.meta?.pagination ? { pagination: opts.meta.pagination } : {}),
         ...opts.meta,
       },
+      ...(opts.extra ? opts.extra : {}),
     };
 
     return res.status(status).json(responsePayload);

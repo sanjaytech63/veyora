@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { categoryService } from "../services/category.service";
 import { CategoryStatus } from "@veyora/types";
+import { sendSuccess } from "../../../utils/response";
 
 export class CategoryController {
   async listCategories(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -9,10 +10,11 @@ export class CategoryController {
         typeof req.query.status === "string" ? (req.query.status as CategoryStatus) : undefined;
       const categories = await categoryService.getCategories(status ? { status } : undefined);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "CATEGORIES_FETCHED",
+        message: "Categories retrieved successfully.",
         data: categories,
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -23,10 +25,11 @@ export class CategoryController {
     try {
       const tree = await categoryService.getCategoryTree();
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "CATEGORY_TREE_FETCHED",
+        message: "Category hierarchy retrieved successfully.",
         data: tree,
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -37,10 +40,11 @@ export class CategoryController {
     try {
       const category = await categoryService.getCategoryByIdOrSlug(req.params["idOrSlug"]!);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "CATEGORY_FETCHED",
+        message: "Category details retrieved successfully.",
         data: category,
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -51,10 +55,11 @@ export class CategoryController {
     try {
       const category = await categoryService.createCategory(req.body);
 
-      res.status(201).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 201,
+        code: "CATEGORY_CREATED",
+        message: "Category created successfully.",
         data: category,
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -65,10 +70,11 @@ export class CategoryController {
     try {
       const category = await categoryService.updateCategory(req.params["id"]!, req.body);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "CATEGORY_UPDATED",
+        message: "Category updated successfully.",
         data: category,
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -79,10 +85,11 @@ export class CategoryController {
     try {
       await categoryService.deleteCategory(req.params["id"]!);
 
-      res.status(200).json({
-        success: true,
-        data: { message: "Category deleted successfully." },
-        timestamp: new Date().toISOString(),
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "CATEGORY_DELETED",
+        message: "Category deleted successfully.",
+        data: { message: "Category deleted successfully.", deleted: true },
       });
     } catch (error) {
       next(error);

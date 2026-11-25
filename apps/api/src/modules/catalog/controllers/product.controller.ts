@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { productService } from "../services/product.service";
 import { ProductQueryInput } from "@veyora/validators";
+import { sendSuccess } from "../../../utils/response";
 
 export class ProductController {
   async listProducts(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -11,8 +12,10 @@ export class ProductController {
         isAdmin
       );
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "PRODUCTS_FETCHED",
+        message: "Products retrieved successfully.",
         data: result.items,
         meta: {
           total: result.total,
@@ -20,7 +23,6 @@ export class ProductController {
           limit: result.limit,
           totalPages: result.totalPages,
         },
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -32,10 +34,11 @@ export class ProductController {
       const isAdmin = req.user?.role === "admin" || req.user?.role === "superadmin";
       const product = await productService.getProductByIdOrSlug(req.params["idOrSlug"]!, isAdmin);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "PRODUCT_FETCHED",
+        message: "Product details retrieved successfully.",
         data: product,
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -46,10 +49,11 @@ export class ProductController {
     try {
       const product = await productService.createProduct(req.body);
 
-      res.status(201).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 201,
+        code: "PRODUCT_CREATED",
+        message: "Product created successfully.",
         data: product,
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -60,10 +64,11 @@ export class ProductController {
     try {
       const product = await productService.updateProduct(req.params["id"]!, req.body);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "PRODUCT_UPDATED",
+        message: "Product updated successfully.",
         data: product,
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -75,10 +80,12 @@ export class ProductController {
       const hardDelete = req.query.hard === "true";
       await productService.deleteProduct(req.params["id"]!, hardDelete);
 
-      res.status(200).json({
-        success: true,
-        data: { message: hardDelete ? "Product deleted permanently." : "Product archived." },
-        timestamp: new Date().toISOString(),
+      const message = hardDelete ? "Product deleted permanently." : "Product archived.";
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "PRODUCT_DELETED",
+        message,
+        data: { message, deleted: true },
       });
     } catch (error) {
       next(error);
@@ -89,10 +96,11 @@ export class ProductController {
     try {
       const stats = await productService.getCatalogStats();
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "CATALOG_STATS_FETCHED",
+        message: "Catalog statistics retrieved successfully.",
         data: stats,
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);

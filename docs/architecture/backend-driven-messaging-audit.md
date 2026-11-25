@@ -930,6 +930,34 @@ The entire Express authentication subsystem (`apps/api/src/modules/auth`) was mi
 
 ---
 
-## 17. Architecture Signoff & Next Steps
+## 17. Task 05 Express Product & Catalog Controller Migration
 
-This architectural contract and implementation provide the complete foundation for Veyora's transition to a backend-driven messaging system. All shared contracts, API response infrastructure, and authentication controllers are verified and ready for domain controller migration and frontend client integration in subsequent tasks.
+The entire Express product, catalog, and search domain (`apps/api/src/modules/catalog` and `apps/api/src/modules/search`) was migrated to the canonical `sendSuccess` helper and standardized domain error codes in Task 05:
+
+### 17.1 Controller Standardization
+
+- Migrated all public and admin catalog controllers to `sendSuccess(res, { statusCode, code, message, data, extra, meta })`:
+  - `product.controller.ts`: `listProducts` (`PRODUCTS_FETCHED`), `getProduct` (`PRODUCT_FETCHED`), `createProduct` (`PRODUCT_CREATED`), `updateProduct` (`PRODUCT_UPDATED`), `deleteProduct` (`PRODUCT_DELETED`), `getStats` (`CATALOG_STATS_FETCHED`).
+  - `category.controller.ts`: `listCategories` (`CATEGORIES_FETCHED`), `getCategoryTree` (`CATEGORY_TREE_FETCHED`), `getCategory` (`CATEGORY_FETCHED`), `createCategory` (`CATEGORY_CREATED`), `updateCategory` (`CATEGORY_UPDATED`), `deleteCategory` (`CATEGORY_DELETED`).
+  - `brand.controller.ts`: `listBrands` (`BRANDS_FETCHED`), `getBrand` (`BRAND_FETCHED`), `createBrand` (`BRAND_CREATED`), `updateBrand` (`BRAND_UPDATED`), `deleteBrand` (`BRAND_DELETED`).
+  - `collection.controller.ts`: `listCollections` (`COLLECTIONS_FETCHED`), `getCollection` (`COLLECTION_FETCHED`), `createCollection` (`COLLECTION_CREATED`), `updateCollection` (`COLLECTION_UPDATED`), `deleteCollection` (`COLLECTION_DELETED`).
+  - `search.controller.ts`: `search` (`SEARCH_RESULTS_FETCHED`), `getSuggestions` (`SEARCH_SUGGESTIONS_FETCHED`).
+
+### 17.2 Backward Compatibility & Frontend Safety
+
+- `sendSuccess` was updated to support optional `extra?: Record<string, unknown>`. Search results supply top-level `facets` and `query` to ensure complete compatibility with existing storefront search components and SEO tests.
+- Admin deletion responses preserve `{ message, deleted: true }` in `data` while delivering top-level canonical `code` and `message`.
+
+### 17.3 Service Domain Errors & Stable Codes
+
+- Services throw `ConflictError` and `NotFoundError` with explicit stable domain codes:
+  - Products: `SKU_CONFLICT` (409), `PRODUCT_NOT_FOUND` (404), `CATEGORY_NOT_FOUND` (404), `BRAND_NOT_FOUND` (404).
+  - Categories: `CATEGORY_CONFLICT` (409), `CATEGORY_NOT_FOUND` (404).
+  - Brands: `BRAND_CONFLICT` (409), `BRAND_NOT_FOUND` (404).
+  - Collections: `COLLECTION_NOT_FOUND` (404).
+
+---
+
+## 18. Architecture Signoff & Next Steps
+
+This architectural contract and implementation provide the complete foundation for Veyora's transition to a backend-driven messaging system. All shared contracts, API response infrastructure, authentication controllers, and product/catalog endpoints are verified with 106 unit/integration tests and ready for subsequent domain controller migrations (cart, wishlist, checkout, orders) and frontend toast notification integration.

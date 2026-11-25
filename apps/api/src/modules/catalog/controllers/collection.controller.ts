@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { collectionService } from "../services/collection.service";
 import { CollectionStatus } from "@veyora/types";
+import { sendSuccess } from "../../../utils/response";
 
 export class CollectionController {
   async listCollections(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -11,10 +12,11 @@ export class CollectionController {
           : undefined;
       const collections = await collectionService.getCollections(status ? { status } : undefined);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "COLLECTIONS_FETCHED",
+        message: "Collections retrieved successfully.",
         data: collections,
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -26,10 +28,11 @@ export class CollectionController {
       const idOrSlug = req.params["idOrSlug"]!;
       const collection = await collectionService.getCollectionByIdOrSlug(idOrSlug);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "COLLECTION_FETCHED",
+        message: "Collection details retrieved successfully.",
         data: collection,
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -40,11 +43,11 @@ export class CollectionController {
     try {
       const collection = await collectionService.createCollection(req.body);
 
-      res.status(201).json({
-        success: true,
-        data: collection,
+      sendSuccess(res, {
+        statusCode: 201,
+        code: "COLLECTION_CREATED",
         message: "Collection created successfully.",
-        timestamp: new Date().toISOString(),
+        data: collection,
       });
     } catch (error) {
       next(error);
@@ -56,11 +59,11 @@ export class CollectionController {
       const id = req.params["id"]!;
       const collection = await collectionService.updateCollection(id, req.body);
 
-      res.status(200).json({
-        success: true,
-        data: collection,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "COLLECTION_UPDATED",
         message: "Collection updated successfully.",
-        timestamp: new Date().toISOString(),
+        data: collection,
       });
     } catch (error) {
       next(error);
@@ -72,10 +75,11 @@ export class CollectionController {
       const id = req.params["id"]!;
       await collectionService.deleteCollection(id);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "COLLECTION_DELETED",
         message: "Collection deleted successfully.",
-        timestamp: new Date().toISOString(),
+        data: { message: "Collection deleted successfully.", deleted: true },
       });
     } catch (error) {
       next(error);

@@ -129,20 +129,24 @@ export class ProductService {
     });
 
     if (existing) {
-      throw new ConflictError(`Product with SKU "${sku}" already exists.`);
+      throw new ConflictError(
+        `Product with SKU "${sku}" already exists.`,
+        undefined,
+        "SKU_CONFLICT"
+      );
     }
   }
 
   async createProduct(input: CreateProductInput): Promise<ProductType> {
     const category = await Category.findById(input.categoryId);
     if (!category) {
-      throw new NotFoundError("Category not found.");
+      throw new NotFoundError("Category not found.", undefined, "CATEGORY_NOT_FOUND");
     }
 
     if (input.brandId) {
       const brand = await Brand.findById(input.brandId);
       if (!brand) {
-        throw new NotFoundError("Brand not found.");
+        throw new NotFoundError("Brand not found.", undefined, "BRAND_NOT_FOUND");
       }
     }
 
@@ -154,10 +158,18 @@ export class ProductService {
       for (const variant of input.variants) {
         const vSku = variant.sku.toUpperCase().trim();
         if (vSku === input.sku.toUpperCase().trim()) {
-          throw new ConflictError(`Variant SKU "${vSku}" cannot match parent product SKU.`);
+          throw new ConflictError(
+            `Variant SKU "${vSku}" cannot match parent product SKU.`,
+            undefined,
+            "SKU_CONFLICT"
+          );
         }
         if (variantSkus.has(vSku)) {
-          throw new ConflictError(`Duplicate variant SKU "${vSku}" in product submission.`);
+          throw new ConflictError(
+            `Duplicate variant SKU "${vSku}" in product submission.`,
+            undefined,
+            "SKU_CONFLICT"
+          );
         }
         variantSkus.add(vSku);
       }
@@ -199,13 +211,13 @@ export class ProductService {
   async updateProduct(id: string, input: UpdateProductInput): Promise<ProductType> {
     const product = await Product.findById(id);
     if (!product) {
-      throw new NotFoundError("Product not found.");
+      throw new NotFoundError("Product not found.", undefined, "PRODUCT_NOT_FOUND");
     }
 
     if (input.categoryId && input.categoryId !== product.categoryId.toString()) {
       const category = await Category.findById(input.categoryId);
       if (!category) {
-        throw new NotFoundError("Category not found.");
+        throw new NotFoundError("Category not found.", undefined, "CATEGORY_NOT_FOUND");
       }
       product.categoryId = new mongoose.Types.ObjectId(input.categoryId);
     }
@@ -214,7 +226,7 @@ export class ProductService {
       if (input.brandId) {
         const brand = await Brand.findById(input.brandId);
         if (!brand) {
-          throw new NotFoundError("Brand not found.");
+          throw new NotFoundError("Brand not found.", undefined, "BRAND_NOT_FOUND");
         }
         product.brandId = new mongoose.Types.ObjectId(input.brandId);
       } else {
@@ -267,7 +279,7 @@ export class ProductService {
   async deleteProduct(id: string, hardDelete = false): Promise<void> {
     const product = await Product.findById(id);
     if (!product) {
-      throw new NotFoundError("Product not found.");
+      throw new NotFoundError("Product not found.", undefined, "PRODUCT_NOT_FOUND");
     }
 
     if (hardDelete) {
@@ -291,11 +303,15 @@ export class ProductService {
       .populate("brandId")) as unknown as PopulatedProductDoc | null;
 
     if (!product) {
-      throw new NotFoundError("Product not found.");
+      throw new NotFoundError("Product not found.", undefined, "PRODUCT_NOT_FOUND");
     }
 
     if (!allowDraft && product.status !== "active") {
-      throw new NotFoundError("Product not found or not published.");
+      throw new NotFoundError(
+        "Product not found or not published.",
+        undefined,
+        "PRODUCT_NOT_FOUND"
+      );
     }
 
     return this.toProductDto(product, product.categoryId, product.brandId ?? undefined);
