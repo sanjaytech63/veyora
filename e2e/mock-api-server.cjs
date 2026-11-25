@@ -88,6 +88,20 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Keep browser session restoration deterministic without relying on a live API.
+  if (pathname === "/api/v1/auth/refresh" || pathname === "/api/v1/auth/me") {
+    res.writeHead(401);
+    res.end(
+      JSON.stringify({
+        success: false,
+        code: "UNAUTHENTICATED",
+        message: "Authentication required.",
+        error: { code: "UNAUTHENTICATED", message: "Authentication required." },
+      })
+    );
+    return;
+  }
+
   // Single product detail by slug / id
   if (pathname.startsWith("/api/v1/products/") && pathname !== "/api/v1/products/") {
     const slug = decodeURIComponent(pathname.replace("/api/v1/products/", ""));

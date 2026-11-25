@@ -1,51 +1,17 @@
-# ==============================================================================
-# Veyora Monorepo - Docker Build Ignore File
-# Prevents host artifacts, secrets, and transient caches from leaking into images
-# ==============================================================================
-
-# Git & Repository metadata
+**/node_modules
+**/.next
+**/.next-e2e
+**/dist
+**/coverage
+**/test-results
+**/playwright-report
+**/.env*
 .git
-.gitignore
 .github
-
-# Node dependencies & caches
-node_modules
-apps/*/node_modules
-packages/*/node_modules
-.pnpm-store
-.npm
-
-# Next.js & Turborepo build caches
 .turbo
-.next
-apps/*/.next
-apps/*/dist
-packages/*/dist
-out
-
-# Environment variables & secrets (NEVER bake into container images)
-.env
-.env.*
-!.env.example
-*.local
-
-# Test outputs, reports, and coverage
-coverage
+docs
+e2e
+infra
+playwright.config.ts
 playwright-report
 test-results
-blob-report
-.nyc_output
-
-# Documentation, Infrastructure & IDE files
-docs
-infra
-.vscode
-.idea
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# OS specific files
-.DS_Store
-Thumbs.db

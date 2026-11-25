@@ -22,13 +22,18 @@ interface NavbarCategoryMenuProps {
 
 export function NavbarCategoryMenu({ className, onNavigate }: NavbarCategoryMenuProps) {
   const pathname = usePathname();
+  const [isHydrated, setIsHydrated] = React.useState(false);
   const { data: categories = [], isLoading } = useCategories();
+
+  React.useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const activeCategories = React.useMemo(() => {
     return categories.filter((c) => c.status === "active");
   }, [categories]);
 
-  if (isLoading) {
+  if (!isHydrated || isLoading) {
     return (
       <div className={cn("flex items-center gap-2", className)}>
         <Skeleton className="h-8 w-20 rounded-md" />

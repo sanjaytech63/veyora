@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  distDir: process.env.NEXT_DIST_DIR || ".next",
+  agentRules: false,
   transpilePackages: ["@veyora/types", "@veyora/utils", "@veyora/validators", "@veyora/config"],
   // NOTE [Task 13 - Cache Architecture Policy]:
   // Next.js Cache Components are intentionally NOT enabled in @veyora/admin (cacheComponents: false).

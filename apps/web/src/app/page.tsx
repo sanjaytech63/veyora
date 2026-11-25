@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/ui/container";
+import type { Category, Product } from "@veyora/types";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -41,9 +42,9 @@ const categoryIcons: Record<string, React.ElementType> = {
 };
 
 export default async function StorefrontHomePage() {
-  let categories: any[] = [];
-  let featuredProducts: any[] = [];
-  let initialCollectionProducts: any[] = [];
+  let categories: Category[] = [];
+  let featuredProducts: Product[] = [];
+  let initialCollectionProducts: Product[] = [];
 
   try {
     const [cats, feat, col] = await Promise.allSettled([

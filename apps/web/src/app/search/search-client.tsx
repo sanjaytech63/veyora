@@ -47,6 +47,11 @@ import { cn } from "@/lib/utils";
 export function SearchClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isHydrated, setIsHydrated] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   // Read initial params from URL
   const initialQuery = searchParams.get("q") || "";
@@ -84,10 +89,13 @@ export function SearchClient() {
   const { data: suggestionData } = useSearchSuggestions(debouncedInput);
   const { data: allCategories = [] } = useCategories();
   const { data: allBrands = [] } = useBrands();
+  const visibleSuggestions = isHydrated ? suggestionData : undefined;
+  const visibleCategories = isHydrated ? allCategories : [];
+  const visibleBrands = isHydrated ? allBrands : [];
 
   const popularTerms = React.useMemo(() => {
-    return allCategories.slice(0, 6).map((c) => c.name);
-  }, [allCategories]);
+    return visibleCategories.slice(0, 6).map((c) => c.name);
+  }, [visibleCategories]);
 
   // Execute advanced search
   const {
@@ -107,8 +115,9 @@ export function SearchClient() {
     limit: 12,
   });
 
-  const products = searchResult?.items || [];
-  const meta = searchResult?.meta || {
+  const visibleSearchResult = isHydrated ? searchResult : undefined;
+  const products = visibleSearchResult?.items || [];
+  const meta = visibleSearchResult?.meta || {
     total: 0,
     page: 1,
     limit: 12,
@@ -116,7 +125,9 @@ export function SearchClient() {
     hasNextPage: false,
     hasPrevPage: false,
   };
-  const facets = searchResult?.facets;
+  const facets = visibleSearchResult?.facets;
+  const visibleIsLoading = isHydrated ? isLoading : true;
+  const visibleIsFetching = isHydrated ? isFetching : false;
 
   // Sync state with URL
   const updateUrl = React.useCallback(
@@ -196,16 +207,16 @@ export function SearchClient() {
   // Category map for label lookups
   const categoryMap = React.useMemo(() => {
     const map = new Map<string, string>();
-    allCategories.forEach((c) => map.set(c.id, c.name));
+    visibleCategories.forEach((c) => map.set(c.id, c.name));
     return map;
-  }, [allCategories]);
+  }, [visibleCategories]);
 
   // Brand map for label lookups
   const brandMap = React.useMemo(() => {
     const map = new Map<string, string>();
-    allBrands.forEach((b) => map.set(b.id, b.name));
+    visibleBrands.forEach((b) => map.set(b.id, b.name));
     return map;
-  }, [allBrands]);
+  }, [visibleBrands]);
 
   // Render filter content shared by desktop and mobile drawer
   const renderFilterControls = () => (
@@ -253,7 +264,7 @@ export function SearchClient() {
                   </Badge>
                 </button>
               ))
-            : allCategories.map((cat) => (
+            : visibleCategories.map((cat) => (
                 <button
                   key={cat.id}
                   type="button"
@@ -275,7 +286,7 @@ export function SearchClient() {
       </div>
 
       {/* Brand Facet Filter */}
-      {((facets?.brands && facets.brands.length > 0) || allBrands.length > 0) && (
+      {((facets?.brands && facets.brands.length > 0) || visibleBrands.length > 0) && (
         <div className="space-y-2">
           <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Brand
@@ -318,7 +329,7 @@ export function SearchClient() {
                     </Badge>
                   </button>
                 ))
-              : allBrands.map((b) => (
+              : visibleBrands.map((b) => (
                   <button
                     key={b.id}
                     type="button"
@@ -511,16 +522,16 @@ export function SearchClient() {
             </form>
 
             {/* Autocomplete / Instant Suggestions Dropdown */}
-            {showSuggestions && debouncedInput.trim().length > 0 && suggestionData && (
+            {showSuggestions && debouncedInput.trim().length > 0 && visibleSuggestions && (
               <div className="absolute z-50 left-0 right-0 mt-2 bg-card/95 backdrop-blur-md rounded-2xl border border-border/80 shadow-2xl p-4 space-y-4 animate-in fade-in-50 zoom-in-95">
                 {/* Matching Category Links */}
-                {(suggestionData.categories?.length ?? 0) > 0 && (
+                {(visibleSuggestions.categories?.length ?? 0) > 0 && (
                   <div className="space-y-1.5">
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       Categories
                     </span>
                     <div className="flex flex-wrap gap-1.5">
-                      {suggestionData.categories?.map((c) => (
+                      {visibleSuggestions.categories?.map((c) => (
                         <Link
                           key={c.id}
                           href={`/category/${c.slug}`}
@@ -536,13 +547,13 @@ export function SearchClient() {
                 )}
 
                 {/* Term Suggestions */}
-                {(suggestionData.suggestions?.length ?? 0) > 0 && (
+                {(visibleSuggestions.suggestions?.length ?? 0) > 0 && (
                   <div className="space-y-1">
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       Search Suggestions
                     </span>
                     <div className="space-y-0.5">
-                      {suggestionData.suggestions?.map((term) => (
+                      {visibleSuggestions.suggestions?.map((term) => (
                         <button
                           key={term}
                           type="button"
@@ -558,13 +569,13 @@ export function SearchClient() {
                 )}
 
                 {/* Top Matching Product Previews */}
-                {(suggestionData.products?.length ?? 0) > 0 && (
+                {(visibleSuggestions.products?.length ?? 0) > 0 && (
                   <div className="space-y-2 border-t border-border/60 pt-3">
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       Product Matches
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {suggestionData.products?.map((p) => (
+                      {visibleSuggestions.products?.map((p) => (
                         <Link
                           key={p.id}
                           href={`/products/${p.slug}`}
@@ -599,7 +610,7 @@ export function SearchClient() {
             )}
 
             {/* Popular Suggestions Pills */}
-            {popularTerms.length > 0 && (
+            {isHydrated && popularTerms.length > 0 && (
               <div className="flex flex-wrap items-center justify-center gap-2 pt-3">
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
                   <Sparkles className="h-3 w-3 text-primary" /> Popular:
@@ -802,7 +813,7 @@ export function SearchClient() {
 
               {/* Product Grid */}
               <div className="relative">
-                {isFetching && !isLoading && (
+                {visibleIsFetching && !visibleIsLoading && (
                   <div className="absolute right-2 top-2 z-10 flex items-center gap-1.5 text-xs text-muted-foreground bg-background/80 px-2.5 py-1 rounded-full backdrop-blur-md shadow-xs">
                     <div className="h-2 w-2 rounded-full bg-primary animate-ping" />
                     Updating...
@@ -810,8 +821,8 @@ export function SearchClient() {
                 )}
                 <ProductGrid
                   products={products}
-                  categories={allCategories}
-                  loading={isLoading}
+                  categories={visibleCategories}
+                  loading={visibleIsLoading}
                   columns={3}
                   emptyTitle={
                     activeQuery
