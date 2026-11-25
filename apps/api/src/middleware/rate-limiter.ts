@@ -54,6 +54,16 @@ export const authRateLimiter = createLimiter(
 );
 
 /**
+ * Rate limiter for token refresh requests to mitigate automated token rotation flooding
+ */
+export const refreshRateLimiter = createLimiter(
+  15 * 60 * 1000,
+  60,
+  "REFRESH_RATE_LIMIT_EXCEEDED",
+  "Too many token refresh attempts. Please try again later."
+);
+
+/**
  * Strict rate limiter for OTP requests, email verification, and password resets
  */
 export const otpRateLimiter = createLimiter(

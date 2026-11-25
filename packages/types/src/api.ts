@@ -32,6 +32,18 @@ export interface ApiResponseError {
 
 export type ApiResponse<T> = ApiResponseSuccess<T> | ApiResponseError;
 
+/**
+ * Standard Next.js Server Action Result shape across Web and Admin
+ */
+export interface ActionResult<T = unknown> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  code?: string;
+  fieldErrors?: Record<string, string[]>;
+  timestamp?: string;
+}
+
 export interface HealthCheckResponse {
   status: "ok" | "degraded" | "error";
   service: string;

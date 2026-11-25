@@ -2,7 +2,7 @@ import { Router } from "express";
 import { authController } from "./auth.controller";
 import { validateRequest } from "../../middleware/validate-request";
 import { requireAuth } from "../../middleware/auth";
-import { authRateLimiter, otpRateLimiter } from "../../middleware/rate-limiter";
+import { authRateLimiter, otpRateLimiter, refreshRateLimiter } from "../../middleware/rate-limiter";
 import {
   registerSchema,
   loginSchema,
@@ -50,7 +50,7 @@ router.post(
   authController.adminLogin.bind(authController)
 );
 
-router.post("/refresh", authController.refreshTokens.bind(authController));
+router.post("/refresh", refreshRateLimiter, authController.refreshTokens.bind(authController));
 
 router.post("/logout", authController.logout.bind(authController));
 

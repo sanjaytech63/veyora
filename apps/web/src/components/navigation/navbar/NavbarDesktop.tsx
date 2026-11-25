@@ -33,18 +33,20 @@ export function NavbarDesktop({ onOpenSearch, className }: NavbarDesktopProps) {
         className
       )}
     >
-      <Container size="xl" className="flex h-16 items-center justify-between gap-4">
+      <Container size="xl" className="flex h-16 items-center justify-between gap-2 sm:gap-4">
         {/* Brand Logo */}
-        <NavbarLogo />
+        <div className="shrink-0">
+          <NavbarLogo />
+        </div>
 
         {/* Primary Desktop Navigation Links + Dynamic Categories */}
-        <nav className="flex items-center gap-1" aria-label="Main Navigation">
+        <nav className="flex items-center gap-0.5 xl:gap-1 min-w-0" aria-label="Main Navigation">
           <NavbarLinks />
           <NavbarCategoryMenu />
         </nav>
 
         {/* Actions (Search, Wishlist, Cart, Theme, Account) */}
-        <NavbarActions onOpenSearch={onOpenSearch} />
+        <NavbarActions onOpenSearch={onOpenSearch} className="shrink-0" />
       </Container>
     </div>
   );

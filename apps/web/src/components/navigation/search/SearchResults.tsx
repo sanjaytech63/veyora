@@ -27,7 +27,7 @@ export function SearchResults({
   if (products.length === 0) return null;
 
   return (
-    <div className={cn("space-y-3", className)}>
+    <div className={cn("space-y-3", className)} aria-live="polite" aria-atomic="true">
       <div className="flex items-center justify-between px-1">
         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Garments ({products.length})

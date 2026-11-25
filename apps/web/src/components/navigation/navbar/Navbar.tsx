@@ -14,7 +14,8 @@ interface NavbarProps {
 }
 
 export function Navbar({ className, showAnnouncement = true }: NavbarProps) {
-  const { searchModalOpen, setSearchModalOpen } = useUIStore();
+  const searchModalOpen = useUIStore((s) => s.searchModalOpen);
+  const setSearchModalOpen = useUIStore((s) => s.setSearchModalOpen);
 
   return (
     <>

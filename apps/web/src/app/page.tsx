@@ -1,14 +1,16 @@
-"use client";
-
-import * as React from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProductGrid } from "@/components/storefront/product-grid";
-import { useCategories, useFeaturedProducts, useProducts } from "@/hooks/use-catalog";
-import { cn } from "@/lib/utils";
+import { CuratedCollectionClient } from "@/components/storefront/curated-collection-client";
+import {
+  getCachedCategories,
+  getCachedFeaturedProducts,
+  getCachedProducts,
+} from "@/lib/cache/catalog-cache";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -23,24 +25,39 @@ import {
   Flame,
 } from "lucide-react";
 
-export default function StorefrontHomePage() {
-  const { data: categories = [], isLoading: catsLoading } = useCategories();
-  const { data: featuredProducts = [], isLoading: featuredLoading } = useFeaturedProducts(4);
-  const [activeCollectionTab, setActiveCollectionTab] = React.useState<string>("all");
+export const metadata: Metadata = {
+  title: "Veyora — Minimal Fashion & Precision Hardware",
+  description:
+    "Minimalist, editorial fashion & precision hardware e-commerce platform. Designed for tactile clarity, enduring aesthetics, and acoustic excellence.",
+};
 
-  const { data: collectionProductsData, isLoading: collectionLoading } = useProducts({
-    categoryId: activeCollectionTab === "all" ? undefined : activeCollectionTab,
-    limit: 8,
-  });
+const categoryIcons: Record<string, React.ElementType> = {
+  kurtis: Shirt,
+  "ethnic-wear": Crown,
+  sarees: Gem,
+  dresses: Sparkles,
+  "co-ords": Layers,
+  accessories: Sparkles,
+};
 
-  const categoryIcons: Record<string, React.ElementType> = {
-    kurtis: Shirt,
-    "ethnic-wear": Crown,
-    sarees: Gem,
-    dresses: Sparkles,
-    "co-ords": Layers,
-    accessories: Sparkles,
-  };
+export default async function StorefrontHomePage() {
+  let categories: any[] = [];
+  let featuredProducts: any[] = [];
+  let initialCollectionProducts: any[] = [];
+
+  try {
+    const [cats, feat, col] = await Promise.allSettled([
+      getCachedCategories(),
+      getCachedFeaturedProducts(4),
+      getCachedProducts({ limit: 8 }),
+    ]);
+
+    if (cats.status === "fulfilled") categories = cats.value || [];
+    if (feat.status === "fulfilled") featuredProducts = feat.value || [];
+    if (col.status === "fulfilled") initialCollectionProducts = col.value || [];
+  } catch {
+    // Graceful fallback for offline build / mock
+  }
 
   const heroProduct = featuredProducts[0];
   const firstCategory = categories[0];
@@ -48,9 +65,8 @@ export default function StorefrontHomePage() {
 
   return (
     <div className="space-y-24 md:space-y-32 pb-28">
-      {/* 1. Fashion Editorial Hero Section */}
+      {/* 1. Fashion Editorial Hero Section (100% Server Rendered) */}
       <section className="relative overflow-hidden border-b border-border/60 bg-background pt-10 pb-20 md:pt-16 md:pb-28">
-        {/* Subtle Radial Gradient Backdrop */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(#00000010_1px,transparent_1px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_75%_65%_at_50%_40%,#000_60%,transparent_100%)] dark:bg-[radial-gradient(#ffffff10_1px,transparent_1px)]"
@@ -235,7 +251,7 @@ export default function StorefrontHomePage() {
         </Container>
       </section>
 
-      {/* 2. Shop by Category — Fashion Department Cards */}
+      {/* 2. Shop by Category — Fashion Department Cards (100% Server Rendered) */}
       <section id="categories">
         <Container size="xl" className="space-y-10">
           <div className="flex flex-col justify-between gap-4 border-b border-border/60 pb-6 sm:flex-row sm:items-end">
@@ -257,14 +273,7 @@ export default function StorefrontHomePage() {
           </div>
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {catsLoading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-64 rounded-[22px] border border-border/50 bg-muted/40 animate-pulse"
-                />
-              ))
-            ) : categories.length === 0 ? (
+            {categories.length === 0 ? (
               <div className="col-span-full rounded-3xl border border-dashed border-border/80 bg-muted/20 py-16 px-4">
                 <EmptyState
                   icon={<Shirt className="h-6 w-6 text-muted-foreground" />}
@@ -292,12 +301,10 @@ export default function StorefrontHomePage() {
                     href={`/category/${cat.slug}`}
                     className="group relative flex flex-col justify-between overflow-hidden rounded-[24px] border border-border/60 bg-card/80 p-6 min-h-[220px] transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-foreground/25 hover:bg-card hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.08)]"
                   >
-                    {/* Top Row */}
                     <div className="flex items-start justify-between">
                       <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border/80 bg-background text-foreground shadow-2xs transition-colors duration-300 group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground">
                         <Icon className="h-5 w-5" />
                       </div>
-
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-xs text-muted-foreground/70">
                           /{indexNumber}
@@ -308,7 +315,6 @@ export default function StorefrontHomePage() {
                       </div>
                     </div>
 
-                    {/* Bottom Info */}
                     <div className="mt-8 space-y-1.5">
                       <h3 className="text-xl font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">
                         {cat.name}
@@ -355,7 +361,6 @@ export default function StorefrontHomePage() {
           <ProductGrid
             products={featuredProducts}
             categories={categories}
-            loading={featuredLoading}
             columns={4}
             emptyTitle="No garments available yet"
             emptyDescription="New fashion pieces will appear here as soon as they are published."
@@ -363,11 +368,10 @@ export default function StorefrontHomePage() {
         </Container>
       </section>
 
-      {/* 4. Artisanal Heritage Campaign Banner */}
+      {/* 4. Artisanal Heritage Campaign Banner (100% Server Rendered) */}
       <section>
         <Container size="xl">
           <div className="relative overflow-hidden rounded-[28px] border border-zinc-800/90 bg-zinc-950 p-8 text-white shadow-2xl sm:p-12 md:p-16">
-            {/* Subtle Texture Grid */}
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:48px_48px]"
@@ -458,78 +462,17 @@ export default function StorefrontHomePage() {
               </div>
             </div>
 
-            {/* Ambient Radial Glows */}
             <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-amber-500/10 blur-3xl" />
             <div className="pointer-events-none absolute bottom-0 right-1/3 -mb-24 h-72 w-72 rounded-full bg-emerald-500/15 blur-3xl" />
           </div>
         </Container>
       </section>
 
-      {/* 5. Interactive Wardrobe Collections by Department */}
-      <section id="collections">
-        <Container size="xl" className="space-y-10">
-          <div className="flex flex-col justify-between gap-6 border-b border-border/60 pb-6 lg:flex-row lg:items-end">
-            <div>
-              <span className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                03 // Curated Edits
-              </span>
-              <h2 className="mt-1.5 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
-                Curated for Every Occasion
-              </h2>
-            </div>
-
-            {/* Segmented Pill Filter Dock */}
-            <div className="inline-flex flex-wrap items-center gap-1.5 rounded-2xl border border-border/70 bg-muted/50 p-1.5 backdrop-blur-sm">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setActiveCollectionTab("all")}
-                className={cn(
-                  "rounded-xl px-4 py-2 text-xs font-semibold h-auto transition-all duration-200",
-                  activeCollectionTab === "all"
-                    ? "bg-background text-foreground shadow-xs ring-1 ring-border/60 hover:bg-background"
-                    : "text-muted-foreground hover:text-foreground hover:bg-transparent"
-                )}
-              >
-                All Apparel
-              </Button>
-              {categories.map((cat) => {
-                const isActive = activeCollectionTab === cat.id;
-                return (
-                  <Button
-                    key={cat.id}
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setActiveCollectionTab(cat.id)}
-                    className={cn(
-                      "rounded-xl px-4 py-2 text-xs font-semibold h-auto transition-all duration-200",
-                      isActive
-                        ? "bg-background text-foreground shadow-xs ring-1 ring-border/60 hover:bg-background"
-                        : "text-muted-foreground hover:text-foreground hover:bg-transparent"
-                    )}
-                  >
-                    {cat.name}
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
-
-          <ProductGrid
-            products={collectionProductsData?.items || []}
-            categories={categories}
-            loading={collectionLoading}
-            emptyTitle="No apparel available in this department"
-            emptyDescription="Garments added to this category will be displayed here."
-            onResetFilters={
-              activeCollectionTab !== "all" ? () => setActiveCollectionTab("all") : undefined
-            }
-            columns={4}
-          />
-        </Container>
-      </section>
+      {/* 5. Interactive Wardrobe Collections by Department (Client Leaf Boundary) */}
+      <CuratedCollectionClient
+        categories={categories}
+        initialProducts={initialCollectionProducts}
+      />
     </div>
   );
 }

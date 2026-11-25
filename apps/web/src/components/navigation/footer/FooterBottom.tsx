@@ -7,7 +7,11 @@ interface FooterBottomProps {
 }
 
 export function FooterBottom({ className }: FooterBottomProps) {
-  const currentYear = new Date().getFullYear();
+  const [currentYear, setCurrentYear] = React.useState<number>(2026);
+
+  React.useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
 
   return (
     <div

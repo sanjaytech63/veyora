@@ -1,6 +1,7 @@
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import globals from "globals";
+import nextPlugin from "@next/eslint-plugin-next";
 
 export default tseslint.config(
   {
@@ -58,6 +59,21 @@ export default tseslint.config(
       "prefer-const": "error",
       "no-var": "error",
       eqeqeq: ["error", "always", { null: "ignore" }],
+    },
+  },
+  {
+    files: ["apps/web/**/*.{js,jsx,ts,tsx}", "apps/admin/**/*.{js,jsx,ts,tsx}"],
+    plugins: {
+      "@next/next": nextPlugin,
+    },
+    rules: {
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs["core-web-vitals"].rules,
+    },
+    settings: {
+      next: {
+        rootDir: ["apps/web/", "apps/admin/"],
+      },
     },
   }
 );

@@ -33,8 +33,12 @@ interface NavbarMobileProps {
 }
 
 export function NavbarMobile({ onOpenSearch, className }: NavbarMobileProps) {
-  const { mobileNavOpen, setMobileNavOpen, setCartDrawerOpen } = useUIStore();
-  const { user, isAuthenticated, clearAuth } = useAuthStore();
+  const mobileNavOpen = useUIStore((s) => s.mobileNavOpen);
+  const setMobileNavOpen = useUIStore((s) => s.setMobileNavOpen);
+  const setCartDrawerOpen = useUIStore((s) => s.setCartDrawerOpen);
+  const user = useAuthStore((s) => s.user);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const clearAuth = useAuthStore((s) => s.clearAuth);
   const { totals } = useCart();
   const cartCount = totals.itemCount;
 
@@ -156,7 +160,7 @@ export function NavbarMobile({ onOpenSearch, className }: NavbarMobileProps) {
             </button>
 
             {/* Primary Store Links */}
-            <div className="space-y-1">
+            <nav aria-label="Mobile Navigation" className="space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-3">
                 Menu
               </span>
@@ -183,7 +187,7 @@ export function NavbarMobile({ onOpenSearch, className }: NavbarMobileProps) {
                   );
                 })}
               </div>
-            </div>
+            </nav>
 
             {/* Dynamic Categories */}
             {activeCategories.length > 0 && (

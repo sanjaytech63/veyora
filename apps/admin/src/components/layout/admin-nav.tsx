@@ -51,7 +51,7 @@ export function AdminNav({ collapsed = false }: { collapsed?: boolean }) {
   const pathname = usePathname();
 
   return (
-    <nav className="grid items-start gap-1 px-2 text-sm font-medium">
+    <nav className="grid items-start gap-1 px-2 text-sm font-medium" aria-label="Admin Navigation">
       {adminNavItems.map((item) => {
         const Icon = item.icon;
         const isActive =
@@ -62,14 +62,16 @@ export function AdminNav({ collapsed = false }: { collapsed?: boolean }) {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex items-center gap-3 rounded-xl px-3 py-2.5 text-muted-foreground transition-all hover:text-foreground hover:bg-accent/60",
+              "flex items-center gap-3 rounded-xl px-3 py-2.5 text-muted-foreground transition-all hover:text-foreground hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
               isActive &&
                 "bg-primary text-primary-foreground font-semibold hover:bg-primary hover:text-primary-foreground",
               collapsed && "justify-center px-2"
             )}
             title={collapsed ? item.title : undefined}
+            aria-label={collapsed ? item.title : undefined}
+            aria-current={isActive ? "page" : undefined}
           >
-            <Icon className="h-4 w-4 shrink-0" />
+            <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
             {!collapsed && <span className="text-xs">{item.title}</span>}
             {!collapsed && item.badge && (
               <span className="ml-auto flex h-5 items-center justify-center rounded-full bg-primary/10 px-2 text-[10px] font-medium text-primary">

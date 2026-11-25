@@ -14,7 +14,7 @@ import {
 export function useProducts(params?: Partial<ProductQueryInput>) {
   return useQuery<ProductsResponse>({
     queryKey: catalogKeys.products(params as Record<string, unknown>),
-    queryFn: () => catalogApi.getProductsWithMeta(params),
+    queryFn: ({ signal }) => catalogApi.getProductsWithMeta(params, signal),
     staleTime: 1000 * 60 * 3, // 3 minutes
   });
 }

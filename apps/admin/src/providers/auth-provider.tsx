@@ -5,7 +5,9 @@ import { useAdminAuthStore } from "@/stores/admin-auth-store";
 import { adminAuthApi } from "@/lib/api/admin-auth-api";
 
 export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
-  const { setAdminAuth, setUnauthenticated } = useAdminAuthStore();
+  // Use narrow action selectors so AdminAuthProvider never re-renders on auth state changes
+  const setAdminAuth = useAdminAuthStore((s) => s.setAdminAuth);
+  const setUnauthenticated = useAdminAuthStore((s) => s.setUnauthenticated);
   const initRef = React.useRef(false);
 
   React.useEffect(() => {

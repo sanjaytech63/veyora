@@ -10,7 +10,7 @@ import { Menu, Bell } from "lucide-react";
 import { AdminMobileSidebar } from "./admin-mobile-sidebar";
 
 export function AdminHeader() {
-  const { setMobileSidebarOpen } = useAdminUIStore();
+  const setMobileSidebarOpen = useAdminUIStore((s) => s.setMobileSidebarOpen);
 
   return (
     <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-border bg-card/80 px-4 backdrop-blur md:px-6 justify-between">

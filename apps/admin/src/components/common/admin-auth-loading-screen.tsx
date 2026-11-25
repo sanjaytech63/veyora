@@ -14,7 +14,7 @@ export function AdminAuthLoadingScreen({
 }: AdminAuthLoadingScreenProps) {
   return (
     <div
-      className={`flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4 text-center text-foreground ${className}`}
+      className={`flex min-h-[50vh] h-full flex-col items-center justify-center gap-4 bg-background px-4 py-12 text-center text-foreground ${className}`}
       data-testid="admin-auth-loading-screen"
     >
       <div className="flex items-center gap-3">

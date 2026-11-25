@@ -4,9 +4,22 @@ import { AdminLayout } from "@/components/layout/admin-layout";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Veyora — Administration Portal",
+  title: {
+    default: "Veyora — Administration Portal",
+    template: "%s | Veyora Administration",
+  },
   description:
-    "Enterprise-grade modern administration portal foundation built with Next.js App Router, Tailwind CSS v4, and shadcn/ui.",
+    "Executive commerce operations, inventory control, and customer management console for Veyora Atelier.",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+    },
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

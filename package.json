@@ -31,10 +31,16 @@
     "typecheck": "tsc --noEmit -p packages/config && tsc --noEmit -p packages/types && tsc --noEmit -p packages/validators && tsc --noEmit -p packages/utils && tsc --noEmit -p apps/api && tsc --noEmit -p apps/worker && tsc --noEmit -p apps/web && tsc --noEmit -p apps/admin",
     "typecheck:turbo": "turbo run typecheck",
     "test": "npm run test --workspaces --if-present",
+    "test:web": "npm run test --workspace=@veyora/web",
+    "test:admin": "npm run test --workspace=@veyora/admin",
+    "test:api": "npm run test --workspace=@veyora/api",
+    "test:worker": "npm run test --workspace=@veyora/worker",
+    "test:packages": "npm run test --workspace=@veyora/validators && npm run test --workspace=@veyora/utils",
+    "test:e2e": "playwright test",
+    "test:e2e:smoke": "playwright test e2e/login.spec.ts e2e/catalog-browsing.spec.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:turbo": "turbo run test",
-    "test:e2e": "playwright test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm run test && npm run build",
@@ -47,6 +53,7 @@
     "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
     "@eslint/js": "^9.21.0",
+    "@next/eslint-plugin-next": "^16.4.6",
     "@playwright/test": "^1.65.1",
     "@vitest/coverage-v8": "^3.2.7",
     "concurrently": "^10.0.7",
@@ -63,5 +70,6 @@
   "engines": {
     "node": ">=24.13.0",
     "npm": ">=11.21.0"
-  }
+  },
+  "packageManager": "npm@11.21.0"
 }

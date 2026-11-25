@@ -46,7 +46,12 @@ export function ProductGallery({
   return (
     <div className={cn("flex flex-col gap-4", className)}>
       {/* Main Display Stage */}
-      <div className="group relative aspect-square w-full overflow-hidden rounded-3xl border border-border/60 bg-muted/30 shadow-xs">
+      <div
+        className="group relative aspect-square w-full overflow-hidden rounded-3xl border border-border/60 bg-muted/30 shadow-xs"
+        role="region"
+        aria-roledescription="carousel"
+        aria-label="Product image gallery"
+      >
         {currentImage?.url ? (
           <OptimizedImage
             src={currentImage.url}
@@ -110,6 +115,8 @@ export function ProductGallery({
               variant="outline"
               size="icon"
               onClick={() => setActiveIndex(idx)}
+              aria-label={`View image ${idx + 1} of ${allImages.length}`}
+              aria-current={activeIndex === idx ? "true" : undefined}
               className={cn(
                 "relative aspect-square h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl border p-0 transition-all",
                 activeIndex === idx
