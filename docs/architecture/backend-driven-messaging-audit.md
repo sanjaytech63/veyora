@@ -868,6 +868,42 @@ The foundational shared API response contracts and error utilities were implemen
 
 ---
 
-## 15. Architecture Signoff & Next Steps
+## 15. Task 03 Express API Response Infrastructure Implementation
 
-This architectural contract and implementation provide the complete foundation for Veyora's transition to a backend-driven messaging system. All shared contracts are verified and ready for controller and client migration in upcoming tasks.
+The core response infrastructure and error middleware for `apps/api` were implemented and verified in Task 03:
+
+### 15.1 Centralized Success Response Helper (`apps/api/src/utils/response.ts`)
+
+- **`sendSuccess<T>(res, options)`**:
+  Constructs and sends an `ApiSuccessResponse<T>` with HTTP status (default 200), stable `code`, user-facing `message`, generic `data`, and merged `meta` (`requestId`, `timestamp`, `pagination`).
+- Supports both modern options object (`{ statusCode, code, message, data, meta }`) and positional parameter signatures.
+- Automatically resolves correlation ID from `req.id` / `res.getHeader("X-Request-Id")`.
+
+### 15.2 Global Error Middleware (`apps/api/src/middleware/error-handler.ts`)
+
+- Normalizes domain `AppError` instances, Zod `ValidationError` instances, MongoDB `E11000 duplicate key` exceptions, and Mongoose `CastError` exceptions into the canonical `ApiErrorResponse` envelope.
+- Suppresses database collection names, raw MongoDB indexes, and file paths.
+- Masks stack traces from client responses while logging detailed diagnostic stack traces to Pino for server errors (`statusCode >= 500`).
+- Provides a transitional backwards-compatibility layer (`error: { code, message, details }`, `errors: Record<string, string[]>`) ensuring zero breaking changes for existing test assertions and legacy clients.
+
+### 15.3 Canonical Rate Limiting (`apps/api/src/middleware/rate-limiter.ts`)
+
+- Harmonized `apiRateLimiter` and domain-specific limiters (`authRateLimiter`, `otpRateLimiter`, `refreshRateLimiter`, `paymentRateLimiter`, `couponRateLimiter`).
+- Emits canonical `ApiErrorResponse` with `code: "RATE_LIMIT_EXCEEDED"`, HTTP status 429, correlation `meta.requestId`, and standard `Retry-After` header.
+
+### 15.4 Request Correlation Architecture (`apps/api/src/middleware/request-id.ts`)
+
+- Enforces strict validation policy on incoming `x-request-id` header (`/^[a-zA-Z0-9_\-.:]{1,64}$/`).
+- Safely rejects malformed, overly long, or suspicious identifiers and falls back to `crypto.randomUUID()`.
+- Binds correlation ID to `req.id`, `req.requestId`, `req.log = logger.child({ requestId })`, and the `X-Request-Id` response header.
+
+### 15.5 Request Validation Integration (`apps/api/src/middleware/validate-request.ts`)
+
+- Standardized high-level validation error message to `"Please review the submitted information."`.
+- Maps nested validation paths (e.g. `shippingAddress.postalCode`, `items[0].quantity`) directly to `details` array.
+
+---
+
+## 16. Architecture Signoff & Next Steps
+
+This architectural contract and implementation provide the complete foundation for Veyora's transition to a backend-driven messaging system. All shared contracts and API response infrastructure are verified and ready for controller migration in upcoming tasks.

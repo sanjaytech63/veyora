@@ -1,28 +1,50 @@
 import { ApiErrorDetail } from "@veyora/types";
 
 /**
- * Standard Application Error Classes
+ * Options for instantiating an AppError via object parameter
  */
+export interface AppErrorOptions {
+  message: string;
+  statusCode?: number;
+  code?: string;
+  details?: ApiErrorDetail[];
+  isOperational?: boolean;
+  cause?: unknown;
+}
 
+/**
+ * Standard Application Error Class across Veyora monorepo.
+ * Supports both legacy positional parameters and modern options object.
+ */
 export class AppError extends Error {
   public readonly statusCode: number;
   public readonly code: string;
   public readonly isOperational: boolean;
   public readonly details?: ApiErrorDetail[];
+  public readonly cause?: unknown;
 
   constructor(
-    message: string,
+    messageOrOptions: string | AppErrorOptions,
     statusCode = 500,
     code = "INTERNAL_SERVER_ERROR",
     details?: ApiErrorDetail[],
     isOperational = true
   ) {
-    super(message);
+    if (typeof messageOrOptions === "object" && messageOrOptions !== null) {
+      super(messageOrOptions.message);
+      this.statusCode = messageOrOptions.statusCode ?? 500;
+      this.code = messageOrOptions.code ?? "INTERNAL_SERVER_ERROR";
+      this.details = messageOrOptions.details;
+      this.isOperational = messageOrOptions.isOperational ?? true;
+      this.cause = messageOrOptions.cause;
+    } else {
+      super(messageOrOptions);
+      this.statusCode = statusCode;
+      this.code = code;
+      this.details = details;
+      this.isOperational = isOperational;
+    }
     this.name = this.constructor.name;
-    this.statusCode = statusCode;
-    this.code = code;
-    this.details = details;
-    this.isOperational = isOperational;
     Error.captureStackTrace(this, this.constructor);
   }
 }
