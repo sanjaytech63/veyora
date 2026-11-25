@@ -20,7 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess, notifyWarning } from "@/lib/notifications";
 import {
   ShieldCheck,
   ShieldAlert,
@@ -77,8 +77,8 @@ export default function RolesManagementPage() {
       ]);
       setRoles(rolesData);
       setPermissions(permsData);
-    } catch {
-      toast.error("Failed to load administrative roles or permissions");
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }
@@ -149,43 +149,42 @@ export default function RolesManagementPage() {
   const handleSubmitRole = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!displayName.trim()) {
-      toast.error("Role display name is required");
+      notifyWarning("Role display name is required");
       return;
     }
 
     if (!editingRole && !name.trim()) {
-      toast.error("Role identifier name is required");
+      notifyWarning("Role identifier name is required");
       return;
     }
 
     if (selectedPermissions.length === 0) {
-      toast.error("Please grant at least one permission to this role");
+      notifyWarning("Please grant at least one permission to this role");
       return;
     }
 
     try {
       setSubmitting(true);
       if (editingRole) {
-        await adminRbacApi.updateRole(editingRole.id, {
+        const updated = await adminRbacApi.updateRole(editingRole.id, {
           displayName,
           description,
           permissions: selectedPermissions,
         });
-        toast.success(`Role '${displayName}' updated successfully`);
+        notifyApiSuccess(updated);
       } else {
-        await adminRbacApi.createRole({
+        const created = await adminRbacApi.createRole({
           name: name.toLowerCase().trim(),
           displayName,
           description,
           permissions: selectedPermissions,
         });
-        toast.success(`Role '${displayName}' created successfully`);
+        notifyApiSuccess(created);
       }
       setIsModalOpen(false);
       fetchInitialData();
     } catch (error: any) {
-      const msg = error?.response?.data?.message || error?.message || "Failed to save role";
-      toast.error(msg);
+      notifyApiError(error);
     } finally {
       setSubmitting(false);
     }
@@ -193,12 +192,12 @@ export default function RolesManagementPage() {
 
   const handleDeleteRole = async (role: RoleDto) => {
     if (role.isSystem) {
-      toast.error("System-defined roles cannot be deleted");
+      notifyWarning("System-defined roles cannot be deleted");
       return;
     }
 
     if ((role.staffCount || 0) > 0) {
-      toast.error(`Cannot delete role currently assigned to ${role.staffCount} staff member(s)`);
+      notifyWarning(`Cannot delete role currently assigned to ${role.staffCount} staff member(s)`);
       return;
     }
 
@@ -208,12 +207,11 @@ export default function RolesManagementPage() {
 
     try {
       setDeletingId(role.id);
-      await adminRbacApi.deleteRole(role.id);
-      toast.success(`Role '${role.displayName}' removed successfully`);
+      const deleted = await adminRbacApi.deleteRole(role.id);
+      notifyApiSuccess(deleted);
       fetchInitialData();
     } catch (error: any) {
-      const msg = error?.response?.data?.message || "Failed to delete role";
-      toast.error(msg);
+      notifyApiError(error);
     } finally {
       setDeletingId(null);
     }

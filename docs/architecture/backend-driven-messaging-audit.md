@@ -1274,3 +1274,9 @@ Frontend code no longer branches on backend message text. Email verification beh
 Desktop and mobile logout now normalize backend/logout failures while preserving local auth cleanup. Socket notification events use the Web notification adapter. Aborted or cancelled requests remain silent. Gateway callback descriptions are not presented as backend-confirmed payment messages; verification failures use normalized backend errors or a generic payment fallback.
 
 Task 14B completed the remaining Web audit. Cart, wishlist, profile/avatar, addresses, orders, reviews, notifications, tracking, checkout, and payment call sites are migrated or explicitly classified. Direct Sonner imports now occur only in the shared notification infrastructure; non-backend field and availability guidance uses `notifyWarning`/`notifyInfo`, not fabricated backend success copy.
+
+## 29. Admin Business Notification Migration (Task 15)
+
+Task 15 migrated applicable Admin mutations to backend-authored success messages and shared normalized errors. Catalog, inventory, customers, orders, refunds, coupons, reviews, shipments, profile/avatar, settings, staff, and RBAC call sites use the Admin notification adapter. Direct Sonner imports remain only in the shared Admin adapter and toast renderer.
+
+Mutation failures use stable backend codes and safe messages; unknown codes use sanitized generic fallback behavior. Aborted/cancelled operations are silent. Background query failures remain silent because TanStack Query notification behavior stays opt-in. Field-level validation remains frontend-owned and separate from global business notifications.

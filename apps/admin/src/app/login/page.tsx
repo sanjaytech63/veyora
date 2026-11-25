@@ -25,7 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 import { ApiClientError } from "@/lib/api/api-client";
 import { Shield, LoaderCircle, Eye, EyeOff } from "lucide-react";
 import { getSafeRedirectUrl } from "@veyora/utils";
@@ -61,17 +61,13 @@ function AdminLoginForm() {
     try {
       const response = await adminAuthApi.login(values);
       setAdminAuth(response.user, response.accessToken);
-      toast.success("Administrator Authenticated", {
-        description: `Signed in as ${response.user.email} (${response.user.role})`,
-      });
+      notifyApiSuccess(response);
       router.push(redirectPath);
     } catch (err) {
       if (err instanceof ApiClientError) {
-        toast.error("Authentication Failed", {
-          description: err.message,
-        });
+        notifyApiError(err);
       } else {
-        toast.error("An unexpected error occurred. Please try again.");
+        notifyApiError(err);
       }
     } finally {
       setIsSubmitting(false);

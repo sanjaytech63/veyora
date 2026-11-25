@@ -2,6 +2,7 @@
 
 import { normalizeApiError, NormalizedApiError } from "@veyora/utils";
 import { toast } from "@/components/ui/sonner";
+import { getApiSuccessMetadata } from "@/lib/api/api-client";
 
 const recentNotifications = new Map<string, number>();
 
@@ -11,6 +12,13 @@ function notificationId(normalized: NormalizedApiError): string {
 
 export function notifyApiError(error: unknown, fallbackMessage?: string): NormalizedApiError {
   const normalized = normalizeApiError(error, fallbackMessage);
+  if (
+    normalized.code === "CLIENT_ABORTED" ||
+    normalized.code === "CANCELLED" ||
+    normalized.code === "ABORTED"
+  ) {
+    return normalized;
+  }
   const id = notificationId(normalized);
   const now = Date.now();
   const previous = recentNotifications.get(id);
@@ -24,8 +32,15 @@ export function notifyApiError(error: unknown, fallbackMessage?: string): Normal
   return normalized;
 }
 
-export function notifySuccess(message: string, description?: string): void {
-  toast.success(message, { id: `success:${message}:${description ?? ""}`, description });
+export function notifyApiSuccess(result: unknown): boolean {
+  const metadata = getApiSuccessMetadata(result);
+  const envelope =
+    typeof result === "object" && result !== null ? (result as Record<string, unknown>) : undefined;
+  const message =
+    metadata?.message || (typeof envelope?.message === "string" ? envelope.message : undefined);
+  if (!message) return false;
+  toast.success(message, { id: `success:${message}` });
+  return true;
 }
 
 export function notifyWarning(message: string, description?: string): void {

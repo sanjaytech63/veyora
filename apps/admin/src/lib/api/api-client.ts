@@ -36,6 +36,22 @@ export class ApiClientError extends Error {
   }
 }
 
+const apiSuccessMetadata = new WeakMap<
+  object,
+  { code?: string; message?: string; meta?: Record<string, unknown> }
+>();
+let lastApiSuccessMetadata:
+  { code?: string; message?: string; meta?: Record<string, unknown> } | undefined;
+
+export function getApiSuccessMetadata(
+  value: unknown
+): { code?: string; message?: string; meta?: Record<string, unknown> } | undefined {
+  if (typeof value === "object" && value !== null) {
+    return apiSuccessMetadata.get(value) ?? lastApiSuccessMetadata;
+  }
+  return lastApiSuccessMetadata;
+}
+
 export type AuthTokenProvider = () => string | null | Promise<string | null>;
 export type RequestInterceptor = (
   options: RequestOptions
@@ -258,7 +274,21 @@ export class ApiClient {
 
       // If wrapped in ApiResponseSuccess format, unwrap data
       if (data && typeof data === "object" && "success" in data && data.success === true) {
-        return (data as ApiResponseSuccess<T>).data;
+        const envelope = data as ApiResponseSuccess<T>;
+        lastApiSuccessMetadata = {
+          code: envelope.code,
+          message: envelope.message,
+          meta: envelope.meta,
+        };
+        const unwrapped = envelope.data;
+        if (typeof unwrapped === "object" && unwrapped !== null) {
+          apiSuccessMetadata.set(unwrapped, {
+            code: envelope.code,
+            message: envelope.message,
+            meta: envelope.meta,
+          });
+        }
+        return unwrapped as T;
       }
 
       return data as T;

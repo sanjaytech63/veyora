@@ -21,7 +21,7 @@ import {
 import { adminCatalogApi } from "@/lib/api/admin-catalog-api";
 import { Product, Category, Brand } from "@veyora/types";
 import { UpdateProductInput } from "@veyora/validators";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess, notifyWarning } from "@/lib/notifications";
 import {
   ArrowLeft,
   Plus,
@@ -145,7 +145,7 @@ export function EditProductClient({ productId }: EditProductClientProps) {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to load product details.";
       setFetchError(msg);
-      toast.error(msg);
+      notifyApiError(err);
     } finally {
       setLoading(false);
     }
@@ -187,11 +187,11 @@ export function EditProductClient({ productId }: EditProductClientProps) {
     e.preventDefault();
 
     if (!title.trim()) {
-      toast.error("Product title is required.");
+      notifyWarning("Product title is required.");
       return;
     }
     if (!sku.trim()) {
-      toast.error("Product SKU is required.");
+      notifyWarning("Product SKU is required.");
       return;
     }
 
@@ -240,11 +240,11 @@ export function EditProductClient({ productId }: EditProductClientProps) {
         },
       };
 
-      await adminCatalogApi.updateProduct(productId, payload);
-      toast.success("Product updated successfully!");
+      const updated = await adminCatalogApi.updateProduct(productId, payload);
+      notifyApiSuccess(updated);
       router.push("/products");
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to update product.");
+      notifyApiError(err);
     } finally {
       setSaving(false);
     }

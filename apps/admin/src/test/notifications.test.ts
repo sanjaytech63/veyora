@@ -9,7 +9,7 @@ const toastMocks = vi.hoisted(() => ({
 
 vi.mock("@/components/ui/sonner", () => ({ toast: toastMocks }));
 
-import { notifyApiError, notifySuccess } from "../lib/notifications";
+import { notifyApiError, notifyApiSuccess } from "../lib/notifications";
 
 describe("Admin notification adapter", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -30,10 +30,37 @@ describe("Admin notification adapter", () => {
   });
 
   it("uses backend success text", () => {
-    notifySuccess("Inventory adjusted successfully.");
+    expect(
+      notifyApiSuccess({
+        success: true,
+        code: "INVENTORY_ADJUSTED",
+        message: "Inventory adjusted successfully.",
+        data: { sku: "SKU-1" },
+      })
+    ).toBe(true);
     expect(toastMocks.success).toHaveBeenCalledWith(
       "Inventory adjusted successfully.",
       expect.objectContaining({ id: expect.stringContaining("success:") })
     );
+  });
+
+  it("does not fabricate success for missing backend text", () => {
+    expect(notifyApiSuccess({ success: true, data: { id: "record-1" } })).toBe(false);
+  });
+
+  it("uses generic fallback for unknown errors", () => {
+    notifyApiError({}, "Unable to complete the admin operation.");
+    expect(toastMocks.error).toHaveBeenCalledWith(
+      "Unable to complete the admin operation.",
+      expect.objectContaining({ id: expect.stringContaining("INTERNAL_SERVER_ERROR") })
+    );
+  });
+
+  it("silences aborted and duplicate errors", () => {
+    notifyApiError({ success: false, code: "CLIENT_ABORTED", message: "Aborted" });
+    const error = { success: false, code: "INSUFFICIENT_STOCK", message: "Insufficient stock" };
+    notifyApiError(error);
+    notifyApiError(error);
+    expect(toastMocks.error).toHaveBeenCalledTimes(1);
   });
 });

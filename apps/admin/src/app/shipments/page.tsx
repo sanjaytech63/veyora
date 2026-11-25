@@ -56,7 +56,7 @@ import {
   Send,
   Boxes,
 } from "lucide-react";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess, notifyInfo, notifyWarning } from "@/lib/notifications";
 
 const SHIPMENT_STATUS_CONFIG: Record<
   ShipmentStatus,
@@ -168,9 +168,7 @@ export default function AdminShipmentsPage() {
   const createShipmentMutation = useMutation({
     mutationFn: (payload: CreateShipmentPayload) => adminShippingApi.createShipment(payload),
     onSuccess: (shipment) => {
-      toast.success(
-        `Shipment #${shipment.shipmentNumber} manifested! AWB: ${shipment.trackingNumber}`
-      );
+      notifyApiSuccess(shipment);
       queryClient.invalidateQueries({ queryKey: ["admin-shipments"] });
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
       setIsCreateOpen(false);
@@ -179,7 +177,7 @@ export default function AdminShipmentsPage() {
       setFulfillmentNotes("");
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || err?.message || "Failed to create shipment");
+      notifyApiError(err);
     },
   });
 
@@ -188,7 +186,7 @@ export default function AdminShipmentsPage() {
     mutationFn: ({ id, payload }: { id: string; payload: UpdateShipmentTrackingPayload }) =>
       adminShippingApi.updateTracking(id, payload),
     onSuccess: (updatedShipment) => {
-      toast.success(`Shipment tracking updated to '${updatedShipment.status}'`);
+      notifyApiSuccess(updatedShipment);
       setSelectedShipment(updatedShipment);
       queryClient.invalidateQueries({ queryKey: ["admin-shipments"] });
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
@@ -196,7 +194,7 @@ export default function AdminShipmentsPage() {
       setNewDescription("");
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || err?.message || "Failed to update tracking");
+      notifyApiError(err);
     },
   });
 
@@ -211,13 +209,13 @@ export default function AdminShipmentsPage() {
 
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    toast.success(`${label} copied to clipboard`);
+    notifyInfo(`${label} copied to clipboard`);
   };
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!orderIdInput.trim()) {
-      toast.error("Please provide a valid Order ID");
+      notifyWarning("Please provide a valid Order ID");
       return;
     }
 

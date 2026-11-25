@@ -31,7 +31,6 @@ import {
   ExternalLink,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { toast } from "sonner";
 import { adminAnalyticsApi } from "@/lib/api/admin-analytics-api";
 import { adminAnalyticsKeys } from "@/lib/api/query-keys";
 import { DashboardDateFilter } from "@/components/dashboard/dashboard-date-filter";
@@ -148,9 +147,6 @@ export function DashboardClient() {
   const handleRefresh = async () => {
     await refetch();
     queryClient.invalidateQueries({ queryKey: adminAnalyticsKeys.all });
-    toast.success("Metrics Synchronized", {
-      description: "Latest operational and commerce metrics updated.",
-    });
   };
 
   const handleCustomDateChange = (start: string, end: string) => {

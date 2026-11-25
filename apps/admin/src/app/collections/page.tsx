@@ -27,7 +27,7 @@ import { adminCatalogApi } from "@/lib/api/admin-catalog-api";
 import { Collection } from "@veyora/types";
 import { CreateCollectionInput } from "@veyora/validators";
 import { Plus, RefreshCw, Trash2, Sparkles, LoaderCircle } from "lucide-react";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 
 export default function AdminCollectionsPage() {
   const [collections, setCollections] = React.useState<Collection[]>([]);
@@ -49,7 +49,7 @@ export default function AdminCollectionsPage() {
       const data = await adminCatalogApi.getCollections();
       setCollections(Array.isArray(data) ? data : []);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to load collections from database.");
+      notifyApiError(err);
     } finally {
       setLoading(false);
     }
@@ -75,10 +75,8 @@ export default function AdminCollectionsPage() {
         status: "active",
       };
 
-      await adminCatalogApi.createCollection(payload);
-      toast.success("Collection Created", {
-        description: `"${newName}" published and persisted to MongoDB.`,
-      });
+      const created = await adminCatalogApi.createCollection(payload);
+      notifyApiSuccess(created);
       setCreateDialogOpen(false);
       setNewName("");
       setNewSlug("");
@@ -88,7 +86,7 @@ export default function AdminCollectionsPage() {
       setNewDescription("");
       await loadCollections();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to create collection.");
+      notifyApiError(err);
     } finally {
       setSubmitting(false);
     }
@@ -97,13 +95,11 @@ export default function AdminCollectionsPage() {
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Are you sure you want to delete collection "${name}"?`)) return;
     try {
-      await adminCatalogApi.deleteCollection(id);
-      toast.success("Collection Removed", {
-        description: `Collection "${name}" deleted from database.`,
-      });
+      const deleted = await adminCatalogApi.deleteCollection(id);
+      notifyApiSuccess(deleted);
       await loadCollections();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete collection.");
+      notifyApiError(err);
     }
   };
 

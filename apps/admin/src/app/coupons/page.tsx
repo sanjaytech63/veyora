@@ -56,7 +56,7 @@ import {
   Edit,
   Search,
 } from "lucide-react";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess, notifyWarning } from "@/lib/notifications";
 import { adminCouponsApi } from "@/lib/api/admin-coupons-api";
 import {
   CouponDto,
@@ -111,8 +111,7 @@ export default function AdminCouponsPage() {
       setCoupons(response.items);
       setTotalCoupons(response.total);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to load coupons";
-      toast.error("Error loading coupons", { description: msg });
+      notifyApiError(err);
     } finally {
       setLoading(false);
     }
@@ -127,10 +126,9 @@ export default function AdminCouponsPage() {
     try {
       const updated = await adminCouponsApi.toggleCouponStatus(coupon.id);
       setCoupons((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
-      toast.success(`Coupon ${updated.code} is now ${updated.isActive ? "Active" : "Inactive"}`);
+      notifyApiSuccess(updated);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to toggle status";
-      toast.error("Status update failed", { description: msg });
+      notifyApiError(err);
     }
   };
 
@@ -154,7 +152,7 @@ export default function AdminCouponsPage() {
   const handleCreateCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formCode.trim()) {
-      toast.error("Coupon code is required");
+      notifyWarning("Coupon code is required");
       return;
     }
 
@@ -177,13 +175,10 @@ export default function AdminCouponsPage() {
       const created = await adminCouponsApi.createCoupon(payload);
       setCoupons((prev) => [created, ...prev]);
       setTotalCoupons((prev) => prev + 1);
-      toast.success("Privilege Code Created", {
-        description: `Code ${created.code} is registered successfully.`,
-      });
+      notifyApiSuccess(created);
       setCreateDialogOpen(false);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to create coupon";
-      toast.error("Creation failed", { description: msg });
+      notifyApiError(err);
     } finally {
       setActionLoading(false);
     }
@@ -227,13 +222,10 @@ export default function AdminCouponsPage() {
 
       const updated = await adminCouponsApi.updateCoupon(selectedCoupon.id, payload);
       setCoupons((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
-      toast.success("Privilege Code Updated", {
-        description: `Changes to ${updated.code} have been saved.`,
-      });
+      notifyApiSuccess(updated);
       setEditDialogOpen(false);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to update coupon";
-      toast.error("Update failed", { description: msg });
+      notifyApiError(err);
     } finally {
       setActionLoading(false);
     }
@@ -248,8 +240,7 @@ export default function AdminCouponsPage() {
       const data = await adminCouponsApi.getCouponAnalytics(coupon.id);
       setAnalyticsData(data);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to load analytics";
-      toast.error("Analytics error", { description: msg });
+      notifyApiError(err);
     } finally {
       setAnalyticsLoading(false);
     }
@@ -266,16 +257,13 @@ export default function AdminCouponsPage() {
     if (!selectedCoupon) return;
     setActionLoading(true);
     try {
-      await adminCouponsApi.deleteCoupon(selectedCoupon.id);
+      const deleted = await adminCouponsApi.deleteCoupon(selectedCoupon.id);
       setCoupons((prev) => prev.filter((c) => c.id !== selectedCoupon.id));
       setTotalCoupons((prev) => Math.max(0, prev - 1));
-      toast.success("Coupon Deleted", {
-        description: `Privilege code ${selectedCoupon.code} has been purged.`,
-      });
+      notifyApiSuccess(deleted);
       setDeleteDialogOpen(false);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to delete coupon";
-      toast.error("Deletion failed", { description: msg });
+      notifyApiError(err);
     } finally {
       setActionLoading(false);
     }
