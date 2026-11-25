@@ -38,6 +38,7 @@ The working tree was clean on `feature/newsletter-subscription` before this task
 ### Workspace, CI, and release configuration
 
 - Installed npm `11.21.0` explicitly in CI and Docker builders to match the root `packageManager` declaration; the base Node 24 image had npm `11.19.1`.
+- Root development commands build the shared workspace packages before starting apps, so imports such as `@veyora/utils` resolve from a clean checkout.
 - CD now runs typecheck, lint, formatting, tests, production build, and Playwright before deployment. OIDC permission is limited to the deploy job, dispatch deployments are restricted to `main`, and staging was removed because no staging ECS target exists in this repository.
 - CD publishes commit-specific `sha-...` tags plus the mutable `latest` bootstrap alias used by the Terraform task definitions.
 - Fixed the Terraform `local.services` reference, restricted the OIDC trust subject to this repository’s `main` ref, scoped ECR/ECS/PassRole actions, and added all runtime task roles to the PassRole allowlist.
@@ -76,6 +77,8 @@ docker run --rm -v <terraform-dir>:/workspace -w /workspace hashicorp/terraform:
 ```
 
 The focused validator suite passed (48 tests). The full unit suite passed (721 tests), typecheck passed across all eight workspaces, and lint passed with no warnings. Prettier passed after formatting this report. Playwright passed 10/10 in CI mode. All four Docker images built successfully, including production builds of both Next.js apps. Both Compose files parsed, all workflow/Compose YAML parsed, and Terraform formatting and provider-backed validation passed.
+
+After the follow-up development startup fix, `npm.cmd run dev:web` rebuilt the shared packages. Since port 3000 was already occupied, the web app was started on port 3310; Next compiled `/` and returned HTTP 200 without the missing `@veyora/utils` error.
 
 Terraform validation initially caught unsupported ECS service `.arn` references in the deployer policy. These were replaced with scoped ECS service ARN strings derived from the cluster and service names. The provider lock file is committed to make subsequent Terraform initialization reproducible.
 
