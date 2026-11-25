@@ -1025,6 +1025,44 @@ The entire Express Wishlist domain (`apps/api/src/modules/wishlist`) and custome
 
 ---
 
-## 20. Architecture Signoff & Next Steps
+## 20. Task 08 Express Checkout & Orders Migration
 
-This architectural contract and implementation provide the complete foundation for Veyora's transition to a backend-driven messaging system. All shared contracts, API response infrastructure, authentication controllers, product/catalog endpoints, cart endpoints, wishlist endpoints, and customer address endpoints are verified with automated tests and ready for subsequent domain controller migrations (checkout, orders, payments) and frontend toast notification integration.
+The entire Express Checkout and Orders domain (`apps/api/src/modules/checkout/checkout.router.ts`, `controllers/checkout.controller.ts`, and `services/checkout.service.ts`) was migrated to the canonical `sendSuccess` helper and standardized domain error codes in Task 08:
+
+### 20.1 Controller Standardization
+
+- Migrated all Checkout and Storefront Order routes to `sendSuccess(res, { statusCode, code, message, data })`:
+  - `GET /api/v1/checkout/validate`: `validateCheckout` (`CHECKOUT_VALIDATED`, 200 OK)
+  - `POST /api/v1/checkout/orders`: `createOrder` (`ORDER_CREATED`, 201 Created)
+  - `GET /api/v1/orders`: `listOrders` (`ORDERS_FETCHED`, 200 OK)
+  - `GET /api/v1/orders/:orderId`: `getOrder` (`ORDER_FETCHED`, 200 OK)
+  - `GET /api/v1/checkout/orders/:orderId`: `getOrder` (`ORDER_FETCHED`, 200 OK)
+  - `POST /api/v1/orders/:orderId/cancel`: `cancelOrder` (`ORDER_CANCELLED`, 200 OK)
+- Migrated all Administrator Order Governance routes to `sendSuccess(res, { statusCode, code, message, data, meta })`:
+  - `GET /api/v1/admin/orders`: `adminListOrders` (`ADMIN_ORDERS_FETCHED`, 200 OK with `meta` pagination)
+  - `GET /api/v1/admin/orders/:orderId`: `adminGetOrder` (`ADMIN_ORDER_FETCHED`, 200 OK)
+  - `PATCH /api/v1/admin/orders/:orderId/status`: `adminUpdateOrderStatus` (`ORDER_STATUS_UPDATED`, 200 OK)
+  - `POST /api/v1/admin/orders/:orderId/cancel`: `adminCancelOrder` (`ORDER_CANCELLED`, 200 OK)
+
+### 20.2 Service Domain Errors & Stable Codes
+
+- Services throw `BadRequestError`, `ConflictError`, and `NotFoundError` with domain-specific stable machine-readable codes:
+  - `CHECKOUT_CART_EMPTY` (400 Bad Request) when checking out with zero cart items.
+  - `CHECKOUT_PRODUCT_UNAVAILABLE` (400 Bad Request / 409 Conflict) when product or variant is inactive or zero stock.
+  - `CHECKOUT_INSUFFICIENT_STOCK` (409 Conflict) when requested quantity exceeds available inventory stock.
+  - `ORDER_NOT_FOUND` (404 Not Found) when order ID does not exist or caller fails patron ownership check.
+  - `ORDER_STATUS_INVALID` (400 Bad Request) on unauthorized or arbitrary status transitions.
+  - `ORDER_CANNOT_BE_CANCELLED` (400 Bad Request) when an order is in an unmodifiable terminal state or already dispatched.
+
+### 20.3 Commercial & State Machine Integrity Preserved
+
+- **Server-Authoritative Pricing:** Subtotals, coupons, tiered shipping, and tax calculations are strictly authoritative and calculated on the server; client tampering is safely rejected.
+- **Strict State Machine:** Follows `pending` -> `confirmed` -> `processing` -> `shipped` -> `delivered`. Terminal states reject arbitrary mutations.
+- **Idempotency & Reservation Safety:** Deduplication keys prevent duplicate orders. Cancellation automatically restores reserved inventory and records stock movements.
+- **Payment Boundary:** Razorpay handlers, signatures, webhooks, and payment verifications remained intentionally untouched and isolated for Task 09.
+
+---
+
+## 21. Architecture Signoff & Next Steps
+
+This architectural contract and implementation provide the complete foundation for Veyora's transition to a backend-driven messaging system. All shared contracts, API response infrastructure, authentication controllers, catalog endpoints, cart endpoints, wishlist endpoints, customer address endpoints, and checkout/orders endpoints are verified with automated tests and ready for subsequent domain controller migrations (Task 09: Razorpay payments) and frontend toast notification integration.

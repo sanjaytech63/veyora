@@ -584,6 +584,8 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("CHECKOUT_VALIDATED");
+      expect(res.body.message).toBe("Checkout validated successfully.");
       expect(res.body.data.isValid).toBe(true);
       expect(res.body.data.totals.subtotal).toBe(200);
       expect(res.body.data.totals.shipping).toBe(0); // Complimentary since $200 >= $150
@@ -599,6 +601,7 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("CHECKOUT_VALIDATED");
       expect(res.body.data.totals.shipping).toBe(15);
       expect(res.body.data.totals.total).toBe(80 + 15 + 6.4); // subtotal + 15 + tax(8%)
     });
@@ -610,6 +613,8 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
       const res = await request(app).get("/api/v1/checkout/validate").set(guestHeader);
 
       expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("CHECKOUT_VALIDATED");
       expect(res.body.data.isValid).toBe(false);
       expect(res.body.data.warnings.length).toBeGreaterThan(0);
       expect(res.body.data.warnings[0]).toContain("out of stock");
@@ -643,6 +648,8 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("ORDER_CREATED");
+      expect(res.body.message).toBe("Order placed successfully.");
       expect(res.body.data.orderNumber).toMatch(/^VY-ORD-\d{6}$/);
       expect(res.body.data.status).toBe("pending");
       expect(res.body.data.subtotal).toBe(200);
@@ -668,6 +675,7 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
         .send(validOrderPayload);
 
       expect(res1.status).toBe(201);
+      expect(res1.body.code).toBe("ORDER_CREATED");
       const initialReserved = testInventory.reserved;
 
       // Second identical submission (network retry / double-click)
@@ -677,6 +685,7 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
         .send(validOrderPayload);
 
       expect([200, 201]).toContain(res2.status);
+      expect(res2.body.code).toBe("ORDER_CREATED");
       expect(res2.body.data.orderNumber).toBe(res1.body.data.orderNumber);
       // Inventory reservation count must NOT increment
       expect(testInventory.reserved).toBe(initialReserved);
@@ -695,6 +704,8 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
         });
 
       expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("CHECKOUT_CART_EMPTY");
       expect(res.body.message).toContain("empty");
     });
 
@@ -711,6 +722,8 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
         });
 
       expect(res.status).toBe(409);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("CHECKOUT_PRODUCT_UNAVAILABLE");
       expect(res.body.message).toContain("out of stock");
     });
 
@@ -730,11 +743,12 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
 
       expect(res.status).toBe(422);
       expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("VALIDATION_ERROR");
     });
   });
 
   describe("4. Order Retrieval API", () => {
-    it("should retrieve order by ID", async () => {
+    it("should retrieve order by ID with canonical envelope", async () => {
       const orderId = new mongoose.Types.ObjectId();
       mockOrders.push({
         _id: orderId,
@@ -760,6 +774,8 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("ORDER_FETCHED");
+      expect(res.body.message).toBe("Order retrieved successfully.");
       expect(res.body.data.orderNumber).toBe("VY-ORD-999999");
     });
 
@@ -769,6 +785,7 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
 
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("ORDER_NOT_FOUND");
     });
 
     it("should prevent unauthorized guest from accessing another customer order (IDOR protection)", async () => {
@@ -801,6 +818,7 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
 
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("ORDER_NOT_FOUND");
     });
   });
 });

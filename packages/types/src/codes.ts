@@ -155,6 +155,41 @@ export const ApiAddressCode = {
   INVALID_CUSTOMER_ADDRESS: "INVALID_CUSTOMER_ADDRESS",
 } as const;
 
+export const ApiCheckoutCode = {
+  CHECKOUT_SUMMARY_FETCHED: "CHECKOUT_SUMMARY_FETCHED",
+  CHECKOUT_VALIDATED: "CHECKOUT_VALIDATED",
+  CHECKOUT_ORDER_CREATED: "CHECKOUT_ORDER_CREATED",
+  CHECKOUT_ADDRESS_VALIDATED: "CHECKOUT_ADDRESS_VALIDATED",
+  CHECKOUT_COUPON_VALIDATED: "CHECKOUT_COUPON_VALIDATED",
+  CHECKOUT_VALIDATION_FAILED: "CHECKOUT_VALIDATION_FAILED",
+  CHECKOUT_ADDRESS_REQUIRED: "CHECKOUT_ADDRESS_REQUIRED",
+  CHECKOUT_ADDRESS_INVALID: "CHECKOUT_ADDRESS_INVALID",
+  CHECKOUT_CART_EMPTY: "CHECKOUT_CART_EMPTY",
+  CHECKOUT_PRODUCT_UNAVAILABLE: "CHECKOUT_PRODUCT_UNAVAILABLE",
+  CHECKOUT_INSUFFICIENT_STOCK: "CHECKOUT_INSUFFICIENT_STOCK",
+  CHECKOUT_COUPON_INVALID: "CHECKOUT_COUPON_INVALID",
+  CHECKOUT_PRICE_CHANGED: "CHECKOUT_PRICE_CHANGED",
+} as const;
+
+export const ApiOrderCode = {
+  ORDERS_FETCHED: "ORDERS_FETCHED",
+  ORDER_FETCHED: "ORDER_FETCHED",
+  ORDER_CREATED: "ORDER_CREATED",
+  ORDER_CANCELLED: "ORDER_CANCELLED",
+  ORDER_STATUS_UPDATED: "ORDER_STATUS_UPDATED",
+  ORDER_TRACKING_FETCHED: "ORDER_TRACKING_FETCHED",
+  ORDER_RETURN_REQUESTED: "ORDER_RETURN_REQUESTED",
+  ADMIN_ORDERS_FETCHED: "ADMIN_ORDERS_FETCHED",
+  ADMIN_ORDER_FETCHED: "ADMIN_ORDER_FETCHED",
+  ORDER_NOT_FOUND: "ORDER_NOT_FOUND",
+  ORDER_ACCESS_DENIED: "ORDER_ACCESS_DENIED",
+  ORDER_CANNOT_BE_CANCELLED: "ORDER_CANNOT_BE_CANCELLED",
+  ORDER_STATUS_INVALID: "ORDER_STATUS_INVALID",
+  ORDER_ALREADY_CANCELLED: "ORDER_ALREADY_CANCELLED",
+  ORDER_ALREADY_PROCESSED: "ORDER_ALREADY_PROCESSED",
+  ORDER_RETURN_NOT_ALLOWED: "ORDER_RETURN_NOT_ALLOWED",
+} as const;
+
 export const ApiResponseCode = {
   ...ApiAuthCode,
   ...ApiCoreCode,
@@ -163,6 +198,8 @@ export const ApiResponseCode = {
   ...ApiPaymentCode,
   ...ApiWishlistCode,
   ...ApiAddressCode,
+  ...ApiCheckoutCode,
+  ...ApiOrderCode,
 } as const;
 
 export type ApiAuthCode = (typeof ApiAuthCode)[keyof typeof ApiAuthCode];
@@ -172,4 +209,6 @@ export type ApiCatalogCode = (typeof ApiCatalogCode)[keyof typeof ApiCatalogCode
 export type ApiPaymentCode = (typeof ApiPaymentCode)[keyof typeof ApiPaymentCode];
 export type ApiWishlistCode = (typeof ApiWishlistCode)[keyof typeof ApiWishlistCode];
 export type ApiAddressCode = (typeof ApiAddressCode)[keyof typeof ApiAddressCode];
+export type ApiCheckoutCode = (typeof ApiCheckoutCode)[keyof typeof ApiCheckoutCode];
+export type ApiOrderCode = (typeof ApiOrderCode)[keyof typeof ApiOrderCode];
 export type ApiResponseCode = (typeof ApiResponseCode)[keyof typeof ApiResponseCode];

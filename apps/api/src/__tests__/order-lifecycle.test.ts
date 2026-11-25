@@ -325,6 +325,8 @@ describe("Phase J — Order Management & Lifecycle State Machine Integration Tes
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("ORDER_STATUS_UPDATED");
+      expect(res.body.message).toBe("Order status updated to confirmed.");
       expect(res.body.data.status).toBe("confirmed");
       expect(res.body.data.statusHistory.length).toBe(2);
       expect(res.body.data.statusHistory[1].toStatus).toBe("confirmed");
@@ -342,6 +344,8 @@ describe("Phase J — Order Management & Lifecycle State Machine Integration Tes
         });
 
       expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("ORDER_STATUS_UPDATED");
       expect(res.body.data.status).toBe("processing");
     });
 
@@ -361,6 +365,8 @@ describe("Phase J — Order Management & Lifecycle State Machine Integration Tes
         });
 
       expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("ORDER_STATUS_UPDATED");
       expect(res.body.data.status).toBe("shipped");
       expect(res.body.data.tracking.carrier).toBe("Bluedart Priority Apex");
       expect(res.body.data.tracking.trackingNumber).toBe("BD99281203");
@@ -379,6 +385,8 @@ describe("Phase J — Order Management & Lifecycle State Machine Integration Tes
         });
 
       expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("ORDER_STATUS_UPDATED");
       expect(res.body.data.status).toBe("delivered");
       expect(res.body.data.tracking.deliveredAt).toBeDefined();
     });
@@ -396,6 +404,8 @@ describe("Phase J — Order Management & Lifecycle State Machine Integration Tes
         });
 
       expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("ORDER_STATUS_INVALID");
       expect(res.body.message).toContain('Invalid status transition from "pending" to "delivered"');
     });
 
@@ -410,6 +420,8 @@ describe("Phase J — Order Management & Lifecycle State Machine Integration Tes
         });
 
       expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("ORDER_STATUS_INVALID");
       expect(res.body.message).toContain('Invalid status transition from "cancelled"');
     });
   });
@@ -428,6 +440,8 @@ describe("Phase J — Order Management & Lifecycle State Machine Integration Tes
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("ORDER_CANCELLED");
+      expect(res.body.message).toBe("Order cancelled successfully.");
       expect(res.body.data.status).toBe("cancelled");
       expect(res.body.data.cancelReason).toBe("Need to update delivery address");
 
@@ -448,6 +462,8 @@ describe("Phase J — Order Management & Lifecycle State Machine Integration Tes
         });
 
       expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("ORDER_CANNOT_BE_CANCELLED");
       expect(res.body.message).toContain('cannot be cancelled in "shipped" status');
     });
   });
@@ -470,6 +486,8 @@ describe("Phase J — Order Management & Lifecycle State Machine Integration Tes
         .set("Authorization", `Bearer ${otherUserToken}`);
 
       expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("ORDER_NOT_FOUND");
     });
 
     it("should deny non-admin access to admin order listing", async () => {
@@ -478,6 +496,8 @@ describe("Phase J — Order Management & Lifecycle State Machine Integration Tes
         .set("Authorization", `Bearer ${customerToken}`);
 
       expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("FORBIDDEN");
     });
 
     it("should allow admin to list orders with search and status filters", async () => {
@@ -487,8 +507,14 @@ describe("Phase J — Order Management & Lifecycle State Machine Integration Tes
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("ADMIN_ORDERS_FETCHED");
+      expect(res.body.message).toBe("Admin orders retrieved successfully.");
       expect(res.body.data.items.length).toBe(1);
       expect(res.body.data.total).toBe(1);
+      expect(res.body.meta).toBeDefined();
+      expect(res.body.meta.page).toBe(1);
+      expect(res.body.meta.limit).toBe(20);
+      expect(res.body.meta.total).toBe(1);
     });
   });
 });
