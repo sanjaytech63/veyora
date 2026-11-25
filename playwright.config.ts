@@ -21,6 +21,12 @@ export default defineConfig({
   ],
   webServer: [
     {
+      command: "node e2e/mock-api-server.cjs",
+      url: "http://localhost:4000/api/v1/health",
+      reuseExistingServer: true,
+      timeout: 120000,
+    },
+    {
       command: "npm run dev --workspace=@veyora/web",
       url: "http://localhost:3000",
       reuseExistingServer: !process.env["CI"],
