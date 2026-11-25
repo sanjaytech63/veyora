@@ -150,6 +150,10 @@ To ensure reliable, deterministic execution on clean runners:
 
 5. **`docker-build`**:
    - Each Dockerfile utilizes multi-stage builds and explicitly runs `npm run build:packages` in the builder stage.
+   - Guarded with `mkdir -p apps/web/public` and `mkdir -p apps/admin/public` along with `.gitkeep` placeholders to prevent missing-path errors during multi-stage artifact copies.
 
-6. **`cd.yml` (`validate-and-gate`)**:
+6. **`e2e` (Playwright E2E Tests)**:
+   - Configured `webServer` block in `playwright.config.ts` targeting both Web (`localhost:3000`) and Admin (`localhost:3001`).
+
+7. **`cd.yml` (`validate-and-gate`)**:
    - Explicitly runs `npm run build:packages` prior to `npm run typecheck` and `npm run test`.

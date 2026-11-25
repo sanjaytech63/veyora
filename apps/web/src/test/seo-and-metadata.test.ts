@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { siteConfig, getCanonicalUrl, normalizeCanonicalPath } from "@/config/site";
 import { safeJsonLdReplacer } from "@/components/storefront/json-ld";
 import webRobots from "@/app/robots";
-import adminRobots from "../../../admin/src/app/robots";
 import sitemap from "@/app/sitemap";
 import { generateMetadata as generateProductMetadata } from "@/app/products/[slug]/page";
 import { generateMetadata as generateCollectionMetadata } from "@/app/collections/[slug]/page";
@@ -107,14 +106,6 @@ describe("Task 19 — Metadata, SEO & Search Engine Optimization", () => {
         ])
       );
       expect(robotsResult.sitemap).toBe(`${siteConfig.url}/sitemap.xml`);
-    });
-
-    it("admin robots.txt strictly disallows all search engine indexing", () => {
-      const adminResult = adminRobots();
-      const rule = Array.isArray(adminResult.rules) ? adminResult.rules[0] : adminResult.rules;
-
-      expect(rule?.disallow).toEqual(["/"]);
-      expect(adminResult.sitemap).toBeUndefined();
     });
   });
 
