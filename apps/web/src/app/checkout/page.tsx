@@ -519,7 +519,7 @@ export default function CheckoutPage() {
 
           <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
             <Lock className="h-3.5 w-3.5 text-primary" />
-            <span>256-Bit SSL Atelier Encrypted Checkout</span>
+            <span>Secure checkout and payment processing</span>
           </div>
         </div>
 
@@ -1173,7 +1173,7 @@ export default function CheckoutPage() {
 
                 <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground pt-2">
                   <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                  <span>Veyora Pure Fabric & Artisan Quality Guaranteed</span>
+                  <span>Product details and care guidance are listed per garment</span>
                 </div>
               </div>
             </div>

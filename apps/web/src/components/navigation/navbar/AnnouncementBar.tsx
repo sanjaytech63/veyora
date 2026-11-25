@@ -20,9 +20,7 @@ export function AnnouncementBar({ className }: { className?: string }) {
     >
       <div className="flex flex-1 items-center justify-center gap-x-2 text-xs font-medium text-primary-foreground">
         <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-300 animate-pulse" />
-        <span>
-          Complimentary Worldwide Express Dispatch on Orders Over $150 • Atelier Festive Edit
-        </span>
+        <span>Free shipping threshold and delivery options are shown at checkout</span>
       </div>
       <Button
         type="button"

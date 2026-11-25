@@ -291,18 +291,18 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
             <div className="grid grid-cols-3 gap-3 pt-2 text-center text-xs text-muted-foreground border-t border-border/60">
               <div className="p-2 space-y-1">
                 <Truck className="h-4 w-4 mx-auto text-primary" />
-                <p className="font-semibold text-foreground text-[11px]">Same-Day Dispatch</p>
-                <p className="text-[10px]">Free over $150</p>
+                <p className="font-semibold text-foreground text-[11px]">Shipping Options</p>
+                <p className="text-[10px]">Calculated at checkout</p>
               </div>
               <div className="p-2 space-y-1">
                 <ShieldCheck className="h-4 w-4 mx-auto text-primary" />
-                <p className="font-semibold text-foreground text-[11px]">Pure Fabric Quality</p>
-                <p className="text-[10px]">Silk Mark Certified</p>
+                <p className="font-semibold text-foreground text-[11px]">Fabric Details</p>
+                <p className="text-[10px]">Listed per garment</p>
               </div>
               <div className="p-2 space-y-1">
                 <RotateCcw className="h-4 w-4 mx-auto text-primary" />
-                <p className="font-semibold text-foreground text-[11px]">15-Day Exchange</p>
-                <p className="text-[10px]">Easy size exchange</p>
+                <p className="font-semibold text-foreground text-[11px]">Return Guidance</p>
+                <p className="text-[10px]">Review at checkout</p>
               </div>
             </div>
 
