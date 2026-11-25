@@ -17,20 +17,20 @@ describe("Admin Console Proxy & URL Security", () => {
   });
 
   describe("Administrative Navigation Rules", () => {
-    it("redirects unauthenticated operator from dashboard to login", () => {
-      const req = new NextRequest("http://localhost:3001/");
-      const res = proxy(req);
+    it("allows operator page navigation to proceed to AdminProtectedRoute for session verification", () => {
+      const adminUrls = [
+        "http://localhost:3001/",
+        "http://localhost:3001/products/prod-123",
+        "http://localhost:3001/orders",
+        "http://localhost:3001/inventory",
+      ];
 
-      expect(res.status).toBe(307);
-      expect(res.headers.get("location")).toContain("/login?redirect=%2F");
-    });
-
-    it("redirects unauthenticated operator from /products to login with return URL", () => {
-      const req = new NextRequest("http://localhost:3001/products/prod-123");
-      const res = proxy(req);
-
-      expect(res.status).toBe(307);
-      expect(res.headers.get("location")).toContain("/login?redirect=%2Fproducts%2Fprod-123");
+      for (const url of adminUrls) {
+        const req = new NextRequest(url);
+        const res = proxy(req);
+        expect(res.status).toBe(200);
+        expect(res.headers.get("location")).toBeNull();
+      }
     });
 
     it("allows unauthenticated operator to view /login", () => {
@@ -41,36 +41,8 @@ describe("Admin Console Proxy & URL Security", () => {
       expect(res.headers.get("location")).toBeNull();
     });
 
-    it("always allows operator to view /login at proxy level regardless of cookie presence", () => {
-      const req = new NextRequest("http://localhost:3001/login", {
-        headers: {
-          cookie: "refreshToken=mock-session-hint",
-        },
-      });
-      const res = proxy(req);
-
-      expect(res.status).toBe(200);
-      expect(res.headers.get("location")).toBeNull();
-    });
-
-    it("allows operator to view /login with return destination to resolve session via client auth provider", () => {
-      const req = new NextRequest("http://localhost:3001/login?redirect=%2Finventory", {
-        headers: {
-          cookie: "refreshToken=mock-session-hint",
-        },
-      });
-      const res = proxy(req);
-
-      expect(res.status).toBe(200);
-      expect(res.headers.get("location")).toBeNull();
-    });
-
-    it("allows operator with session hint to access protected dashboard for client-side resolution", () => {
-      const req = new NextRequest("http://localhost:3001/", {
-        headers: {
-          cookie: "refreshToken=mock-session-hint",
-        },
-      });
+    it("allows operator to view /login with return destination", () => {
+      const req = new NextRequest("http://localhost:3001/login?redirect=%2Finventory");
       const res = proxy(req);
 
       expect(res.status).toBe(200);

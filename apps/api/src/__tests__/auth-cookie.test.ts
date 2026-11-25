@@ -15,7 +15,7 @@ describe("Auth Cookie Configuration & Operations", () => {
     expect(AUTH_COOKIE_NAME).toBe("refreshToken");
     expect(options.httpOnly).toBe(true);
     expect(options.sameSite).toBe("lax");
-    expect(options.path).toBe("/");
+    expect(options.path).toBe("/api/v1/auth");
     expect(typeof options.maxAge).toBe("number");
     expect(options.maxAge).toBeGreaterThan(0);
   });
@@ -42,7 +42,7 @@ describe("Auth Cookie Configuration & Operations", () => {
       "test-refresh-token-xyz",
       expect.objectContaining({
         httpOnly: true,
-        path: "/",
+        path: "/api/v1/auth",
         sameSite: "lax",
       })
     );
@@ -59,7 +59,7 @@ describe("Auth Cookie Configuration & Operations", () => {
       AUTH_COOKIE_NAME,
       expect.objectContaining({
         httpOnly: true,
-        path: "/",
+        path: "/api/v1/auth",
         sameSite: "lax",
       })
     );

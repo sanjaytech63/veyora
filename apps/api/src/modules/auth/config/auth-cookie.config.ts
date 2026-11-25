@@ -13,7 +13,7 @@ export function getRefreshTokenCookieOptions(): CookieOptions {
     httpOnly: true,
     secure: isProduction,
     sameSite: "lax",
-    path: "/",
+    path: "/api/v1/auth",
     maxAge: env.JWT_REFRESH_EXPIRES_IN_DAYS * 24 * 60 * 60 * 1000,
   };
 }
@@ -29,7 +29,7 @@ export function getClearRefreshTokenCookieOptions(): CookieOptions {
     httpOnly: true,
     secure: isProduction,
     sameSite: "lax",
-    path: "/",
+    path: "/api/v1/auth",
   };
 }
 

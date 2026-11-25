@@ -32,59 +32,21 @@ describe("Web Storefront Proxy & URL Security", () => {
     });
   });
 
-  describe("Storefront Authentication-Aware Routing", () => {
-    it("redirects unauthenticated visitor from protected account page to login", () => {
-      const req = new NextRequest("http://localhost:3000/account/profile");
-      const res = proxy(req);
+  describe("Storefront Navigation Routing", () => {
+    it("allows page navigation to proceed so ProtectedRoute and AuthProvider can resolve session", () => {
+      const paths = [
+        "http://localhost:3000/account/profile",
+        "http://localhost:3000/orders/12345",
+        "http://localhost:3000/login",
+        "http://localhost:3000/login?redirect=%2Fcheckout",
+      ];
 
-      expect(res.status).toBe(307);
-      const location = res.headers.get("location");
-      expect(location).toContain("/login?redirect=%2Faccount%2Fprofile");
-    });
-
-    it("redirects unauthenticated visitor from orders page to login", () => {
-      const req = new NextRequest("http://localhost:3000/orders/12345");
-      const res = proxy(req);
-
-      expect(res.status).toBe(307);
-      const location = res.headers.get("location");
-      expect(location).toContain("/login?redirect=%2Forders%2F12345");
-    });
-
-    it("always allows visitors to view /login at proxy level regardless of cookie presence", () => {
-      const req = new NextRequest("http://localhost:3000/login", {
-        headers: {
-          cookie: "refreshToken=valid-mock-session-hint",
-        },
-      });
-      const res = proxy(req);
-
-      expect(res.status).toBe(200);
-      expect(res.headers.get("location")).toBeNull();
-    });
-
-    it("allows visitors to view /login with return destination to resolve session via client auth provider", () => {
-      const req = new NextRequest("http://localhost:3000/login?redirect=%2Fcheckout", {
-        headers: {
-          cookie: "refreshToken=valid-mock-session-hint",
-        },
-      });
-      const res = proxy(req);
-
-      expect(res.status).toBe(200);
-      expect(res.headers.get("location")).toBeNull();
-    });
-
-    it("allows visitors with session hint to access protected routes for client-side resolution", () => {
-      const req = new NextRequest("http://localhost:3000/account/profile", {
-        headers: {
-          cookie: "refreshToken=valid-mock-session-hint",
-        },
-      });
-      const res = proxy(req);
-
-      expect(res.status).toBe(200);
-      expect(res.headers.get("location")).toBeNull();
+      for (const url of paths) {
+        const req = new NextRequest(url);
+        const res = proxy(req);
+        expect(res.status).toBe(200);
+        expect(res.headers.get("location")).toBeNull();
+      }
     });
 
     it("permits public storefront browsing for unauthenticated visitors", () => {
@@ -101,7 +63,6 @@ describe("Web Storefront Proxy & URL Security", () => {
       for (const url of publicPaths) {
         const req = new NextRequest(url);
         const res = proxy(req);
-        // NextResponse.next() returns a 200 without redirect headers
         expect(res.status).toBe(200);
         expect(res.headers.get("location")).toBeNull();
       }

@@ -30,7 +30,7 @@ interface NavbarActionsProps {
 
 export function NavbarActions({ onOpenSearch, className }: NavbarActionsProps) {
   const { setCartDrawerOpen } = useUIStore();
-  const { user, isAuthenticated, clearAuth } = useAuthStore();
+  const { user, isAuthenticated, clearAuth, status } = useAuthStore();
   const { itemCount: wishlistCount } = useWishlist();
   const { totals } = useCart();
   const cartCount = totals.itemCount;
@@ -99,7 +99,13 @@ export function NavbarActions({ onOpenSearch, className }: NavbarActionsProps) {
       <ThemeToggle />
 
       {/* Account Navigation */}
-      {isAuthenticated && user ? (
+      {status === "initializing" ? (
+        <div
+          className="ml-1 h-8 w-8 rounded-full bg-muted/60 animate-pulse"
+          aria-label="Loading session..."
+          data-testid="navbar-auth-loading"
+        />
+      ) : isAuthenticated && user ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button

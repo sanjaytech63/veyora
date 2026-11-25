@@ -4,7 +4,8 @@ import { apiClient } from "@/lib/api/api-client";
 import { adminAuthApi } from "@/lib/api/admin-auth-api";
 import { clearQueryClient } from "@/lib/api/query-client";
 
-export type AdminAuthStatus = "initializing" | "authenticated" | "unauthenticated";
+export type AdminAuthStatus =
+  "initializing" | "authenticated" | "unauthenticated" | "refreshing" | "error";
 
 export interface AdminAuthState {
   status: AdminAuthStatus;
@@ -12,29 +13,45 @@ export interface AdminAuthState {
   accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  error: string | null;
   setAdminAuth: (admin: AuthUser, accessToken: string) => void;
   setAdmin: (admin: AuthUser) => void;
   clearAdminAuth: () => void;
   setLoading: (isLoading: boolean) => void;
   setStatus: (status: AdminAuthStatus) => void;
   setUnauthenticated: () => void;
+  setError: (error: string) => void;
 }
 
-export const useAdminAuthStore = create<AdminAuthState>((set) => ({
+export const useAdminAuthStore = create<AdminAuthState>((set, get) => ({
   status: "initializing",
   admin: null,
   accessToken: null,
   isAuthenticated: false,
   isLoading: true,
+  error: null,
 
-  setAdminAuth: (admin, accessToken) =>
+  setAdminAuth: (admin, accessToken) => {
     set({
       status: "authenticated",
       admin,
       accessToken,
       isAuthenticated: true,
       isLoading: false,
-    }),
+      error: null,
+    });
+
+    // Notify other browser tabs of active administrator session
+    if (typeof window !== "undefined" && typeof BroadcastChannel !== "undefined") {
+      try {
+        const channel = new BroadcastChannel("veyora_admin_auth");
+        channel.postMessage({ type: "SESSION_SYNC" });
+        channel.close();
+      } catch {
+        // Silently ignore channel errors in restrictive sandboxes
+      }
+    }
+  },
 
   setAdmin: (admin) => set({ admin }),
 
@@ -46,7 +63,19 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
       accessToken: null,
       isAuthenticated: false,
       isLoading: false,
+      error: null,
     });
+
+    // Broadcast session logout notification to other open admin tabs
+    if (typeof window !== "undefined" && typeof BroadcastChannel !== "undefined") {
+      try {
+        const channel = new BroadcastChannel("veyora_admin_auth");
+        channel.postMessage({ type: "LOGOUT" });
+        channel.close();
+      } catch {
+        // Silently ignore channel errors in restrictive sandboxes
+      }
+    }
   },
 
   setUnauthenticated: () => {
@@ -57,20 +86,34 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
       accessToken: null,
       isAuthenticated: false,
       isLoading: false,
+      error: null,
     });
   },
+
+  setError: (error) =>
+    set({
+      status: "error",
+      error,
+      isLoading: false,
+      isAuthenticated: false,
+    }),
 
   setLoading: (isLoading) =>
     set({
       isLoading,
-      status: isLoading ? "initializing" : "unauthenticated",
+      status: isLoading
+        ? "initializing"
+        : get().status === "authenticated"
+          ? "authenticated"
+          : "unauthenticated",
     }),
 
   setStatus: (status) =>
     set({
       status,
-      isLoading: status === "initializing",
+      isLoading: status === "initializing" || status === "refreshing",
       isAuthenticated: status === "authenticated",
+      error: status === "error" ? get().error : null,
     }),
 }));
 
