@@ -8,4 +8,5 @@ export const navbarLinks: NavbarLink[] = [
   { label: "Shop", href: "/shop" },
   { label: "New Arrivals", href: "/new-arrivals" },
   { label: "Collections", href: "/collections" },
+  { label: "Festive Edit", href: "/collections" },
 ];

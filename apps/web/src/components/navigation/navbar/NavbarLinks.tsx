@@ -24,13 +24,13 @@ export function NavbarLinks({ className, onNavigate }: NavbarLinksProps) {
 
         return (
           <Link
-            key={link.href}
+            key={`${link.href}-${link.label}`}
             href={link.href}
             onClick={onNavigate}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "relative flex h-10 items-center rounded-md px-3 text-[11px] font-semibold uppercase tracking-[0.12em] outline-none",
-              "transition-colors duration-200 hover:bg-accent/70 hover:text-foreground",
+              "relative flex h-10 items-center  px-3 text-[11px] font-semibold uppercase tracking-[0.12em] outline-none",
+              "transition-colors duration-200 hover:text-foreground",
               "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4 focus-visible:ring-offset-background",
               "after:absolute after:inset-x-3 after:-bottom-0.5 after:h-px after:origin-left after:bg-primary after:transition-transform after:duration-250",
               isActive

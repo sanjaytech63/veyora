@@ -18,9 +18,14 @@ export function AnnouncementBar({ className }: { className?: string }) {
         className
       )}
     >
-      <div className="flex flex-1 items-center justify-center gap-x-2 text-xs font-medium text-primary-foreground">
-        <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-300 animate-pulse" />
-        <span>Free shipping threshold and delivery options are shown at checkout</span>
+      <div className="flex flex-1 flex-wrap items-center justify-center gap-x-2 text-[10px] font-medium text-primary-foreground sm:text-[11px]">
+        <Sparkles className="h-3.5 w-3.5 shrink-0 text-gold" />
+        <span>
+          {" "}
+          <span>Free shipping on orders over ₹999</span>
+          <span className="hidden text-primary-foreground/80 sm:inline">•</span>
+          <span className="hidden sm:inline">Get 10% off on your first order</span>
+        </span>
       </div>
       <Button
         type="button"
