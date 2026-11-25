@@ -229,18 +229,26 @@ export class CheckoutService {
     payload: UpdateAddressPayload
   ): Promise<AddressDto> {
     if (!mongoose.Types.ObjectId.isValid(addressId)) {
-      throw new NotFoundError("Address not found.");
+      throw new NotFoundError("Address not found.", undefined, "CUSTOMER_ADDRESS_NOT_FOUND");
     }
 
     const address = await Address.findById(addressId);
     if (!address) {
-      throw new NotFoundError("Address not found.");
+      throw new NotFoundError("Address not found.", undefined, "CUSTOMER_ADDRESS_NOT_FOUND");
     }
 
     if (userId && address.userId && address.userId.toString() !== userId) {
-      throw new BadRequestError("You are not authorized to edit this address.");
+      throw new BadRequestError(
+        "You are not authorized to edit this address.",
+        undefined,
+        "CUSTOMER_ADDRESS_UNAUTHORIZED"
+      );
     } else if (!userId && guestId && address.guestId !== guestId) {
-      throw new BadRequestError("You are not authorized to edit this address.");
+      throw new BadRequestError(
+        "You are not authorized to edit this address.",
+        undefined,
+        "CUSTOMER_ADDRESS_UNAUTHORIZED"
+      );
     }
 
     if (payload.isDefault) {
@@ -264,18 +272,26 @@ export class CheckoutService {
     addressId: string
   ): Promise<void> {
     if (!mongoose.Types.ObjectId.isValid(addressId)) {
-      throw new NotFoundError("Address not found.");
+      throw new NotFoundError("Address not found.", undefined, "CUSTOMER_ADDRESS_NOT_FOUND");
     }
 
     const address = await Address.findById(addressId);
     if (!address) {
-      throw new NotFoundError("Address not found.");
+      throw new NotFoundError("Address not found.", undefined, "CUSTOMER_ADDRESS_NOT_FOUND");
     }
 
     if (userId && address.userId && address.userId.toString() !== userId) {
-      throw new BadRequestError("You are not authorized to delete this address.");
+      throw new BadRequestError(
+        "You are not authorized to delete this address.",
+        undefined,
+        "CUSTOMER_ADDRESS_UNAUTHORIZED"
+      );
     } else if (!userId && guestId && address.guestId !== guestId) {
-      throw new BadRequestError("You are not authorized to delete this address.");
+      throw new BadRequestError(
+        "You are not authorized to delete this address.",
+        undefined,
+        "CUSTOMER_ADDRESS_UNAUTHORIZED"
+      );
     }
 
     await Address.deleteOne({ _id: address._id });

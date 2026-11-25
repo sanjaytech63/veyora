@@ -130,12 +130,39 @@ export const ApiPaymentCode = {
   PAYMENT_PENDING: "PAYMENT_PENDING",
 } as const;
 
+export const ApiWishlistCode = {
+  WISHLIST_FETCHED: "WISHLIST_FETCHED",
+  WISHLIST_ITEM_ADDED: "WISHLIST_ITEM_ADDED",
+  WISHLIST_ITEM_REMOVED: "WISHLIST_ITEM_REMOVED",
+  WISHLIST_CLEARED: "WISHLIST_CLEARED",
+  WISHLIST_ITEM_CHECKED: "WISHLIST_ITEM_CHECKED",
+  WISHLIST_NOT_FOUND: "WISHLIST_NOT_FOUND",
+  WISHLIST_ITEM_NOT_FOUND: "WISHLIST_ITEM_NOT_FOUND",
+  WISHLIST_ITEM_ALREADY_EXISTS: "WISHLIST_ITEM_ALREADY_EXISTS",
+  WISHLIST_LIMIT_EXCEEDED: "WISHLIST_LIMIT_EXCEEDED",
+} as const;
+
+export const ApiAddressCode = {
+  CUSTOMER_ADDRESSES_FETCHED: "CUSTOMER_ADDRESSES_FETCHED",
+  CUSTOMER_ADDRESS_CREATED: "CUSTOMER_ADDRESS_CREATED",
+  CUSTOMER_ADDRESS_UPDATED: "CUSTOMER_ADDRESS_UPDATED",
+  CUSTOMER_ADDRESS_DELETED: "CUSTOMER_ADDRESS_DELETED",
+  CUSTOMER_DEFAULT_ADDRESS_UPDATED: "CUSTOMER_DEFAULT_ADDRESS_UPDATED",
+  CUSTOMER_ADDRESS_NOT_FOUND: "CUSTOMER_ADDRESS_NOT_FOUND",
+  CUSTOMER_ADDRESS_LIMIT_EXCEEDED: "CUSTOMER_ADDRESS_LIMIT_EXCEEDED",
+  CUSTOMER_ADDRESS_UNAUTHORIZED: "CUSTOMER_ADDRESS_UNAUTHORIZED",
+  DEFAULT_ADDRESS_REQUIRED: "DEFAULT_ADDRESS_REQUIRED",
+  INVALID_CUSTOMER_ADDRESS: "INVALID_CUSTOMER_ADDRESS",
+} as const;
+
 export const ApiResponseCode = {
   ...ApiAuthCode,
   ...ApiCoreCode,
   ...ApiCommerceCode,
   ...ApiCatalogCode,
   ...ApiPaymentCode,
+  ...ApiWishlistCode,
+  ...ApiAddressCode,
 } as const;
 
 export type ApiAuthCode = (typeof ApiAuthCode)[keyof typeof ApiAuthCode];
@@ -143,4 +170,6 @@ export type ApiCoreCode = (typeof ApiCoreCode)[keyof typeof ApiCoreCode];
 export type ApiCommerceCode = (typeof ApiCommerceCode)[keyof typeof ApiCommerceCode];
 export type ApiCatalogCode = (typeof ApiCatalogCode)[keyof typeof ApiCatalogCode];
 export type ApiPaymentCode = (typeof ApiPaymentCode)[keyof typeof ApiPaymentCode];
+export type ApiWishlistCode = (typeof ApiWishlistCode)[keyof typeof ApiWishlistCode];
+export type ApiAddressCode = (typeof ApiAddressCode)[keyof typeof ApiAddressCode];
 export type ApiResponseCode = (typeof ApiResponseCode)[keyof typeof ApiResponseCode];

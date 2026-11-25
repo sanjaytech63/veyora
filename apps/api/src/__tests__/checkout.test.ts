@@ -383,7 +383,7 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
   });
 
   describe("1. Address Management API", () => {
-    it("should allow guest to create a delivery address", async () => {
+    it("should allow guest to create a delivery address with canonical envelope", async () => {
       const res = await request(app).post("/api/v1/addresses").set(guestHeader).send({
         firstName: "Ananya",
         lastName: "Roy",
@@ -398,6 +398,9 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("CUSTOMER_ADDRESS_CREATED");
+      expect(res.body.message).toBe("Address created successfully.");
+      expect(res.body.meta.requestId).toBeDefined();
       expect(res.body.data.firstName).toBe("Ananya");
       expect(res.body.data.city).toBe("Kolkata");
       expect(res.body.data.isDefault).toBe(true);
@@ -412,9 +415,10 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
 
       expect(res.status).toBe(422);
       expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("VALIDATION_ERROR");
     });
 
-    it("should list addresses for guest session", async () => {
+    it("should list addresses for guest session with canonical envelope", async () => {
       mockAddresses.push({
         _id: new mongoose.Types.ObjectId(),
         guestId: "atelier-patron-guest-888",
@@ -432,11 +436,13 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("CUSTOMER_ADDRESSES_FETCHED");
+      expect(res.body.message).toBe("Addresses retrieved successfully.");
       expect(Array.isArray(res.body.data)).toBe(true);
       expect(res.body.data.length).toBe(1);
     });
 
-    it("should update an existing address", async () => {
+    it("should update an existing address with canonical envelope", async () => {
       const addrId = new mongoose.Types.ObjectId();
       const addrDoc = {
         _id: addrId,
@@ -464,10 +470,82 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("CUSTOMER_ADDRESS_UPDATED");
+      expect(res.body.message).toBe("Address updated successfully.");
       expect(res.body.data.street).toBe("New Alipore 5th Block");
     });
 
-    it("should delete an address", async () => {
+    it("should set an address as default with CUSTOMER_DEFAULT_ADDRESS_UPDATED", async () => {
+      const addrId = new mongoose.Types.ObjectId();
+      const addrDoc = {
+        _id: addrId,
+        guestId: "atelier-patron-guest-888",
+        firstName: "Ananya",
+        lastName: "Roy",
+        street: "Park Street",
+        city: "Kolkata",
+        state: "West Bengal",
+        postalCode: "700016",
+        country: "India",
+        isDefault: false,
+        save: async function () {
+          return this;
+        },
+      };
+      mockAddresses.push(addrDoc);
+
+      const res = await request(app)
+        .patch(`/api/v1/addresses/${addrId.toString()}/default`)
+        .set(guestHeader);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("CUSTOMER_DEFAULT_ADDRESS_UPDATED");
+      expect(res.body.message).toBe("Default address set successfully.");
+    });
+
+    it("should reject updating a non-existent address with 404 CUSTOMER_ADDRESS_NOT_FOUND", async () => {
+      const nonExistentId = new mongoose.Types.ObjectId().toString();
+      const res = await request(app)
+        .put(`/api/v1/addresses/${nonExistentId}`)
+        .set(guestHeader)
+        .send({ street: "Non-existent street" });
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("CUSTOMER_ADDRESS_NOT_FOUND");
+    });
+
+    it("should reject unauthorized address modification with 400 CUSTOMER_ADDRESS_UNAUTHORIZED", async () => {
+      const addrId = new mongoose.Types.ObjectId();
+      const addrDoc = {
+        _id: addrId,
+        guestId: "different-guest-id",
+        firstName: "Other",
+        lastName: "Patron",
+        street: "Private Lane",
+        city: "Mumbai",
+        state: "Maharashtra",
+        postalCode: "400001",
+        country: "India",
+        isDefault: false,
+        save: async function () {
+          return this;
+        },
+      };
+      mockAddresses.push(addrDoc);
+
+      const res = await request(app)
+        .put(`/api/v1/addresses/${addrId.toString()}`)
+        .set(guestHeader) // atelier-patron-guest-888 != different-guest-id
+        .send({ street: "Tampered Street" });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("CUSTOMER_ADDRESS_UNAUTHORIZED");
+    });
+
+    it("should delete an address with canonical envelope", async () => {
       const addrId = new mongoose.Types.ObjectId();
       const addrDoc = {
         _id: addrId,
@@ -492,6 +570,8 @@ describe("Phase I — Checkout & Address System Integration Tests", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("CUSTOMER_ADDRESS_DELETED");
+      expect(res.body.message).toBe("Address deleted successfully.");
       expect(mockAddresses.length).toBe(0);
     });
   });

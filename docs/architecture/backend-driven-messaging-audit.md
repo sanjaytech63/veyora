@@ -992,6 +992,39 @@ The entire Express Cart domain (`apps/api/src/modules/cart`) was migrated to the
 
 ---
 
-## 19. Architecture Signoff & Next Steps
+## 19. Task 07 Express Wishlist & Customer Commerce Migration
 
-This architectural contract and implementation provide the complete foundation for Veyora's transition to a backend-driven messaging system. All shared contracts, API response infrastructure, authentication controllers, product/catalog endpoints, and cart endpoints are verified with automated tests and ready for subsequent domain controller migrations (wishlist, checkout, orders, payments) and frontend toast notification integration.
+The entire Express Wishlist domain (`apps/api/src/modules/wishlist`) and customer delivery address management endpoints (`apps/api/src/modules/checkout/address.router.ts`) were migrated to the canonical `sendSuccess` helper and standardized domain error codes in Task 07:
+
+### 19.1 Controller Standardization
+
+- Migrated all Wishlist routes to `sendSuccess(res, { statusCode, code, message, data })`:
+  - `GET /api/v1/wishlist`: `getWishlist` (`WISHLIST_FETCHED`, 200 OK)
+  - `POST /api/v1/wishlist/items`: `addItem` (`WISHLIST_ITEM_ADDED`, 201 Created)
+  - `DELETE /api/v1/wishlist/items/:productId`: `removeItem` (`WISHLIST_ITEM_REMOVED`, 200 OK)
+  - `DELETE /api/v1/wishlist`: `clearWishlist` (`WISHLIST_CLEARED`, 200 OK)
+- Migrated all Customer Address routes to `sendSuccess(res, { statusCode, code, message, data })`:
+  - `GET /api/v1/addresses`: `listAddresses` (`CUSTOMER_ADDRESSES_FETCHED`, 200 OK)
+  - `POST /api/v1/addresses`: `createAddress` (`CUSTOMER_ADDRESS_CREATED`, 201 Created)
+  - `PUT /api/v1/addresses/:addressId`: `updateAddress` (`CUSTOMER_ADDRESS_UPDATED`, 200 OK)
+  - `DELETE /api/v1/addresses/:addressId`: `deleteAddress` (`CUSTOMER_ADDRESS_DELETED`, 200 OK)
+  - `PATCH /api/v1/addresses/:addressId/default`: `setDefaultAddress` (`CUSTOMER_DEFAULT_ADDRESS_UPDATED`, 200 OK)
+
+### 19.2 Service Domain Errors & Stable Codes
+
+- Services throw `NotFoundError` and `BadRequestError` with domain-specific stable machine-readable codes:
+  - `WISHLIST_NOT_FOUND` (400 Bad Request) when missing cart/guest identifier.
+  - `PRODUCT_NOT_AVAILABLE` (404 Not Found) when adding a non-existent or inactive garment to wishlist.
+  - `CUSTOMER_ADDRESS_NOT_FOUND` (404 Not Found) when target address ID does not exist.
+  - `CUSTOMER_ADDRESS_UNAUTHORIZED` (400 Bad Request) when caller is unauthorized to edit or delete the address.
+
+### 19.3 Business Rules Preserved
+
+- **Wishlist Idempotency & Availability:** Duplicate additions succeed gracefully without creating duplicate entries. Inactive/draft products are rejected.
+- **Address Management & Ownership:** Strict user/guest ownership checks prevent cross-user mutations. Setting a default address atomically updates the default state across all user addresses.
+
+---
+
+## 20. Architecture Signoff & Next Steps
+
+This architectural contract and implementation provide the complete foundation for Veyora's transition to a backend-driven messaging system. All shared contracts, API response infrastructure, authentication controllers, product/catalog endpoints, cart endpoints, wishlist endpoints, and customer address endpoints are verified with automated tests and ready for subsequent domain controller migrations (checkout, orders, payments) and frontend toast notification integration.
