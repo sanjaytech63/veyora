@@ -43,8 +43,8 @@
     "test:turbo": "turbo run test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run typecheck && npm run lint && npm run format:check && npm run test && npm run build",
-    "check:push": "npm run typecheck && npm run lint && npm run format:check && npm run test",
+    "check": "npm run build:packages && npm run typecheck && npm run lint && npm run format:check && npm run test && npm run build",
+    "check:push": "npm run build:packages && npm run typecheck && npm run lint && npm run format:check && npm run test",
     "check:turbo": "turbo run typecheck lint test build",
     "clean": "rimraf node_modules apps/*/node_modules apps/*/.next apps/*/dist packages/*/node_modules packages/*/dist .turbo",
     "prepare": "husky"
