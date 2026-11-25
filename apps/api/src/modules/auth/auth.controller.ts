@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { authService, RequestMetadata } from "./services/auth.service";
 import { env } from "../../config/env";
 import { UnauthorizedError } from "@veyora/utils";
+import { sendSuccess } from "../../utils/response";
 import {
   AUTH_COOKIE_NAME,
   setRefreshTokenCookie,
@@ -27,14 +28,15 @@ export class AuthController {
       const meta = getRequestMetadata(req);
       const result = await authService.register(req.body, meta);
 
-      res.status(201).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 201,
+        code: "AUTH_REGISTER_SUCCESS",
+        message: "Registration successful. Please verify your email with the OTP code sent.",
         data: {
           user: result.user,
           message: "Registration successful. Please verify your email with the OTP code sent.",
           ...(env.NODE_ENV !== "production" && { otp: result.otp }),
         },
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -49,14 +51,15 @@ export class AuthController {
 
       setRefreshTokenCookie(res, tokens.refreshToken);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "OTP_VERIFIED",
+        message: "Your email address has been verified successfully.",
         data: {
           user,
           accessToken: tokens.accessToken,
           expiresIn: tokens.expiresIn,
         },
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -68,13 +71,14 @@ export class AuthController {
       const { email, type } = req.body;
       const result = await authService.resendOtp(email, type);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "OTP_RESENT",
+        message: result.message || "Verification code sent successfully.",
         data: {
           message: result.message,
           ...(env.NODE_ENV !== "production" && { otp: result.otp }),
         },
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -88,14 +92,15 @@ export class AuthController {
 
       setRefreshTokenCookie(res, tokens.refreshToken);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "AUTH_LOGIN_SUCCESS",
+        message: "Welcome back! You have successfully signed in.",
         data: {
           user,
           accessToken: tokens.accessToken,
           expiresIn: tokens.expiresIn,
         },
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -109,14 +114,15 @@ export class AuthController {
 
       setRefreshTokenCookie(res, tokens.refreshToken);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "AUTH_LOGIN_SUCCESS",
+        message: "Welcome back, Administrator! You have successfully signed in.",
         data: {
           user,
           accessToken: tokens.accessToken,
           expiresIn: tokens.expiresIn,
         },
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -127,7 +133,11 @@ export class AuthController {
     try {
       const rawRefreshToken = req.cookies?.[COOKIE_NAME] || req.body?.refreshToken;
       if (!rawRefreshToken) {
-        throw new UnauthorizedError("Refresh token is required.");
+        throw new UnauthorizedError(
+          "Refresh token is required.",
+          undefined,
+          "INVALID_REFRESH_TOKEN"
+        );
       }
 
       const meta = getRequestMetadata(req);
@@ -135,14 +145,15 @@ export class AuthController {
 
       setRefreshTokenCookie(res, tokens.refreshToken);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "SESSION_REFRESHED",
+        message: "Your session has been refreshed successfully.",
         data: {
           user,
           accessToken: tokens.accessToken,
           expiresIn: tokens.expiresIn,
         },
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -156,12 +167,14 @@ export class AuthController {
 
       clearRefreshTokenCookie(res);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "AUTH_LOGOUT_SUCCESS",
+        message: "Logged out successfully.",
         data: {
           message: "Logged out successfully.",
+          loggedOut: true,
         },
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -173,13 +186,16 @@ export class AuthController {
       const { email } = req.body;
       const result = await authService.forgotPassword(email);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "PASSWORD_RESET_REQUEST_RECEIVED",
+        message:
+          result.message ||
+          "If an account exists with this email address, a password reset code has been sent.",
         data: {
           message: result.message,
           ...(env.NODE_ENV !== "production" && result.otp && { otp: result.otp }),
         },
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -192,12 +208,14 @@ export class AuthController {
 
       clearRefreshTokenCookie(res);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "PASSWORD_RESET_SUCCESS",
+        message:
+          result.message || "Password reset successful. Please log in with your new password.",
         data: {
           message: result.message,
         },
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -212,10 +230,11 @@ export class AuthController {
 
       const user = await authService.getUserById(req.user.id);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "AUTH_USER_FETCHED",
+        message: "User profile retrieved successfully.",
         data: user,
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -230,10 +249,11 @@ export class AuthController {
 
       const sessions = await authService.getUserSessions(req.user.id, req.sessionId);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "AUTH_SESSIONS_FETCHED",
+        message: "Active sessions retrieved successfully.",
         data: sessions,
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -253,12 +273,13 @@ export class AuthController {
 
       await authService.revokeSession(req.user.id, sessionId);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: "AUTH_SESSION_REVOKED",
+        message: "Session successfully revoked.",
         data: {
           message: "Session successfully revoked.",
         },
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);

@@ -361,8 +361,14 @@ describe("Authentication & Authorization System", () => {
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("AUTH_REGISTER_SUCCESS");
+      expect(res.body.message).toBe(
+        "Registration successful. Please verify your email with the OTP code sent."
+      );
+      expect(res.body.meta?.requestId).toBeDefined();
       expect(res.body.data.user.email).toBe("customer@example.com");
       expect(res.body.data.user.isEmailVerified).toBe(false);
+      expect(res.body.data.refreshToken).toBeUndefined();
       expect(res.body.data.otp).toBeDefined(); // returned in test env
     });
 
@@ -421,8 +427,12 @@ describe("Authentication & Authorization System", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("OTP_VERIFIED");
+      expect(res.body.message).toBe("Your email address has been verified successfully.");
+      expect(res.body.meta?.requestId).toBeDefined();
       expect(res.body.data.user.isEmailVerified).toBe(true);
       expect(res.body.data.accessToken).toBeDefined();
+      expect(res.body.data.refreshToken).toBeUndefined();
 
       // Check HTTP-only cookie set
       const cookies = res.headers["set-cookie"] as string[] | undefined;
@@ -454,7 +464,10 @@ describe("Authentication & Authorization System", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("AUTH_LOGIN_SUCCESS");
+      expect(res.body.message).toBe("Welcome back! You have successfully signed in.");
       expect(res.body.data.accessToken).toBeDefined();
+      expect(res.body.data.refreshToken).toBeUndefined();
       expect(res.body.data.user.email).toBe("customer@example.com");
     });
 
@@ -475,7 +488,8 @@ describe("Authentication & Authorization System", () => {
 
       expect(res.status).toBe(401);
       expect(res.body.success).toBe(false);
-      expect(res.body.error.code).toBe("UNAUTHORIZED");
+      expect(res.body.code).toBe("INVALID_CREDENTIALS");
+      expect(res.body.error.code).toBe("INVALID_CREDENTIALS");
     });
 
     it("rejects login if email is unverified", async () => {
@@ -495,7 +509,38 @@ describe("Authentication & Authorization System", () => {
       });
 
       expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("EMAIL_NOT_VERIFIED");
+      expect(res.body.message).toBe("Please verify your email address before signing in.");
+      expect(res.body.meta?.requestId).toBeDefined();
       expect(res.body.error.details?.[0]?.code).toBe("EMAIL_NOT_VERIFIED");
+    });
+
+    it("demonstrates the canonical EMAIL_NOT_VERIFIED response contract (Acceptance Check)", async () => {
+      const password = "CorrectPassword123!";
+      const passwordHash = await passwordService.hashPassword(password);
+      mockUsers.push(
+        makeUserDoc({
+          email: "unverified-demo@example.com",
+          passwordHash,
+          isEmailVerified: false,
+        })
+      );
+
+      const customRequestId = "test-request-id-acceptance-123";
+      const res = await request(app)
+        .post("/api/v1/auth/login")
+        .set("X-Request-Id", customRequestId)
+        .send({
+          email: "unverified-demo@example.com",
+          password,
+        });
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("EMAIL_NOT_VERIFIED");
+      expect(res.body.message).toBe("Please verify your email address before signing in.");
+      expect(res.body.meta.requestId).toBe(customRequestId);
     });
 
     it("allows admin login for admin role (POST /api/v1/auth/admin/login)", async () => {
@@ -519,7 +564,9 @@ describe("Authentication & Authorization System", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("AUTH_LOGIN_SUCCESS");
       expect(res.body.data.user.role).toBe("admin");
+      expect(res.body.data.refreshToken).toBeUndefined();
     });
 
     it("denies admin login for customer role (403 Forbidden)", async () => {
@@ -574,7 +621,9 @@ describe("Authentication & Authorization System", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("SESSION_REFRESHED");
       expect(res.body.data.accessToken).toBeDefined();
+      expect(res.body.data.refreshToken).toBeUndefined();
 
       // Old session must be marked revoked
       expect(oldSession.isRevoked).toBe(true);
@@ -617,6 +666,7 @@ describe("Authentication & Authorization System", () => {
         .send({ refreshToken: tokens.refreshToken });
 
       expect(res.status).toBe(401);
+      expect(res.body.code).toBe("SESSION_REVOKED");
       // Both sessions in family must now be revoked!
       expect(session1.isRevoked).toBe(true);
       expect(session2.isRevoked).toBe(true);
@@ -638,8 +688,20 @@ describe("Authentication & Authorization System", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("PASSWORD_RESET_REQUEST_RECEIVED");
       expect(mockOtps).toHaveLength(1);
       expect(mockOtps[0]?.type).toBe("PASSWORD_RESET");
+    });
+
+    it("preserves account enumeration safety for non-existent email on forgot-password", async () => {
+      const res = await request(app)
+        .post("/api/v1/auth/forgot-password")
+        .send({ email: "nonexistent-ghost@example.com" });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("PASSWORD_RESET_REQUEST_RECEIVED");
+      expect(res.body.message).toContain("If an account exists with this email address");
     });
 
     it("resets password and revokes all user sessions (POST /api/v1/auth/reset-password)", async () => {
@@ -666,6 +728,7 @@ describe("Authentication & Authorization System", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("PASSWORD_RESET_SUCCESS");
 
       // Password must have changed
       const isNewValid = await passwordService.comparePassword(
@@ -713,6 +776,7 @@ describe("Authentication & Authorization System", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("AUTH_USER_FETCHED");
       expect(res.body.data.email).toBe("profile@example.com");
     });
 
@@ -728,10 +792,88 @@ describe("Authentication & Authorization System", () => {
         .set("Cookie", ["refreshToken=some-refresh-token"]);
 
       expect(res.status).toBe(200);
+      expect(res.body.code).toBe("AUTH_LOGOUT_SUCCESS");
       expect(session.isRevoked).toBe(true);
       // Cookie cleared
       const cookies = res.headers["set-cookie"] as string[] | undefined;
       expect(cookies?.[0]).toMatch(/refreshToken=;/);
+    });
+
+    it("resends OTP with stable code (POST /api/v1/auth/resend-otp)", async () => {
+      const user = makeUserDoc({
+        email: "resend@example.com",
+        passwordHash: "hash",
+        isEmailVerified: false,
+      });
+      mockUsers.push(user);
+
+      const res = await request(app).post("/api/v1/auth/resend-otp").send({
+        email: "resend@example.com",
+        type: "EMAIL_VERIFICATION",
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("OTP_RESENT");
+      expect(res.body.meta?.requestId).toBeDefined();
+    });
+
+    it("retrieves active sessions with stable code (GET /api/v1/auth/sessions)", async () => {
+      const user = makeUserDoc({ email: "sessions@example.com" });
+      mockUsers.push(user);
+
+      const session = makeSessionDoc({
+        userId: user._id,
+        isRevoked: false,
+      });
+      mockSessions.push(session);
+
+      const tokens = tokenService.generateTokens(
+        user as unknown as IUser,
+        session._id.toString(),
+        "fam-sessions"
+      );
+
+      const res = await request(app)
+        .get("/api/v1/auth/sessions")
+        .set("Authorization", `Bearer ${tokens.accessToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("AUTH_SESSIONS_FETCHED");
+      expect(Array.isArray(res.body.data)).toBe(true);
+    });
+
+    it("revokes a session with stable code (DELETE /api/v1/auth/sessions/:sessionId)", async () => {
+      const user = makeUserDoc({ email: "revoke@example.com" });
+      mockUsers.push(user);
+
+      const session = makeSessionDoc({
+        userId: user._id,
+        isRevoked: false,
+      });
+      mockSessions.push(session);
+
+      const tokens = tokenService.generateTokens(
+        user as unknown as IUser,
+        session._id.toString(),
+        "fam-revoke"
+      );
+
+      const targetSession = makeSessionDoc({
+        userId: user._id,
+        isRevoked: false,
+      });
+      mockSessions.push(targetSession);
+
+      const res = await request(app)
+        .delete(`/api/v1/auth/sessions/${targetSession._id}`)
+        .set("Authorization", `Bearer ${tokens.accessToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("AUTH_SESSION_REVOKED");
+      expect(targetSession.isRevoked).toBe(true);
     });
   });
 });

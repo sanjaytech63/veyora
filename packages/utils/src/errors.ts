@@ -50,32 +50,32 @@ export class AppError extends Error {
 }
 
 export class NotFoundError extends AppError {
-  constructor(message = "Resource not found", details?: ApiErrorDetail[]) {
-    super(message, 404, "NOT_FOUND", details);
+  constructor(message = "Resource not found", details?: ApiErrorDetail[], code = "NOT_FOUND") {
+    super(message, 404, code, details);
   }
 }
 
 export class BadRequestError extends AppError {
-  constructor(message = "Bad request", details?: ApiErrorDetail[]) {
-    super(message, 400, "BAD_REQUEST", details);
+  constructor(message = "Bad request", details?: ApiErrorDetail[], code = "BAD_REQUEST") {
+    super(message, 400, code, details);
   }
 }
 
 export class UnauthorizedError extends AppError {
-  constructor(message = "Unauthorized", details?: ApiErrorDetail[]) {
-    super(message, 401, "UNAUTHORIZED", details);
+  constructor(message = "Unauthorized", details?: ApiErrorDetail[], code = "UNAUTHORIZED") {
+    super(message, 401, code, details);
   }
 }
 
 export class ForbiddenError extends AppError {
-  constructor(message = "Forbidden", details?: ApiErrorDetail[]) {
-    super(message, 403, "FORBIDDEN", details);
+  constructor(message = "Forbidden", details?: ApiErrorDetail[], code = "FORBIDDEN") {
+    super(message, 403, code, details);
   }
 }
 
 export class ConflictError extends AppError {
-  constructor(message = "Resource already exists", details?: ApiErrorDetail[]) {
-    super(message, 409, "CONFLICT", details);
+  constructor(message = "Resource already exists", details?: ApiErrorDetail[], code = "CONFLICT") {
+    super(message, 409, code, details);
   }
 }
 

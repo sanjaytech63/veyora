@@ -904,6 +904,32 @@ The core response infrastructure and error middleware for `apps/api` were implem
 
 ---
 
-## 16. Architecture Signoff & Next Steps
+## 16. Task 04 Express Authentication Controller Migration
 
-This architectural contract and implementation provide the complete foundation for Veyora's transition to a backend-driven messaging system. All shared contracts and API response infrastructure are verified and ready for controller migration in upcoming tasks.
+The entire Express authentication subsystem (`apps/api/src/modules/auth`) was migrated to the canonical `sendSuccess` helper and standardized error codes in Task 04:
+
+### 16.1 Controller Standardization (`apps/api/src/modules/auth/auth.controller.ts`)
+
+- Migrated all public and protected auth endpoints to `sendSuccess(res, { statusCode, code, message, data })`.
+- Refresh tokens are strictly excluded from response JSON payloads across all endpoints.
+- Cookie management remains governed by `auth-cookie.config.ts`, issuing `HttpOnly`, `SameSite=Lax`, `Path=/api/v1/auth` cookies with 7-day retention.
+
+### 16.2 Service & Domain Error Codes (`apps/api/src/modules/auth/services/auth.service.ts` & `otp.service.ts`)
+
+- Implemented deterministic machine-readable codes for all authentication failures:
+  - `INVALID_CREDENTIALS`: 401 Unauthorized for incorrect email or password.
+  - `EMAIL_NOT_VERIFIED`: 401 Unauthorized for unverified customer login (includes email field detail for client navigation).
+  - `ACCOUNT_INACTIVE`: 403 Forbidden for deactivated accounts.
+  - `SESSION_EXPIRED`: 401 Unauthorized when refresh session expires.
+  - `SESSION_REVOKED`: 401 Unauthorized when a revoked token or token replay attempt is detected (triggers family revocation).
+  - `INVALID_REFRESH_TOKEN`: 401 Unauthorized when refresh token signature is missing or corrupted.
+  - `OTP_INVALID`: 400 Bad Request for incorrect OTP code.
+  - `OTP_EXPIRED`: 400 Bad Request for expired OTP code.
+  - `PASSWORD_RESET_REQUEST_RECEIVED`: 200 OK for constant-time account-enumeration-safe forgot-password submissions.
+  - `PASSWORD_RESET_SUCCESS`: 200 OK for successful password reset (revokes all existing sessions).
+
+---
+
+## 17. Architecture Signoff & Next Steps
+
+This architectural contract and implementation provide the complete foundation for Veyora's transition to a backend-driven messaging system. All shared contracts, API response infrastructure, and authentication controllers are verified and ready for domain controller migration and frontend client integration in subsequent tasks.
