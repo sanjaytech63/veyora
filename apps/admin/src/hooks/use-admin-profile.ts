@@ -5,7 +5,7 @@ import { adminProfileApi } from "@/lib/api/admin-profile-api";
 import { profileKeys } from "@/lib/api/query-keys";
 import { UserProfileDto, ProfileCompletionDto, AvatarUploadSignatureResponse } from "@veyora/types";
 import { UpdateProfileInput, UpdateAvatarInput } from "@veyora/validators";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 import { useAdminAuthStore } from "@/stores/admin-auth-store";
 
 export function useAdminProfile() {
@@ -49,14 +49,10 @@ export function useUpdateAdminProfile() {
         });
       }
 
-      toast.success("Administrator Profile Updated", {
-        description: "Your staff profile information has been saved successfully.",
-      });
+      notifyApiSuccess(updatedProfile);
     },
     onError: (error: Error) => {
-      toast.error("Profile Update Failed", {
-        description: error.message || "Failed to update staff profile.",
-      });
+      notifyApiError(error);
     },
   });
 }
@@ -119,14 +115,10 @@ export function useUploadAdminAvatar() {
     onSuccess: (updatedProfile) => {
       queryClient.setQueryData(profileKeys.current(), updatedProfile);
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
-      toast.success("Profile Avatar Updated", {
-        description: "Your administrator avatar has been uploaded and applied.",
-      });
+      notifyApiSuccess(updatedProfile);
     },
     onError: (error: Error) => {
-      toast.error("Avatar Upload Failed", {
-        description: error.message || "Failed to upload and apply profile photo.",
-      });
+      notifyApiError(error);
     },
   });
 }
@@ -139,14 +131,10 @@ export function useRemoveAdminAvatar() {
     onSuccess: (updatedProfile) => {
       queryClient.setQueryData(profileKeys.current(), updatedProfile);
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
-      toast.success("Avatar Removed", {
-        description: "Your administrator avatar has been removed.",
-      });
+      notifyApiSuccess(updatedProfile);
     },
     onError: (error: Error) => {
-      toast.error("Avatar Removal Failed", {
-        description: error.message || "Failed to remove avatar image.",
-      });
+      notifyApiError(error);
     },
   });
 }

@@ -13,6 +13,8 @@ services:
     restart: unless-stopped
     environment:
       MONGO_INITDB_DATABASE: veyora_production
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_ROOT_USER:?MONGO_ROOT_USER must be set}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_ROOT_PASSWORD:?MONGO_ROOT_PASSWORD must be set}"
     ports:
       - "127.0.0.1:27017:27017"
     volumes:
@@ -33,7 +35,7 @@ services:
     image: redis:7-alpine
     container_name: veyora-prod-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD:-veyora_prod_redis_password}"
+    command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD:?REDIS_PASSWORD must be set}"
     ports:
       - "127.0.0.1:6379:6379"
     volumes:
@@ -41,7 +43,7 @@ services:
     networks:
       - veyora-network
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-veyora_prod_redis_password}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:?REDIS_PASSWORD must be set}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -62,16 +64,22 @@ services:
       NODE_ENV: production
       PORT: 4000
       API_PREFIX: /api/v1
-      CORS_ORIGIN: "http://localhost:3000,http://localhost:3001"
-      COOKIE_SECRET: "${COOKIE_SECRET:-veyora_production_cookie_secret_super_secure_32chars}"
-      JWT_ACCESS_SECRET: "${JWT_ACCESS_SECRET:-veyora_prod_jwt_access_secret_super_secure_32chars}"
-      JWT_REFRESH_SECRET: "${JWT_REFRESH_SECRET:-veyora_prod_jwt_refresh_secret_super_secure_32chars}"
+      CORS_ORIGIN: "${CORS_ORIGIN:?CORS_ORIGIN must be set}"
+      RAZORPAY_KEY_ID: "${RAZORPAY_KEY_ID:?RAZORPAY_KEY_ID must be set}"
+      RAZORPAY_KEY_SECRET: "${RAZORPAY_KEY_SECRET:?RAZORPAY_KEY_SECRET must be set}"
+      RAZORPAY_WEBHOOK_SECRET: "${RAZORPAY_WEBHOOK_SECRET:?RAZORPAY_WEBHOOK_SECRET must be set}"
+      CLOUDINARY_CLOUD_NAME: "${CLOUDINARY_CLOUD_NAME:?CLOUDINARY_CLOUD_NAME must be set}"
+      CLOUDINARY_API_KEY: "${CLOUDINARY_API_KEY:?CLOUDINARY_API_KEY must be set}"
+      CLOUDINARY_API_SECRET: "${CLOUDINARY_API_SECRET:?CLOUDINARY_API_SECRET must be set}"
+      COOKIE_SECRET: "${COOKIE_SECRET:?COOKIE_SECRET must be set}"
+      JWT_ACCESS_SECRET: "${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET must be set}"
+      JWT_REFRESH_SECRET: "${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET must be set}"
       JWT_ACCESS_EXPIRES_IN: 15m
       JWT_REFRESH_EXPIRES_IN_DAYS: 7
-      MONGODB_URI: "mongodb://mongodb:27017/veyora_production"
+      MONGODB_URI: "${MONGODB_URI:?MONGODB_URI must be set to the authenticated MongoDB service URI}"
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_PASSWORD: "${REDIS_PASSWORD:-veyora_prod_redis_password}"
+      REDIS_PASSWORD: "${REDIS_PASSWORD:?REDIS_PASSWORD must be set}"
       LOG_LEVEL: info
     depends_on:
       mongodb:
@@ -98,11 +106,11 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      MONGODB_URI: "mongodb://mongodb:27017/veyora_production"
+      MONGODB_URI: "${MONGODB_URI:?MONGODB_URI must be set to the authenticated MongoDB service URI}"
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_PASSWORD: "${REDIS_PASSWORD:-veyora_prod_redis_password}"
-      WORKER_CONCURRENCY: 5
+      REDIS_PASSWORD: "${REDIS_PASSWORD:?REDIS_PASSWORD must be set}"
+      CONCURRENCY: 5
       LOG_LEVEL: info
     depends_on:
       mongodb:
@@ -128,6 +136,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
+      INTERNAL_API_URL: "http://api:4000/api/v1"
       NEXT_PUBLIC_API_URL: "http://localhost:4000/api/v1"
       NEXT_PUBLIC_WEB_URL: "http://localhost:3000"
     depends_on:
@@ -156,6 +165,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
+      INTERNAL_API_URL: "http://api:4000/api/v1"
       NEXT_PUBLIC_API_URL: "http://localhost:4000/api/v1"
       NEXT_PUBLIC_ADMIN_URL: "http://localhost:3001"
     depends_on:

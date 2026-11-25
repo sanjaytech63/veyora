@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { AdminCouponListQuery } from "@veyora/types";
+import { AdminCouponListQuery, ApiCouponCode } from "@veyora/types";
 import { couponService } from "../services/coupon.service";
+import { sendSuccess } from "../../../utils/response";
 
 export class CouponController {
   /**
@@ -14,10 +15,11 @@ export class CouponController {
         email: req.user?.email,
       });
 
-      res.status(200).json({
-        success: true,
-        data: result,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiCouponCode.COUPON_VALIDATED,
         message: result.message,
+        data: result,
       });
     } catch (error) {
       next(error);
@@ -32,10 +34,21 @@ export class CouponController {
       const paginated = await couponService.listCoupons(
         req.query as unknown as AdminCouponListQuery
       );
-      res.status(200).json({
-        success: true,
-        data: paginated,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiCouponCode.COUPONS_FETCHED,
         message: "Coupons retrieved successfully.",
+        data: paginated,
+        meta: {
+          pagination: {
+            page: paginated.page,
+            limit: paginated.limit,
+            total: paginated.total,
+            totalPages: paginated.totalPages,
+            hasNextPage: paginated.page < paginated.totalPages,
+            hasPrevPage: paginated.page > 1,
+          },
+        },
       });
     } catch (error) {
       next(error);
@@ -49,10 +62,11 @@ export class CouponController {
     try {
       const { id } = req.params;
       const coupon = await couponService.getCouponById(id!);
-      res.status(200).json({
-        success: true,
-        data: coupon,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiCouponCode.COUPON_FETCHED,
         message: "Coupon retrieved successfully.",
+        data: coupon,
       });
     } catch (error) {
       next(error);
@@ -65,10 +79,11 @@ export class CouponController {
   public async createCoupon(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const coupon = await couponService.createCoupon(req.body);
-      res.status(201).json({
-        success: true,
-        data: coupon,
+      sendSuccess(res, {
+        statusCode: 201,
+        code: ApiCouponCode.COUPON_CREATED,
         message: "Coupon created successfully.",
+        data: coupon,
       });
     } catch (error) {
       next(error);
@@ -82,10 +97,11 @@ export class CouponController {
     try {
       const { id } = req.params;
       const coupon = await couponService.updateCoupon(id!, req.body);
-      res.status(200).json({
-        success: true,
-        data: coupon,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiCouponCode.COUPON_UPDATED,
         message: "Coupon updated successfully.",
+        data: coupon,
       });
     } catch (error) {
       next(error);
@@ -99,10 +115,11 @@ export class CouponController {
     try {
       const { id } = req.params;
       const coupon = await couponService.toggleCouponStatus(id!);
-      res.status(200).json({
-        success: true,
-        data: coupon,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiCouponCode.COUPON_STATUS_UPDATED,
         message: `Coupon is now ${coupon.isActive ? "active" : "inactive"}.`,
+        data: coupon,
       });
     } catch (error) {
       next(error);
@@ -116,9 +133,11 @@ export class CouponController {
     try {
       const { id } = req.params;
       await couponService.deleteCoupon(id!);
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiCouponCode.COUPON_DELETED,
         message: "Coupon deleted successfully.",
+        data: null,
       });
     } catch (error) {
       next(error);
@@ -132,10 +151,11 @@ export class CouponController {
     try {
       const { id } = req.params;
       const analytics = await couponService.getCouponAnalytics(id!);
-      res.status(200).json({
-        success: true,
-        data: analytics,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiCouponCode.COUPON_ANALYTICS_FETCHED,
         message: "Coupon analytics retrieved successfully.",
+        data: analytics,
       });
     } catch (error) {
       next(error);

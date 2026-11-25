@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { SERVICES } from "@veyora/config";
 import { cn } from "@/lib/utils";
+import { FooterSocialLinks } from "./FooterSocialLinks";
 
 export function FooterBrand({ className }: { className?: string }) {
   return (
@@ -14,7 +15,7 @@ export function FooterBrand({ className }: { className?: string }) {
         aria-label={`${SERVICES.NAME} Atelier Home`}
         className="flex items-center gap-2.5 font-bold text-lg tracking-tight group"
       >
-        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs group-hover:bg-primary/90 transition-colors">
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors duration-150 group-hover:bg-primary/90">
           <ShoppingBag className="h-4 w-4" />
         </div>
         <div className="flex flex-col leading-none">
@@ -25,14 +26,16 @@ export function FooterBrand({ className }: { className?: string }) {
         </div>
       </Link>
 
-      <p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
-        Contemporary Indian couture and modern ready-to-wear. Handcrafted from authentic Chanderi
-        silks, pure mulmul cotton, and heritage Banarasi brocades.
+      <p className="max-w-md text-sm leading-6 text-muted-foreground">
+        Contemporary Indian fashion and modern ready-to-wear, bringing considered silhouettes and
+        timeless style together.
       </p>
 
-      <div className="text-[11px] text-muted-foreground/80 flex items-center gap-2">
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-        <span>Concierge &amp; Worldwide Express Fulfillment Active</span>
+      <div className="space-y-2.5">
+        <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          Follow Veyora
+        </span>
+        <FooterSocialLinks />
       </div>
     </div>
   );

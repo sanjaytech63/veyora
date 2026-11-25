@@ -14,6 +14,7 @@ import {
   UpdateCustomerStatusPayload,
   AddressDto,
   PaginatedOrdersDto,
+  ApiCustomerAdminCode,
 } from "@veyora/types";
 import { NotFoundError } from "@veyora/utils";
 
@@ -157,12 +158,20 @@ export class CustomerService {
    */
   public async getCustomerById(id: string): Promise<CustomerDetailDto> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new NotFoundError("Customer not found.");
+      throw new NotFoundError(
+        "Customer not found.",
+        undefined,
+        ApiCustomerAdminCode.CUSTOMER_NOT_FOUND
+      );
     }
 
     const user = await User.findById(id);
     if (!user) {
-      throw new NotFoundError("Customer not found.");
+      throw new NotFoundError(
+        "Customer not found.",
+        undefined,
+        ApiCustomerAdminCode.CUSTOMER_NOT_FOUND
+      );
     }
 
     const stats = await this.getCustomerStats(user._id);
@@ -195,12 +204,20 @@ export class CustomerService {
     pagination?: { page?: number; limit?: number }
   ): Promise<PaginatedOrdersDto> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new NotFoundError("Customer not found.");
+      throw new NotFoundError(
+        "Customer not found.",
+        undefined,
+        ApiCustomerAdminCode.CUSTOMER_NOT_FOUND
+      );
     }
 
     const user = await User.findById(id);
     if (!user) {
-      throw new NotFoundError("Customer not found.");
+      throw new NotFoundError(
+        "Customer not found.",
+        undefined,
+        ApiCustomerAdminCode.CUSTOMER_NOT_FOUND
+      );
     }
 
     const page = Math.max(1, Number(pagination?.page) || 1);
@@ -226,12 +243,20 @@ export class CustomerService {
    */
   public async getCustomerAddresses(id: string): Promise<AddressDto[]> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new NotFoundError("Customer not found.");
+      throw new NotFoundError(
+        "Customer not found.",
+        undefined,
+        ApiCustomerAdminCode.CUSTOMER_NOT_FOUND
+      );
     }
 
     const user = await User.findById(id);
     if (!user) {
-      throw new NotFoundError("Customer not found.");
+      throw new NotFoundError(
+        "Customer not found.",
+        undefined,
+        ApiCustomerAdminCode.CUSTOMER_NOT_FOUND
+      );
     }
 
     const addresses = await Address.find({ userId: user._id }).sort({
@@ -251,12 +276,20 @@ export class CustomerService {
     adminUser: { id: string; email: string; role?: string }
   ): Promise<CustomerDto> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new NotFoundError("Customer not found.");
+      throw new NotFoundError(
+        "Customer not found.",
+        undefined,
+        ApiCustomerAdminCode.CUSTOMER_NOT_FOUND
+      );
     }
 
     const user = await User.findById(id);
     if (!user) {
-      throw new NotFoundError("Customer not found.");
+      throw new NotFoundError(
+        "Customer not found.",
+        undefined,
+        ApiCustomerAdminCode.CUSTOMER_NOT_FOUND
+      );
     }
 
     const previousStatus = user.isActive;
@@ -295,12 +328,20 @@ export class CustomerService {
     adminUser: { id: string; email: string; role?: string }
   ): Promise<CustomerDto> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new NotFoundError("Customer not found.");
+      throw new NotFoundError(
+        "Customer not found.",
+        undefined,
+        ApiCustomerAdminCode.CUSTOMER_NOT_FOUND
+      );
     }
 
     const user = await User.findById(id);
     if (!user) {
-      throw new NotFoundError("Customer not found.");
+      throw new NotFoundError(
+        "Customer not found.",
+        undefined,
+        ApiCustomerAdminCode.CUSTOMER_NOT_FOUND
+      );
     }
 
     user.notes = payload.notes ? payload.notes.trim() : null;
@@ -324,12 +365,20 @@ export class CustomerService {
    */
   public async getCustomerActivity(id: string): Promise<CustomerActivityDto[]> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new NotFoundError("Customer not found.");
+      throw new NotFoundError(
+        "Customer not found.",
+        undefined,
+        ApiCustomerAdminCode.CUSTOMER_NOT_FOUND
+      );
     }
 
     const user = await User.findById(id);
     if (!user) {
-      throw new NotFoundError("Customer not found.");
+      throw new NotFoundError(
+        "Customer not found.",
+        undefined,
+        ApiCustomerAdminCode.CUSTOMER_NOT_FOUND
+      );
     }
 
     const activities = await CustomerActivity.find({ customerId: user._id })

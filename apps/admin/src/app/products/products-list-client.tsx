@@ -27,7 +27,7 @@ import {
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { adminCatalogApi } from "@/lib/api/admin-catalog-api";
 import { adminCatalogKeys } from "@/lib/api/query-keys";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 import {
   Package,
   Plus,
@@ -71,12 +71,12 @@ export function ProductsListClient() {
 
   const deleteProductMutation = useMutation({
     mutationFn: (id: string) => adminCatalogApi.deleteProduct(id),
-    onSuccess: () => {
+    onSuccess: (archived) => {
       queryClient.invalidateQueries({ queryKey: adminCatalogKeys.all });
-      toast.success("Product archived successfully.");
+      notifyApiSuccess(archived);
     },
     onError: (err: unknown) => {
-      toast.error(err instanceof Error ? err.message : "Failed to delete product.");
+      notifyApiError(err);
     },
   });
 

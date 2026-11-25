@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import { createApp } from "../app";
 import { env } from "../config/env";
 import { AnalyticsService } from "../modules/analytics/services/analytics.service";
+import { ApiAnalyticsCode } from "@veyora/types";
 
 let mockOrders: any[] = [];
 let mockProducts: any[] = [];
@@ -487,6 +488,7 @@ describe("Phase Q — Veyora Admin Dashboard & Analytics", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe(ApiAnalyticsCode.ADMIN_ANALYTICS_DASHBOARD_FETCHED);
       expect(res.body.data).toHaveProperty("revenue");
       expect(res.body.data).toHaveProperty("orders");
       expect(res.body.data).toHaveProperty("customers");
@@ -504,6 +506,7 @@ describe("Phase Q — Veyora Admin Dashboard & Analytics", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe(ApiAnalyticsCode.ADMIN_ANALYTICS_REVENUE_FETCHED);
       expect(res.body.data).toHaveProperty("totalRevenue");
       expect(res.body.data).toHaveProperty("revenueGrowthRate");
     });

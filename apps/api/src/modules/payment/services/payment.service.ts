@@ -11,6 +11,8 @@ import {
   PaymentVerificationResultDto,
   PaymentRefundDto,
   PaymentDetailsDto,
+  ApiPaymentCode,
+  ApiOrderCode,
 } from "@veyora/types";
 import {
   BadRequestError,
@@ -47,25 +49,31 @@ export class PaymentService {
 
     const order = await Order.findOne(orderQuery);
     if (!order) {
-      throw new NotFoundError("Order not found with specified identifier.");
+      throw new NotFoundError(
+        "Order not found with specified identifier.",
+        undefined,
+        ApiOrderCode.ORDER_NOT_FOUND
+      );
     }
 
     // Access control
     if (order.userId) {
       if (!userId || order.userId.toString() !== userId) {
-        throw new NotFoundError("Order not found.");
+        throw new NotFoundError("Order not found.", undefined, ApiOrderCode.ORDER_NOT_FOUND);
       }
     } else if (order.guestId) {
       if (!guestId || order.guestId !== guestId) {
-        throw new NotFoundError("Order not found.");
+        throw new NotFoundError("Order not found.", undefined, ApiOrderCode.ORDER_NOT_FOUND);
       }
     } else {
-      throw new NotFoundError("Order not found.");
+      throw new NotFoundError("Order not found.", undefined, ApiOrderCode.ORDER_NOT_FOUND);
     }
 
     if (order.status === "cancelled" || order.status === "refunded") {
       throw new BadRequestError(
-        `Cannot initiate payment for order in terminal status "${order.status}".`
+        `Cannot initiate payment for order in terminal status "${order.status}".`,
+        undefined,
+        ApiPaymentCode.PAYMENT_ORDER_CREATION_FAILED
       );
     }
 
@@ -75,7 +83,11 @@ export class PaymentService {
       status: "successful",
     });
     if (existingSuccessfulPayment) {
-      throw new ConflictError("Order has already been settled and paid successfully.");
+      throw new ConflictError(
+        "Order has already been settled and paid successfully.",
+        undefined,
+        ApiPaymentCode.PAYMENT_ALREADY_SETTLED
+      );
     }
 
     const providerInstance = PaymentProviderFactory.getProvider(provider);
@@ -168,20 +180,24 @@ export class PaymentService {
 
     const order = await Order.findOne(orderQuery);
     if (!order) {
-      throw new NotFoundError("Order not found with specified identifier.");
+      throw new NotFoundError(
+        "Order not found with specified identifier.",
+        undefined,
+        ApiOrderCode.ORDER_NOT_FOUND
+      );
     }
 
     // Access control
     if (order.userId) {
       if (!userId || order.userId.toString() !== userId) {
-        throw new NotFoundError("Order not found.");
+        throw new NotFoundError("Order not found.", undefined, ApiOrderCode.ORDER_NOT_FOUND);
       }
     } else if (order.guestId) {
       if (!guestId || order.guestId !== guestId) {
-        throw new NotFoundError("Order not found.");
+        throw new NotFoundError("Order not found.", undefined, ApiOrderCode.ORDER_NOT_FOUND);
       }
     } else {
-      throw new NotFoundError("Order not found.");
+      throw new NotFoundError("Order not found.", undefined, ApiOrderCode.ORDER_NOT_FOUND);
     }
 
     const payment = await Payment.findOne({
@@ -190,7 +206,11 @@ export class PaymentService {
     });
 
     if (!payment) {
-      throw new NotFoundError("Payment record not found for this gateway order.");
+      throw new NotFoundError(
+        "Payment record not found for this gateway order.",
+        undefined,
+        ApiPaymentCode.PAYMENT_NOT_FOUND
+      );
     }
 
     // Server-side cryptographic signature check
@@ -216,7 +236,11 @@ export class PaymentService {
         { orderId: order._id.toString(), gatewayOrderId: payload.gatewayOrderId }
       );
 
-      throw new BadRequestError("Payment verification failed. Invalid gateway signature.");
+      throw new BadRequestError(
+        "Payment verification failed. Invalid gateway signature.",
+        undefined,
+        ApiPaymentCode.PAYMENT_SIGNATURE_INVALID
+      );
     }
 
     // Transition payment to successful
@@ -302,7 +326,11 @@ export class PaymentService {
     const isValidSignature = providerInstance.verifyWebhookSignature(rawBody, signature);
     if (!isValidSignature) {
       logger.warn("WEBHOOK_SECURITY", "Received webhook with invalid signature.", { provider });
-      throw new UnauthorizedError("Invalid webhook signature.");
+      throw new UnauthorizedError(
+        "Invalid webhook signature.",
+        undefined,
+        ApiPaymentCode.PAYMENT_WEBHOOK_SIGNATURE_INVALID
+      );
     }
 
     // 2. Extract Event ID for Idempotency
@@ -464,7 +492,11 @@ export class PaymentService {
 
     const order = await Order.findOne(orderQuery);
     if (!order) {
-      throw new NotFoundError("Order not found with specified identifier.");
+      throw new NotFoundError(
+        "Order not found with specified identifier.",
+        undefined,
+        ApiOrderCode.ORDER_NOT_FOUND
+      );
     }
 
     const payment = await Payment.findOne({
@@ -473,18 +505,30 @@ export class PaymentService {
     });
 
     if (!payment) {
-      throw new BadRequestError("No successful payment found to refund for this order.");
+      throw new BadRequestError(
+        "No successful payment found to refund for this order.",
+        undefined,
+        ApiPaymentCode.PAYMENT_NOT_FOUND
+      );
     }
 
     if (!payment.gatewayPaymentId) {
-      throw new BadRequestError("Payment does not have a valid gateway payment identifier.");
+      throw new BadRequestError(
+        "Payment does not have a valid gateway payment identifier.",
+        undefined,
+        ApiPaymentCode.REFUND_CREATION_FAILED
+      );
     }
 
     const currentRefunded = payment.refunds.reduce((acc, r) => acc + r.amount, 0);
     const remainingBalance = Math.round((payment.amount - currentRefunded) * 100) / 100;
 
     if (remainingBalance <= 0) {
-      throw new BadRequestError("This order has already been fully refunded.");
+      throw new BadRequestError(
+        "This order has already been fully refunded.",
+        undefined,
+        ApiPaymentCode.REFUND_ALREADY_PROCESSED
+      );
     }
 
     const refundAmount = amount ? Math.min(amount, remainingBalance) : remainingBalance;
@@ -564,26 +608,34 @@ export class PaymentService {
 
     const order = await Order.findOne(orderQuery);
     if (!order) {
-      throw new NotFoundError("Order not found with specified identifier.");
+      throw new NotFoundError(
+        "Order not found with specified identifier.",
+        undefined,
+        ApiOrderCode.ORDER_NOT_FOUND
+      );
     }
 
     if (!isAdmin) {
       if (order.userId) {
         if (!userId || order.userId.toString() !== userId) {
-          throw new NotFoundError("Order not found.");
+          throw new NotFoundError("Order not found.", undefined, ApiOrderCode.ORDER_NOT_FOUND);
         }
       } else if (order.guestId) {
         if (!guestId || order.guestId !== guestId) {
-          throw new NotFoundError("Order not found.");
+          throw new NotFoundError("Order not found.", undefined, ApiOrderCode.ORDER_NOT_FOUND);
         }
       } else {
-        throw new NotFoundError("Order not found.");
+        throw new NotFoundError("Order not found.", undefined, ApiOrderCode.ORDER_NOT_FOUND);
       }
     }
 
     const payment = await Payment.findOne({ orderId: order._id }).sort({ createdAt: -1 });
     if (!payment) {
-      throw new NotFoundError("No payment record found for this order.");
+      throw new NotFoundError(
+        "No payment record found for this order.",
+        undefined,
+        ApiPaymentCode.PAYMENT_NOT_FOUND
+      );
     }
 
     return {

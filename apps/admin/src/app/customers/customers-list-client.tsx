@@ -60,7 +60,7 @@ import {
   ShieldCheck,
   ShoppingBag,
 } from "lucide-react";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 import { adminCustomersApi } from "@/lib/api/admin-customers-api";
 import { adminCustomerKeys } from "@/lib/api/query-keys";
 import { CustomerDto } from "@veyora/types";
@@ -124,13 +124,10 @@ export function CustomersListClient() {
       });
 
       queryClient.invalidateQueries({ queryKey: adminCustomerKeys.all });
-      toast.success(`Patron account ${updated.isActive ? "activated" : "suspended"}`, {
-        description: `Status for ${updated.fullName} was updated.`,
-      });
+      notifyApiSuccess(updated);
       setStatusDialogOpen(false);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to update status";
-      toast.error("Status update error", { description: msg });
+      notifyApiError(err);
     } finally {
       setActionLoading(false);
     }
@@ -153,13 +150,10 @@ export function CustomersListClient() {
       });
 
       queryClient.invalidateQueries({ queryKey: adminCustomerKeys.all });
-      toast.success("Dossier Updated", {
-        description: `Internal notes for ${updated.fullName} have been saved.`,
-      });
+      notifyApiSuccess(updated);
       setNotesDialogOpen(false);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to update notes";
-      toast.error("Note save error", { description: msg });
+      notifyApiError(err);
     } finally {
       setActionLoading(false);
     }

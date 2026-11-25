@@ -108,8 +108,8 @@ describe("Task 22 — Web Storefront Verification & Hardening", () => {
 
       client.setRefreshTokenHandler(refreshHandler);
 
-      const mockFetch = vi.fn().mockImplementation(async (url: string, opts: any) => {
-        const headers = opts.headers as Headers;
+      const mockFetch = vi.fn().mockImplementation(async (url: string, opts: RequestInit = {}) => {
+        const headers = new Headers(opts.headers);
         const auth = headers.get("Authorization");
 
         if (auth !== "Bearer new-refreshed-token-456") {

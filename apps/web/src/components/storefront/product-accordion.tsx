@@ -50,47 +50,30 @@ export function ProductAccordion({ attributes = [], sku, className }: ProductAcc
               </span>
             </div>
           ))}
-          <div className="flex justify-between py-1.5 text-muted-foreground">
-            <span>Quality Certification</span>
-            <span className="text-foreground font-medium">
-              100% Handloom &amp; Certified Pure Silks
-            </span>
-          </div>
         </div>
       ),
     },
     {
       id: "shipping",
-      title: "Express Delivery & Complimentary Size Exchanges",
+      title: "Delivery & Size Information",
       icon: Truck,
       content: (
         <div className="space-y-3 pt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-          <p>• Orders placed before 3:00 PM ship same-day in protective garment covers.</p>
-          <p>• Worldwide express delivery via tracked, insured courier partners.</p>
-          <p>• Complimentary doorstep size exchange within 15 days of receiving your order.</p>
-          <p>• Real-time SMS and email tracking milestone updates provided upon dispatch.</p>
+          <p>• Available shipping methods and delivery estimates are shown at checkout.</p>
+          <p>• Tracking details are available through your order or the public tracking page.</p>
+          <p>• Review the shipping and exchange terms shown during checkout before ordering.</p>
         </div>
       ),
     },
     {
       id: "care",
-      title: "Artisan Heritage & Care Instructions",
+      title: "Care Instructions",
       icon: ShieldCheck,
       content: (
         <div className="space-y-3 pt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-          <p>
-            • Handcrafted by regional master artisans using heritage Indian hand-block printing,
-            Bandhani tie-dye, and traditional zari brocade techniques.
-          </p>
-          <p>
-            • For pure silks, Chanderi, and embroidered garments: professional dry clean only to
-            maintain fabric lustre.
-          </p>
-          <p>
-            • For pure organic mulmul cotton: gentle cold hand wash separately with mild detergent;
-            dry in shade.
-          </p>
-          <p>• Iron on low heat or use a vertical garment steamer.</p>
+          <p>• Follow the care label and product-specific material guidance for this garment.</p>
+          <p>• Delicate fabrics, embroidery, and zari may require professional dry cleaning.</p>
+          <p>• Air-dry in shade and avoid direct heat unless the care label permits it.</p>
         </div>
       ),
     },

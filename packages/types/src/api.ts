@@ -1,36 +1,106 @@
 import { AppEnvironment } from "./common";
 
 /**
- * Standard API Response structures for Veyora services
+ * Standard pagination metadata envelope for collection queries
  */
+export interface ApiPaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
 
-export interface ApiResponseSuccess<T> {
+/**
+ * Standard API metadata envelope for diagnostics, tracing, and pagination
+ */
+export interface ApiMeta {
+  requestId?: string;
+  timestamp?: string;
+  pagination?: ApiPaginationMeta;
+  [key: string]: unknown;
+}
+
+/**
+ * Canonical success response contract across Veyora monorepo.
+ * All successful Express controller mutations and queries adhere to this envelope.
+ */
+export interface ApiSuccessResponse<T = unknown> {
+  success: true;
+  code: string;
+  message: string;
+  data: T;
+  meta?: ApiMeta;
+}
+
+/**
+ * Field-level validation and domain error representation
+ */
+export interface ApiErrorDetail {
+  field?: string;
+  code?: string;
+  message: string;
+}
+
+/**
+ * Canonical error response contract across Veyora monorepo.
+ * All error responses from Express error handlers and middleware adhere to this envelope.
+ */
+export interface ApiErrorResponse {
+  success: false;
+  code: string;
+  message: string;
+  details?: ApiErrorDetail[];
+  meta?: ApiMeta;
+}
+
+/**
+ * Shared paginated collection response envelope
+ */
+export interface ApiPaginatedResponse<T = unknown> extends ApiSuccessResponse<T[]> {
+  meta: ApiMeta & {
+    pagination: ApiPaginationMeta;
+  };
+}
+
+/**
+ * Legacy API Success Response interface retained for backwards compatibility
+ * during phased migration.
+ */
+export interface ApiResponseSuccess<T = unknown> {
   success: true;
   data: T;
   meta?: Record<string, unknown>;
-  timestamp: string;
-}
-
-export interface ApiErrorDetail {
-  field?: string;
-  message: string;
+  timestamp?: string;
+  message?: string;
   code?: string;
 }
 
+/**
+ * Legacy API Error Response interface retained for backwards compatibility
+ * during phased migration.
+ */
 export interface ApiResponseError {
   success: false;
   message?: string;
   code?: string;
-  error: {
+  error?: {
     code: string;
     message: string;
     details?: ApiErrorDetail[];
   };
   errors?: Record<string, string[]>;
-  timestamp: string;
+  details?: ApiErrorDetail[];
+  timestamp?: string;
+  meta?: ApiMeta;
 }
 
-export type ApiResponse<T> = ApiResponseSuccess<T> | ApiResponseError;
+/**
+ * Universal API response union covering both canonical contracts and legacy responses.
+ */
+export type ApiResponse<T = unknown> =
+  ApiSuccessResponse<T> | ApiErrorResponse | ApiResponseSuccess<T> | ApiResponseError;
 
 /**
  * Standard Next.js Server Action Result shape across Web and Admin

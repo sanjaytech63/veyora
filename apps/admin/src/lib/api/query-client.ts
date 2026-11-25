@@ -1,8 +1,17 @@
-import { QueryClient } from "@tanstack/react-query";
+import { MutationCache, QueryClient } from "@tanstack/react-query";
 import { ApiClientError } from "./api-client";
+import { notifyApiError } from "@/lib/notifications";
 
 export function createQueryClient(): QueryClient {
   return new QueryClient({
+    mutationCache: new MutationCache({
+      onError: (error, _variables, _onMutateResult, mutation) => {
+        const meta = mutation.options.meta as { notifyError?: boolean } | undefined;
+        if (meta?.notifyError === true) {
+          notifyApiError(error);
+        }
+      },
+    }),
     defaultOptions: {
       queries: {
         staleTime: 1000 * 60 * 5, // 5 minutes default

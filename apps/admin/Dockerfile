@@ -21,6 +21,7 @@ COPY packages/ ./packages/
 COPY apps/admin/ ./apps/admin/
 
 # Install dependencies deterministically
+RUN npm install --global npm@11.21.0
 RUN npm ci
 
 # Build shared packages and compile Next.js application
@@ -57,4 +58,4 @@ EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3001 || exit 1
 
-CMD ["npm", "run", "start", "--workspace=@veyora/admin"]
+CMD ["node", "node_modules/next/dist/bin/next", "start", "-p", "3001"]

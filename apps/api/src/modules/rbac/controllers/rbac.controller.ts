@@ -4,6 +4,8 @@ import { roleService } from "../services/role.service";
 import { staffService } from "../services/staff.service";
 import { auditLogService } from "../services/audit-log.service";
 import { PERMISSION_DEFINITIONS } from "../permission-registry";
+import { ApiRbacCode } from "@veyora/types";
+import { sendSuccess } from "../../../utils/response";
 
 export class RbacController {
   /**
@@ -11,10 +13,11 @@ export class RbacController {
    */
   public async getPermissions(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiRbacCode.RBAC_PERMISSIONS_FETCHED,
+        message: "Permission definitions retrieved successfully.",
         data: PERMISSION_DEFINITIONS,
-        message: "Permission definitions retrieved successfully",
       });
     } catch (error) {
       next(error);
@@ -27,8 +30,10 @@ export class RbacController {
   public async listRoles(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const data = await roleService.listRoles();
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiRbacCode.RBAC_ROLES_FETCHED,
+        message: "Administrative roles retrieved successfully.",
         data,
       });
     } catch (error) {
@@ -42,8 +47,10 @@ export class RbacController {
   public async getRoleById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const data = await roleService.getRoleById(req.params.id as string);
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiRbacCode.RBAC_ROLE_FETCHED,
+        message: "Role details retrieved successfully.",
         data,
       });
     } catch (error) {
@@ -62,10 +69,11 @@ export class RbacController {
         role: req.user!.role,
       };
       const data = await roleService.createRole(actor, req.body);
-      res.status(201).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 201,
+        code: ApiRbacCode.RBAC_ROLE_CREATED,
+        message: "Role created successfully.",
         data,
-        message: "Role created successfully",
       });
     } catch (error) {
       next(error);
@@ -83,10 +91,11 @@ export class RbacController {
         role: req.user!.role,
       };
       const data = await roleService.updateRole(actor, req.params.id as string, req.body);
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiRbacCode.RBAC_ROLE_UPDATED,
+        message: "Role updated successfully.",
         data,
-        message: "Role updated successfully",
       });
     } catch (error) {
       next(error);
@@ -104,10 +113,11 @@ export class RbacController {
         role: req.user!.role,
       };
       const result = await roleService.deleteRole(actor, req.params.id as string);
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiRbacCode.RBAC_ROLE_DELETED,
+        message: result.message || "Role deleted successfully.",
         data: result,
-        message: result.message,
       });
     } catch (error) {
       next(error);
@@ -120,9 +130,21 @@ export class RbacController {
   public async listStaff(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const data = await staffService.listStaff(req.query as any);
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiRbacCode.RBAC_STAFF_FETCHED,
+        message: "Staff directory retrieved successfully.",
         data,
+        meta: {
+          pagination: {
+            page: data.page,
+            limit: data.limit,
+            total: data.total,
+            totalPages: data.totalPages,
+            hasNextPage: data.page < data.totalPages,
+            hasPrevPage: data.page > 1,
+          },
+        },
       });
     } catch (error) {
       next(error);
@@ -135,8 +157,10 @@ export class RbacController {
   public async getStaffById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const data = await staffService.getStaffById(req.params.id as string);
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiRbacCode.RBAC_STAFF_MEMBER_FETCHED,
+        message: "Staff member details retrieved successfully.",
         data,
       });
     } catch (error) {
@@ -155,10 +179,11 @@ export class RbacController {
         role: req.user!.role,
       };
       const data = await staffService.createStaff(actor, req.body);
-      res.status(201).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 201,
+        code: ApiRbacCode.RBAC_STAFF_CREATED,
+        message: "Staff member enrolled successfully.",
         data,
-        message: "Staff member enrolled successfully",
       });
     } catch (error) {
       next(error);
@@ -176,10 +201,11 @@ export class RbacController {
         role: req.user!.role,
       };
       const data = await staffService.updateStaff(actor, req.params.id as string, req.body);
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiRbacCode.RBAC_STAFF_UPDATED,
+        message: "Staff member updated successfully.",
         data,
-        message: "Staff member updated successfully",
       });
     } catch (error) {
       next(error);
@@ -203,10 +229,11 @@ export class RbacController {
         Boolean(isActive),
         statusReason
       );
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiRbacCode.RBAC_STAFF_STATUS_UPDATED,
+        message: "Staff member status updated successfully.",
         data,
-        message: "Staff member status updated successfully",
       });
     } catch (error) {
       next(error);
@@ -224,10 +251,11 @@ export class RbacController {
         role: req.user!.role,
       };
       const result = await staffService.deleteStaff(actor, req.params.id as string);
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiRbacCode.RBAC_STAFF_DELETED,
+        message: result.message || "Staff member deleted successfully.",
         data: result,
-        message: result.message,
       });
     } catch (error) {
       next(error);
@@ -240,9 +268,21 @@ export class RbacController {
   public async listAuditLogs(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const data = await auditLogService.queryLogs(req.query as any);
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiRbacCode.RBAC_AUDIT_LOGS_FETCHED,
+        message: "Audit logs retrieved successfully.",
         data,
+        meta: {
+          pagination: {
+            page: data.page,
+            limit: data.limit,
+            total: data.total,
+            totalPages: data.totalPages,
+            hasNextPage: data.page < data.totalPages,
+            hasPrevPage: data.page > 1,
+          },
+        },
       });
     } catch (error) {
       next(error);

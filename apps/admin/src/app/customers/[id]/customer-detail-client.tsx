@@ -44,7 +44,7 @@ import {
   ChevronRight,
   ExternalLink,
 } from "lucide-react";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 import { useQueryClient } from "@tanstack/react-query";
 import { adminCustomerKeys } from "@/lib/api/query-keys";
 import { adminCustomersApi } from "@/lib/api/admin-customers-api";
@@ -88,7 +88,7 @@ export function CustomerDetailClient({ customerId }: CustomerDetailClientProps) 
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to load customer profile";
       setFetchError(msg);
-      toast.error("Error loading patron dossier", { description: msg });
+      notifyApiError(err);
     } finally {
       setLoading(false);
     }
@@ -120,13 +120,10 @@ export function CustomerDetailClient({ customerId }: CustomerDetailClientProps) 
       setActivities(refreshedActivities);
       queryClient.invalidateQueries({ queryKey: adminCustomerKeys.all });
 
-      toast.success(`Patron account ${updated.isActive ? "re-activated" : "suspended"}`, {
-        description: `Updated standing for ${updated.fullName}`,
-      });
+      notifyApiSuccess(updated);
       setStatusDialogOpen(false);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to update standing";
-      toast.error("Status update error", { description: msg });
+      notifyApiError(err);
     } finally {
       setActionLoading(false);
     }
@@ -146,11 +143,10 @@ export function CustomerDetailClient({ customerId }: CustomerDetailClientProps) 
       setActivities(refreshedActivities);
       queryClient.invalidateQueries({ queryKey: adminCustomerKeys.all });
 
-      toast.success("Dossier Saved", { description: "Internal patron notes updated." });
+      notifyApiSuccess(updated);
       setNotesDialogOpen(false);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to update notes";
-      toast.error("Note save error", { description: msg });
+      notifyApiError(err);
     } finally {
       setActionLoading(false);
     }

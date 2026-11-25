@@ -14,26 +14,9 @@ interface NavbarDesktopProps {
 }
 
 export function NavbarDesktop({ onOpenSearch, className }: NavbarDesktopProps) {
-  const [scrolled, setScrolled] = React.useState(false);
-
-  React.useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 15);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
-    <div
-      className={cn(
-        "hidden md:block w-full transition-all duration-200",
-        scrolled && "shadow-xs bg-background/95 backdrop-blur-md",
-        className
-      )}
-    >
-      <Container size="xl" className="flex h-16 items-center justify-between gap-2 sm:gap-4">
+    <div className={cn("hidden md:block w-full", className)}>
+      <Container size="xl" className="flex h-[72px] items-center justify-between gap-3 lg:gap-5">
         {/* Brand Logo */}
         <div className="shrink-0">
           <NavbarLogo />

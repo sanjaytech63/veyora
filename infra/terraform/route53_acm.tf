@@ -15,7 +15,7 @@ resource "aws_route53_zone" "main" {
 # ACM TLS/SSL Certificate with DNS Validation
 # ------------------------------------------------------------------------------
 resource "aws_acm_certificate" "main" {
-  domain_name               = var.domain_name
+  domain_name = var.domain_name
   subject_alternative_names = [
     "*.${var.domain_name}",
     "api.${var.domain_name}",

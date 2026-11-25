@@ -3,6 +3,7 @@ import { CloudinarySignedUploadParams, CloudinaryAssetMetadata } from "./cloudin
 import { env } from "../../config/env";
 import { logger } from "../../config/logger";
 import { BadRequestError } from "@veyora/utils";
+import { ApiProfileCode, ApiCoreCode } from "@veyora/types";
 
 const ALLOWED_IMAGE_FORMATS = ["jpg", "jpeg", "png", "webp"];
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -61,7 +62,11 @@ export class CloudinaryService {
         { userId, publicId: metadata.publicId, expectedPrefix },
         "Security Alert: Attempted to bind an avatar outside authorized user folder boundary."
       );
-      throw new BadRequestError("Invalid asset ownership or untrusted public ID.");
+      throw new BadRequestError(
+        "Invalid asset ownership or untrusted public ID.",
+        undefined,
+        ApiProfileCode.AVATAR_INVALID_OWNERSHIP
+      );
     }
 
     if (!metadata.secureUrl || !metadata.secureUrl.startsWith("https://res.cloudinary.com/")) {
@@ -69,17 +74,27 @@ export class CloudinaryService {
         { userId, secureUrl: metadata.secureUrl },
         "Security Alert: Untrusted asset origin URL rejected."
       );
-      throw new BadRequestError("Asset URL must originate from secure Cloudinary CDN.");
+      throw new BadRequestError(
+        "Asset URL must originate from secure Cloudinary CDN.",
+        undefined,
+        ApiProfileCode.AVATAR_INVALID_OWNERSHIP
+      );
     }
 
     if (metadata.format && !ALLOWED_IMAGE_FORMATS.includes(metadata.format.toLowerCase())) {
       throw new BadRequestError(
-        `Unsupported image format. Allowed formats: ${ALLOWED_IMAGE_FORMATS.join(", ")}`
+        `Unsupported image format. Allowed formats: ${ALLOWED_IMAGE_FORMATS.join(", ")}`,
+        undefined,
+        ApiCoreCode.VALIDATION_ERROR
       );
     }
 
     if (metadata.bytes && metadata.bytes > MAX_FILE_SIZE_BYTES) {
-      throw new BadRequestError("Image file size exceeds maximum limit of 5MB.");
+      throw new BadRequestError(
+        "Image file size exceeds maximum limit of 5MB.",
+        undefined,
+        ApiCoreCode.VALIDATION_ERROR
+      );
     }
 
     return true;

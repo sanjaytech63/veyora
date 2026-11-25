@@ -109,7 +109,7 @@ export function ProductCard({
   return (
     <article
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-[24px] border border-border/60 bg-card/80 backdrop-blur-sm transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-foreground/20 hover:shadow-[0_24px_48px_-16px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_24px_48px_-16px_rgba(0,0,0,0.5)]",
+        "group relative flex flex-col overflow-hidden rounded-lg border border-border/70 bg-card transition-[border-color,box-shadow,transform] duration-300 ease-out hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-[0_16px_32px_-16px_hsl(var(--foreground)/0.16)]",
         className
       )}
     >
@@ -117,7 +117,7 @@ export function ProductCard({
       <div className="relative p-2 pb-0">
         <Link
           href={`/products/${product.slug}`}
-          className="relative block aspect-[4/5.2] w-full overflow-hidden rounded-[18px] bg-muted/50 ring-1 ring-inset ring-black/[0.04] dark:ring-white/[0.06]"
+          className="relative block aspect-[4/5.2] w-full overflow-hidden rounded-md bg-muted/50 ring-1 ring-inset ring-black/[0.04] dark:ring-white/[0.06]"
         >
           {activeImage ? (
             <OptimizedImage

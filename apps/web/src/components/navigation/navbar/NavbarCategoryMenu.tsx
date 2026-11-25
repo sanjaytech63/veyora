@@ -22,13 +22,18 @@ interface NavbarCategoryMenuProps {
 
 export function NavbarCategoryMenu({ className, onNavigate }: NavbarCategoryMenuProps) {
   const pathname = usePathname();
+  const [isHydrated, setIsHydrated] = React.useState(false);
   const { data: categories = [], isLoading } = useCategories();
+
+  React.useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const activeCategories = React.useMemo(() => {
     return categories.filter((c) => c.status === "active");
   }, [categories]);
 
-  if (isLoading) {
+  if (!isHydrated || isLoading) {
     return (
       <div className={cn("flex items-center gap-2", className)}>
         <Skeleton className="h-8 w-20 rounded-md" />
@@ -50,14 +55,16 @@ export function NavbarCategoryMenu({ className, onNavigate }: NavbarCategoryMenu
             asChild
             variant="ghost"
             size="sm"
-            className="h-9 px-3.5 font-semibold text-xs tracking-wider uppercase"
+            className="relative h-10 rounded-md px-3 font-semibold text-[11px] tracking-[0.12em] uppercase transition-colors duration-200 hover:bg-accent/70 hover:text-foreground"
           >
             <Link
               href={`/category/${cat.slug}`}
               onClick={onNavigate}
               className={cn(
-                "transition-colors hover:text-primary",
-                pathname.includes(cat.slug) ? "text-primary font-bold" : "text-muted-foreground"
+                "relative transition-colors after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:bg-primary after:transition-transform after:duration-250",
+                pathname.includes(cat.slug)
+                  ? "text-primary font-bold after:scale-x-100"
+                  : "text-muted-foreground after:scale-x-0 hover:after:scale-x-100"
               )}
             >
               {cat.name}
@@ -77,8 +84,12 @@ export function NavbarCategoryMenu({ className, onNavigate }: NavbarCategoryMenu
             variant="ghost"
             size="sm"
             className={cn(
-              "h-9 px-3.5 font-semibold text-xs tracking-wider uppercase gap-1",
-              pathname.startsWith("/category") ? "text-primary font-bold" : "text-muted-foreground"
+              "relative h-10 rounded-md px-3 font-semibold text-[11px] tracking-[0.12em] uppercase gap-1 outline-none transition-colors duration-200",
+              "after:absolute after:inset-x-3 after:-bottom-0.5 after:h-px after:origin-left after:bg-primary after:transition-transform after:duration-250",
+              "hover:bg-accent/70 hover:text-foreground",
+              pathname.startsWith("/category")
+                ? "text-foreground after:scale-x-100"
+                : "text-muted-foreground after:scale-x-0 hover:after:scale-x-100"
             )}
           >
             <span>Categories</span>
@@ -87,7 +98,7 @@ export function NavbarCategoryMenu({ className, onNavigate }: NavbarCategoryMenu
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="start"
-          className="w-72 p-2.5 rounded-2xl border border-border/80 bg-card shadow-xl space-y-1"
+          className="w-[22rem] p-3 rounded-lg border border-border/80 bg-popover shadow-lg space-y-1"
         >
           <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-primary flex items-center justify-between">
             <span>Curated Departments</span>

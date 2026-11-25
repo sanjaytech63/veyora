@@ -60,7 +60,7 @@ export class BrandService {
   async updateBrand(id: string, input: UpdateBrandInput): Promise<BrandType> {
     const brand = await Brand.findById(id);
     if (!brand) {
-      throw new NotFoundError("Brand not found.");
+      throw new NotFoundError("Brand not found.", undefined, "BRAND_NOT_FOUND");
     }
 
     if (input.slug && input.slug !== brand.slug) {
@@ -82,13 +82,15 @@ export class BrandService {
   async deleteBrand(id: string): Promise<void> {
     const brand = await Brand.findById(id);
     if (!brand) {
-      throw new NotFoundError("Brand not found.");
+      throw new NotFoundError("Brand not found.", undefined, "BRAND_NOT_FOUND");
     }
 
     const hasProducts = await Product.exists({ brandId: id });
     if (hasProducts) {
       throw new ConflictError(
-        "Cannot delete brand with associated products. Reassign products first."
+        "Cannot delete brand with associated products. Reassign products first.",
+        undefined,
+        "BRAND_CONFLICT"
       );
     }
 
@@ -102,7 +104,7 @@ export class BrandService {
     );
 
     if (!brand) {
-      throw new NotFoundError("Brand not found.");
+      throw new NotFoundError("Brand not found.", undefined, "BRAND_NOT_FOUND");
     }
 
     return this.toBrandDto(brand);

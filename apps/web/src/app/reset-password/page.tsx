@@ -25,7 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 import { ApiClientError } from "@/lib/api/api-client";
 import { ShieldCheck, LoaderCircle, ArrowLeft, Eye, EyeOff } from "lucide-react";
 
@@ -54,18 +54,14 @@ function ResetPasswordForm() {
   async function onSubmit(values: ResetPasswordInput) {
     setIsSubmitting(true);
     try {
-      await authApi.resetPassword(values);
-      toast.success("Password Reset Successful", {
-        description: "You can now log in with your new password.",
-      });
+      const response = await authApi.resetPassword(values);
+      notifyApiSuccess(response);
       router.push("/login");
     } catch (err) {
       if (err instanceof ApiClientError) {
-        toast.error("Password Reset Failed", {
-          description: err.message,
-        });
+        notifyApiError(err);
       } else {
-        toast.error("An unexpected error occurred. Please try again.");
+        notifyApiError(err);
       }
     } finally {
       setIsSubmitting(false);

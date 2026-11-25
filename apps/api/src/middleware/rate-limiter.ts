@@ -1,21 +1,37 @@
 import rateLimit from "express-rate-limit";
 import { env } from "../config/env";
-import { ApiResponseError } from "@veyora/types";
+import { ApiErrorResponse } from "@veyora/types";
 import { Request, Response } from "express";
 
+/**
+ * Global rate limiter for general API routes.
+ * Emits canonical ApiErrorResponse on throttle with correlation ID and Retry-After header.
+ */
 export const apiRateLimiter = rateLimit({
   windowMs: env.RATE_LIMIT_WINDOW_MS,
   max: env.RATE_LIMIT_MAX,
   standardHeaders: true,
   legacyHeaders: false,
-  handler: (_req: Request, res: Response) => {
-    const errorResponse: ApiResponseError = {
+  handler: (req: Request, res: Response) => {
+    const rawReqId =
+      req.id || req.requestId || res.getHeader("X-Request-Id") || res.getHeader("x-request-id");
+    const reqId: string = rawReqId ? String(rawReqId) : "unknown";
+
+    const errorResponse: ApiErrorResponse & {
+      error?: { code: string; message: string };
+    } = {
       success: false,
+      code: "RATE_LIMIT_EXCEEDED",
+      message: "Too many requests. Please try again shortly.",
+      meta: {
+        requestId: reqId,
+        timestamp: new Date().toISOString(),
+      },
+      // Backward compatibility for legacy clients
       error: {
         code: "RATE_LIMIT_EXCEEDED",
-        message: "Too many requests. Please try again later.",
+        message: "Too many requests. Please try again shortly.",
       },
-      timestamp: new Date().toISOString(),
     };
 
     res.status(429).json(errorResponse);
@@ -29,14 +45,26 @@ function createLimiter(windowMs: number, max: number, code: string, message: str
     standardHeaders: true,
     legacyHeaders: false,
     skip: () => env.NODE_ENV === "test",
-    handler: (_req: Request, res: Response) => {
-      const errorResponse: ApiResponseError = {
+    handler: (req: Request, res: Response) => {
+      const rawReqId =
+        req.id || req.requestId || res.getHeader("X-Request-Id") || res.getHeader("x-request-id");
+      const reqId: string = rawReqId ? String(rawReqId) : "unknown";
+
+      const errorResponse: ApiErrorResponse & {
+        error?: { code: string; message: string };
+      } = {
         success: false,
+        code,
+        message,
+        meta: {
+          requestId: reqId,
+          timestamp: new Date().toISOString(),
+        },
+        // Backward compatibility for legacy clients
         error: {
           code,
           message,
         },
-        timestamp: new Date().toISOString(),
       };
       res.status(429).json(errorResponse);
     },
@@ -91,4 +119,11 @@ export const couponRateLimiter = createLimiter(
   15,
   "COUPON_RATE_LIMIT_EXCEEDED",
   "Too many coupon validation attempts. Please try again later."
+);
+
+export const newsletterRateLimiter = createLimiter(
+  15 * 60 * 1000,
+  20,
+  "RATE_LIMIT_EXCEEDED",
+  "Too many newsletter requests. Please try again shortly."
 );

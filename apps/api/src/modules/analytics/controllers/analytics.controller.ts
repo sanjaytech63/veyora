@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { analyticsService } from "../services/analytics.service";
-import { AnalyticsDateRangeFilter } from "@veyora/types";
+import { AnalyticsDateRangeFilter, ApiAnalyticsCode } from "@veyora/types";
+import { sendSuccess } from "../../../utils/response";
 
 export class AnalyticsController {
   /**
@@ -11,8 +12,10 @@ export class AnalyticsController {
       const query = req.query as unknown as AnalyticsDateRangeFilter;
       const data = await analyticsService.getComprehensiveDashboard(query);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiAnalyticsCode.ADMIN_ANALYTICS_DASHBOARD_FETCHED,
+        message: "Comprehensive dashboard metrics retrieved successfully.",
         data,
       });
     } catch (error) {
@@ -28,8 +31,10 @@ export class AnalyticsController {
       const query = req.query as unknown as AnalyticsDateRangeFilter;
       const data = await analyticsService.getRevenueOverview(query);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiAnalyticsCode.ADMIN_ANALYTICS_REVENUE_FETCHED,
+        message: "Revenue analytics retrieved successfully.",
         data,
       });
     } catch (error) {
@@ -45,8 +50,10 @@ export class AnalyticsController {
       const query = req.query as unknown as AnalyticsDateRangeFilter;
       const data = await analyticsService.getOrdersOverview(query);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiAnalyticsCode.ADMIN_ANALYTICS_ORDERS_FETCHED,
+        message: "Order analytics retrieved successfully.",
         data,
       });
     } catch (error) {
@@ -66,8 +73,10 @@ export class AnalyticsController {
       const query = req.query as unknown as AnalyticsDateRangeFilter;
       const data = await analyticsService.getCustomersOverview(query);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiAnalyticsCode.ADMIN_ANALYTICS_CUSTOMERS_FETCHED,
+        message: "Customer analytics retrieved successfully.",
         data,
       });
     } catch (error) {
@@ -87,8 +96,10 @@ export class AnalyticsController {
       const query = req.query as unknown as AnalyticsDateRangeFilter;
       const data = await analyticsService.getProductsOverview(query);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiAnalyticsCode.ADMIN_ANALYTICS_PRODUCTS_FETCHED,
+        message: "Product performance analytics retrieved successfully.",
         data,
       });
     } catch (error) {
@@ -107,8 +118,10 @@ export class AnalyticsController {
     try {
       const data = await analyticsService.getInventoryOverview();
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiAnalyticsCode.ADMIN_ANALYTICS_INVENTORY_FETCHED,
+        message: "Inventory health analytics retrieved successfully.",
         data,
       });
     } catch (error) {

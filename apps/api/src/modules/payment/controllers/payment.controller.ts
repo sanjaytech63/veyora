@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response, NextFunction } from "express";
 import { paymentService } from "../services/payment.service";
+import { ApiPaymentCode } from "@veyora/types";
+import { sendSuccess } from "../../../utils/response";
 
 export class PaymentController {
   public async initiatePayment(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -14,10 +16,11 @@ export class PaymentController {
         currency
       );
 
-      res.status(200).json({
-        success: true,
-        data: initDto,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiPaymentCode.PAYMENT_ORDER_CREATED,
         message: "Payment order initiated successfully.",
+        data: initDto,
       });
     } catch (error) {
       next(error);
@@ -28,10 +31,11 @@ export class PaymentController {
     try {
       const result = await paymentService.verifyPayment(req.user?.id, req.guestId, req.body);
 
-      res.status(200).json({
-        success: true,
-        data: result,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiPaymentCode.PAYMENT_VERIFIED,
         message: "Payment verified successfully.",
+        data: result,
       });
     } catch (error) {
       next(error);
@@ -43,10 +47,11 @@ export class PaymentController {
       const { orderId } = req.body;
       const initDto = await paymentService.retryPayment(orderId, req.user?.id, req.guestId);
 
-      res.status(200).json({
-        success: true,
-        data: initDto,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiPaymentCode.PAYMENT_RETRY_INITIATED,
         message: "Payment retry initiated successfully.",
+        data: initDto,
       });
     } catch (error) {
       next(error);
@@ -63,10 +68,11 @@ export class PaymentController {
         req.user?.role === "admin" || req.user?.role === "superadmin"
       );
 
-      res.status(200).json({
-        success: true,
-        data: details,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiPaymentCode.PAYMENT_DETAILS_FETCHED,
         message: "Payment details retrieved successfully.",
+        data: details,
       });
     } catch (error) {
       next(error);
@@ -84,7 +90,16 @@ export class PaymentController {
 
       const result = await paymentService.handleWebhook("razorpay", rawBody, signature, req.body);
 
-      res.status(200).json(result);
+      // Provider-protocol compliant acknowledgement adhering to Razorpay webhook semantics
+      res.status(200).json({
+        status: "ok",
+        success: true,
+        code: result.duplicate
+          ? ApiPaymentCode.PAYMENT_WEBHOOK_IGNORED
+          : ApiPaymentCode.PAYMENT_WEBHOOK_PROCESSED,
+        message: result.message,
+        ...(result.duplicate ? { duplicate: true } : {}),
+      });
     } catch (error) {
       next(error);
     }
@@ -101,10 +116,11 @@ export class PaymentController {
 
       const refundDto = await paymentService.initiateRefund(orderId, amount, reason, adminUser);
 
-      res.status(200).json({
-        success: true,
-        data: refundDto,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiPaymentCode.REFUND_PROCESSED,
         message: "Refund processed successfully.",
+        data: refundDto,
       });
     } catch (error) {
       next(error);

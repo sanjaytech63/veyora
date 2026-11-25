@@ -19,7 +19,7 @@ import {
   AlertCircle,
   Copy,
 } from "lucide-react";
-import { toast } from "sonner";
+import { notifyInfo, notifyWarning } from "@/lib/notifications";
 
 const STATUS_MAP: Record<
   ShipmentStatus,
@@ -90,7 +90,7 @@ export default function TrackingPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!queryInput.trim()) {
-      toast.error("Please enter a tracking number or shipment ID");
+      notifyWarning("Please enter a tracking number or shipment ID");
       return;
     }
     setActiveTrackingNumber(queryInput.trim());
@@ -98,7 +98,7 @@ export default function TrackingPage() {
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success("AWB copied to clipboard");
+    notifyInfo("AWB copied to clipboard");
   };
 
   const statusMeta = shipment

@@ -113,10 +113,12 @@ export function CustomerOrderDetailClient({ orderId }: { orderId: string }) {
     const errorStatus =
       (error as { statusCode?: number })?.statusCode ||
       (error as { response?: { status?: number } })?.response?.status;
-    const errorMsg = error instanceof Error ? error.message.toLowerCase() : "";
-    const isNotFound = errorStatus === 404 || errorMsg.includes("not found");
+    const errorCode =
+      (error as { code?: string })?.code ||
+      (error as { response?: { data?: { code?: string } } })?.response?.data?.code;
+    const isNotFound = errorStatus === 404 || errorCode === "RESOURCE_NOT_FOUND";
     const isForbidden =
-      errorStatus === 403 || errorMsg.includes("forbidden") || errorMsg.includes("access");
+      errorStatus === 403 || errorCode === "FORBIDDEN" || errorCode === "UNAUTHORIZED";
 
     if (isForbidden) {
       return (

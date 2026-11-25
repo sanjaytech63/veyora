@@ -35,7 +35,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess, notifyWarning } from "@/lib/notifications";
 import {
   UserCheck,
   UserPlus,
@@ -91,8 +91,8 @@ export default function StaffManagementPage() {
       setStaffList(staffRes.staff);
       setRoles(rolesData);
       setPermissions(permsData);
-    } catch {
-      toast.error("Failed to load staff roster and roles");
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }
@@ -157,14 +157,14 @@ export default function StaffManagementPage() {
   const handleSubmitStaff = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firstName.trim() || !lastName.trim()) {
-      toast.error("First and last name are required");
+      notifyWarning("First and last name are required");
       return;
     }
 
     try {
       setSubmitting(true);
       if (editingStaff) {
-        await adminRbacApi.updateStaff(editingStaff.id, {
+        const updated = await adminRbacApi.updateStaff(editingStaff.id, {
           firstName,
           lastName,
           phone: phone.trim() || undefined,
@@ -172,13 +172,13 @@ export default function StaffManagementPage() {
           assignedRoleIds: selectedRoleIds,
           customPermissions: selectedCustomPerms,
         });
-        toast.success(`Staff member '${firstName} ${lastName}' updated successfully`);
+        notifyApiSuccess(updated);
       } else {
         if (!email.trim()) {
-          toast.error("Email address is required");
+          notifyWarning("Email address is required");
           return;
         }
-        await adminRbacApi.createStaff({
+        const created = await adminRbacApi.createStaff({
           email,
           password: password.trim() || undefined,
           firstName,
@@ -188,13 +188,12 @@ export default function StaffManagementPage() {
           assignedRoleIds: selectedRoleIds,
           customPermissions: selectedCustomPerms,
         });
-        toast.success(`Staff member '${firstName} ${lastName}' enrolled successfully`);
+        notifyApiSuccess(created);
       }
       setIsModalOpen(false);
       fetchStaffData();
     } catch (error: any) {
-      const msg = error?.response?.data?.message || error?.message || "Failed to save staff member";
-      toast.error(msg);
+      notifyApiError(error);
     } finally {
       setSubmitting(false);
     }
@@ -214,17 +213,12 @@ export default function StaffManagementPage() {
   const executeToggleStatus = async (staff: StaffUserDto, makeActive: boolean, reason?: string) => {
     try {
       setUpdatingStatus(true);
-      await adminRbacApi.updateStaffStatus(staff.id, makeActive, reason);
-      toast.success(
-        `Staff member '${staff.firstName} ${staff.lastName}' ${
-          makeActive ? "activated" : "deactivated"
-        }`
-      );
+      const updated = await adminRbacApi.updateStaffStatus(staff.id, makeActive, reason);
+      notifyApiSuccess(updated);
       setStatusTarget(null);
       fetchStaffData();
     } catch (error: any) {
-      const msg = error?.response?.data?.message || "Failed to update status";
-      toast.error(msg);
+      notifyApiError(error);
     } finally {
       setUpdatingStatus(false);
     }
@@ -240,12 +234,11 @@ export default function StaffManagementPage() {
     }
 
     try {
-      await adminRbacApi.deleteStaff(staff.id);
-      toast.success(`Staff member '${staff.email}' removed`);
+      const deleted = await adminRbacApi.deleteStaff(staff.id);
+      notifyApiSuccess(deleted);
       fetchStaffData();
     } catch (error: any) {
-      const msg = error?.response?.data?.message || "Failed to delete staff member";
-      toast.error(msg);
+      notifyApiError(error);
     }
   };
 

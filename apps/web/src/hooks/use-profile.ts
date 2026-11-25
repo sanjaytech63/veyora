@@ -5,7 +5,7 @@ import { profileApi } from "@/lib/api/profile-api";
 import { profileKeys } from "@/lib/api/query-keys";
 import { UserProfileDto, ProfileCompletionDto, AvatarUploadSignatureResponse } from "@veyora/types";
 import { UpdateProfileInput, UpdateAvatarInput } from "@veyora/validators";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 import { useAuthStore } from "@/stores/auth-store";
 
 export function useProfile() {
@@ -49,14 +49,10 @@ export function useUpdateProfile() {
         });
       }
 
-      toast.success("Profile updated", {
-        description: "Your personal details have been saved successfully.",
-      });
+      notifyApiSuccess(updatedProfile);
     },
     onError: (error: Error) => {
-      toast.error("Update failed", {
-        description: error.message || "Failed to update profile details.",
-      });
+      notifyApiError(error);
     },
   });
 }
@@ -119,14 +115,10 @@ export function useUploadAvatar() {
     onSuccess: (updatedProfile) => {
       queryClient.setQueryData(profileKeys.current(), updatedProfile);
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
-      toast.success("Avatar updated", {
-        description: "Your new profile picture has been uploaded and applied.",
-      });
+      notifyApiSuccess(updatedProfile);
     },
     onError: (error: Error) => {
-      toast.error("Avatar upload failed", {
-        description: error.message || "Failed to upload and apply profile photo.",
-      });
+      notifyApiError(error);
     },
   });
 }
@@ -139,14 +131,10 @@ export function useRemoveAvatar() {
     onSuccess: (updatedProfile) => {
       queryClient.setQueryData(profileKeys.current(), updatedProfile);
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
-      toast.success("Avatar removed", {
-        description: "Your profile picture has been reset to default.",
-      });
+      notifyApiSuccess(updatedProfile);
     },
     onError: (error: Error) => {
-      toast.error("Removal failed", {
-        description: error.message || "Failed to remove profile picture.",
-      });
+      notifyApiError(error);
     },
   });
 }

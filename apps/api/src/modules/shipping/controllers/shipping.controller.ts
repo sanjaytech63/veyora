@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { shippingService } from "../services/shipping.service";
-import { ShipmentListQuery } from "@veyora/types";
+import { ShipmentListQuery, ApiShippingCode } from "@veyora/types";
+import { sendSuccess } from "../../../utils/response";
 
 export class ShippingController {
   /**
@@ -9,8 +10,10 @@ export class ShippingController {
   public async calculateRates(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const result = await shippingService.calculateRates(req.body);
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiShippingCode.SHIPPING_RATES_CALCULATED,
+        message: "Shipping rates calculated successfully.",
         data: result,
       });
     } catch (error) {
@@ -25,8 +28,10 @@ export class ShippingController {
     try {
       const { identifier } = req.params;
       const shipment = await shippingService.getShipment(identifier as string);
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiShippingCode.SHIPMENT_TRACKED,
+        message: "Shipment tracking details retrieved successfully.",
         data: shipment,
       });
     } catch (error) {
@@ -41,8 +46,10 @@ export class ShippingController {
     try {
       const { orderId } = req.params;
       const shipments = await shippingService.getShipmentsByOrderId(orderId as string);
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiShippingCode.ORDER_SHIPMENTS_FETCHED,
+        message: "Order shipments retrieved successfully.",
         data: shipments,
       });
     } catch (error) {
@@ -56,14 +63,28 @@ export class ShippingController {
   public async adminListShipments(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const result = await shippingService.listShipments(req.query as unknown as ShipmentListQuery);
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiShippingCode.SHIPMENTS_FETCHED,
+        message: "Shipments retrieved successfully.",
         data: result.shipments,
-        pagination: {
-          total: result.total,
-          page: result.page,
-          limit: result.limit,
-          pages: result.pages,
+        meta: {
+          pagination: {
+            page: result.page,
+            limit: result.limit,
+            total: result.total,
+            totalPages: result.pages,
+            hasNextPage: result.page < result.pages,
+            hasPrevPage: result.page > 1,
+          },
+        },
+        extra: {
+          pagination: {
+            total: result.total,
+            page: result.page,
+            limit: result.limit,
+            pages: result.pages,
+          },
         },
       });
     } catch (error) {
@@ -78,8 +99,10 @@ export class ShippingController {
     try {
       const { id } = req.params;
       const shipment = await shippingService.getShipment(id as string);
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiShippingCode.SHIPMENT_FETCHED,
+        message: "Shipment details retrieved successfully.",
         data: shipment,
       });
     } catch (error) {
@@ -96,8 +119,9 @@ export class ShippingController {
         ? { id: req.user.id, email: req.user.email, role: req.user.role }
         : undefined;
       const shipment = await shippingService.createShipment(req.body, actor);
-      res.status(201).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 201,
+        code: ApiShippingCode.SHIPMENT_CREATED,
         message: "Shipment manifested successfully",
         data: shipment,
       });
@@ -116,8 +140,9 @@ export class ShippingController {
         ? { id: req.user.id, email: req.user.email, role: req.user.role }
         : undefined;
       const shipment = await shippingService.updateShipmentTracking(id as string, req.body, actor);
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiShippingCode.SHIPMENT_TRACKING_UPDATED,
         message: "Shipment tracking updated successfully",
         data: shipment,
       });
@@ -132,8 +157,10 @@ export class ShippingController {
   public async adminListZones(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const zones = await shippingService.listZones();
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiShippingCode.SHIPPING_ZONES_FETCHED,
+        message: "Shipping zones retrieved successfully.",
         data: zones,
       });
     } catch (error) {
@@ -147,8 +174,9 @@ export class ShippingController {
   public async adminCreateZone(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const zone = await shippingService.createZone(req.body);
-      res.status(201).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 201,
+        code: ApiShippingCode.SHIPPING_ZONE_CREATED,
         message: "Shipping zone created successfully",
         data: zone,
       });
@@ -164,8 +192,10 @@ export class ShippingController {
     try {
       const { zoneId } = req.query;
       const methods = await shippingService.listMethods(zoneId as string | undefined);
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiShippingCode.SHIPPING_METHODS_FETCHED,
+        message: "Shipping methods retrieved successfully.",
         data: methods,
       });
     } catch (error) {
@@ -179,8 +209,9 @@ export class ShippingController {
   public async adminCreateMethod(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const method = await shippingService.createMethod(req.body);
-      res.status(201).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 201,
+        code: ApiShippingCode.SHIPPING_METHOD_CREATED,
         message: "Shipping method created successfully",
         data: method,
       });

@@ -20,7 +20,7 @@ import {
 import { adminCatalogApi } from "@/lib/api/admin-catalog-api";
 import { Category, Brand } from "@veyora/types";
 import { CreateProductInput } from "@veyora/validators";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess, notifyWarning } from "@/lib/notifications";
 import {
   ArrowLeft,
   Plus,
@@ -134,19 +134,19 @@ export default function NewProductPage() {
     e.preventDefault();
 
     if (!title.trim()) {
-      toast.error("Product title is required.");
+      notifyWarning("Product title is required.");
       return;
     }
     if (!sku.trim()) {
-      toast.error("Product SKU is required.");
+      notifyWarning("Product SKU is required.");
       return;
     }
     if (typeof price !== "number" || price < 0) {
-      toast.error("Valid product price is required.");
+      notifyWarning("Valid product price is required.");
       return;
     }
     if (!categoryId) {
-      toast.error("Category must be selected.");
+      notifyWarning("Category must be selected.");
       return;
     }
 
@@ -195,11 +195,11 @@ export default function NewProductPage() {
         },
       };
 
-      await adminCatalogApi.createProduct(payload);
-      toast.success("Product created successfully!");
+      const created = await adminCatalogApi.createProduct(payload);
+      notifyApiSuccess(created);
       router.push("/products");
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to create product.");
+      notifyApiError(err);
     } finally {
       setLoading(false);
     }

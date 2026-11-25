@@ -403,15 +403,15 @@ export default function CartPage() {
                 <div className="space-y-2 pt-2 text-[11px] text-muted-foreground border-t border-border/60">
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span>256-bit Encrypted Bank-Grade Checkout</span>
+                    <span>Secure payment processing</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <RotateCcw className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span>15-Day Complimentary Garment Return / Exchange</span>
+                    <span>Shipping and exchange options are confirmed at checkout</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Truck className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span>100% Insured Luxury Courier Dispatch</span>
+                    <span>Available delivery methods are shown before payment</span>
                   </div>
                 </div>
               </div>

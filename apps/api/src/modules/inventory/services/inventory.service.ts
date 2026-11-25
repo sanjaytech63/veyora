@@ -14,6 +14,7 @@ import {
   StockMovement as StockMovementDto,
   InventoryStats,
   StockMovementType,
+  ApiInventoryCode,
 } from "@veyora/types";
 import { ConflictError, NotFoundError, escapeRegex } from "@veyora/utils";
 
@@ -107,7 +108,11 @@ export class InventoryService {
 
     const item = await Inventory.findOne(query);
     if (!item) {
-      throw new NotFoundError(`Inventory item "${skuOrId}" not found.`);
+      throw new NotFoundError(
+        `Inventory item "${skuOrId}" not found.`,
+        undefined,
+        ApiInventoryCode.INVENTORY_ITEM_NOT_FOUND
+      );
     }
 
     return this.toInventoryDto(item);
@@ -167,7 +172,11 @@ export class InventoryService {
         $or: [{ sku }, { "variants.sku": sku }],
       });
       if (!product) {
-        throw new NotFoundError(`No catalog product found with SKU "${sku}".`);
+        throw new NotFoundError(
+          `No catalog product found with SKU "${sku}".`,
+          undefined,
+          ApiInventoryCode.INVENTORY_PRODUCT_NOT_FOUND
+        );
       }
 
       const variant = product.variants?.find((v) => v.sku.toUpperCase() === sku);
@@ -202,7 +211,9 @@ export class InventoryService {
       const available = Math.max(0, prevOnHand - prevReserved);
       if (input.quantity > available) {
         throw new ConflictError(
-          `Cannot decrease stock by ${input.quantity}. Only ${available} units are currently available (Reserved: ${prevReserved}).`
+          `Cannot decrease stock by ${input.quantity}. Only ${available} units are currently available (Reserved: ${prevReserved}).`,
+          undefined,
+          ApiInventoryCode.INVENTORY_INSUFFICIENT_STOCK
         );
       }
       delta = -input.quantity;
@@ -211,7 +222,9 @@ export class InventoryService {
     } else if (input.type === "correction") {
       if (input.quantity < prevReserved) {
         throw new ConflictError(
-          `Physical count correction (${input.quantity}) cannot be lower than currently reserved units (${prevReserved}).`
+          `Physical count correction (${input.quantity}) cannot be lower than currently reserved units (${prevReserved}).`,
+          undefined,
+          ApiInventoryCode.INVENTORY_ADJUSTMENT_INVALID
         );
       }
       delta = input.quantity - prevOnHand;
@@ -251,13 +264,19 @@ export class InventoryService {
     const sku = input.sku.toUpperCase().trim();
     const inventory = await Inventory.findOne({ sku });
     if (!inventory) {
-      throw new NotFoundError(`Inventory item for SKU "${sku}" not found.`);
+      throw new NotFoundError(
+        `Inventory item for SKU "${sku}" not found.`,
+        undefined,
+        ApiInventoryCode.INVENTORY_ITEM_NOT_FOUND
+      );
     }
 
     const available = Math.max(0, inventory.onHand - inventory.reserved);
     if (available < input.quantity) {
       throw new ConflictError(
-        `Insufficient available stock for SKU "${sku}". Available: ${available}, Requested: ${input.quantity}`
+        `Insufficient available stock for SKU "${sku}". Available: ${available}, Requested: ${input.quantity}`,
+        undefined,
+        ApiInventoryCode.INVENTORY_INSUFFICIENT_STOCK
       );
     }
 
@@ -290,7 +309,11 @@ export class InventoryService {
     const sku = input.sku.toUpperCase().trim();
     const inventory = await Inventory.findOne({ sku });
     if (!inventory) {
-      throw new NotFoundError(`Inventory item for SKU "${sku}" not found.`);
+      throw new NotFoundError(
+        `Inventory item for SKU "${sku}" not found.`,
+        undefined,
+        ApiInventoryCode.INVENTORY_ITEM_NOT_FOUND
+      );
     }
 
     const prevOnHand = inventory.onHand;
@@ -323,7 +346,11 @@ export class InventoryService {
     const sku = input.sku.toUpperCase().trim();
     const inventory = await Inventory.findOne({ sku });
     if (!inventory) {
-      throw new NotFoundError(`Inventory item for SKU "${sku}" not found.`);
+      throw new NotFoundError(
+        `Inventory item for SKU "${sku}" not found.`,
+        undefined,
+        ApiInventoryCode.INVENTORY_ITEM_NOT_FOUND
+      );
     }
 
     const prevOnHand = inventory.onHand;
@@ -364,7 +391,11 @@ export class InventoryService {
 
     const item = await Inventory.findOne(query);
     if (!item) {
-      throw new NotFoundError(`Inventory item "${skuOrId}" not found.`);
+      throw new NotFoundError(
+        `Inventory item "${skuOrId}" not found.`,
+        undefined,
+        ApiInventoryCode.INVENTORY_ITEM_NOT_FOUND
+      );
     }
 
     item.lowStockThreshold = lowStockThreshold;

@@ -6,3 +6,4 @@ export * from "./NavbarLogo";
 export * from "./NavbarLinks";
 export * from "./NavbarCategoryMenu";
 export * from "./AnnouncementBar";
+export * from "./navbar.config";

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/ui/container";
+import type { Category, Product } from "@veyora/types";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -41,9 +42,9 @@ const categoryIcons: Record<string, React.ElementType> = {
 };
 
 export default async function StorefrontHomePage() {
-  let categories: any[] = [];
-  let featuredProducts: any[] = [];
-  let initialCollectionProducts: any[] = [];
+  let categories: Category[] = [];
+  let featuredProducts: Product[] = [];
+  let initialCollectionProducts: Product[] = [];
 
   try {
     const [cats, feat, col] = await Promise.allSettled([
@@ -136,13 +137,13 @@ export default async function StorefrontHomePage() {
                   <div className="flex h-7 w-7 items-center justify-center rounded-full border border-border/80 bg-card text-foreground">
                     <ShieldCheck className="h-3.5 w-3.5" />
                   </div>
-                  <span>100% Certified Pure Silks</span>
+                  <span>Quality Fabric Selection</span>
                 </div>
                 <div className="flex items-center justify-center gap-2 lg:justify-start">
                   <div className="flex h-7 w-7 items-center justify-center rounded-full border border-border/80 bg-card text-foreground">
                     <RotateCcw className="h-3.5 w-3.5" />
                   </div>
-                  <span>Complimentary Sizing Exchange</span>
+                  <span>Size Guidance Available</span>
                 </div>
               </div>
             </div>
@@ -389,9 +390,9 @@ export default async function StorefrontHomePage() {
                 </h2>
 
                 <p className="max-w-2xl text-sm leading-relaxed text-zinc-400 sm:text-base">
-                  Every Veyora ensemble honors heritage Indian craft — from hand-tied Rajasthani
-                  Bandhani and Benarasi zari to certified organic mulmul cotton. Crafted with
-                  tailored precision, ethical artisan wages, and zero compromise on fabric purity.
+                  Every Veyora collection explores heritage Indian craft through regional textiles,
+                  considered details, and contemporary silhouettes. Product materials and garment
+                  specifications are listed individually for a clear, informed selection.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-3.5 pt-2">
@@ -450,7 +451,7 @@ export default async function StorefrontHomePage() {
                     <div className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">
                       Cotton
                     </div>
-                    <div className="text-sm font-semibold text-zinc-100">100% Organic Mulmul</div>
+                    <div className="text-sm font-semibold text-zinc-100">Mulmul Cotton</div>
                   </div>
                   <div className="space-y-1 pt-1">
                     <div className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">

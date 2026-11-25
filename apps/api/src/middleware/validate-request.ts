@@ -55,7 +55,7 @@ export function validateRequest(schemas: RequestValidationSchemas) {
           fieldErrors[field].push(err.message);
         }
 
-        next(new ValidationError("Validation failed", details, fieldErrors));
+        next(new ValidationError("Please review the submitted information.", details, fieldErrors));
       } else {
         next(error);
       }
