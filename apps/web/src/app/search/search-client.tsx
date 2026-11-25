@@ -514,13 +514,13 @@ export function SearchClient() {
             {showSuggestions && debouncedInput.trim().length > 0 && suggestionData && (
               <div className="absolute z-50 left-0 right-0 mt-2 bg-card/95 backdrop-blur-md rounded-2xl border border-border/80 shadow-2xl p-4 space-y-4 animate-in fade-in-50 zoom-in-95">
                 {/* Matching Category Links */}
-                {suggestionData.categories.length > 0 && (
+                {(suggestionData.categories?.length ?? 0) > 0 && (
                   <div className="space-y-1.5">
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       Categories
                     </span>
                     <div className="flex flex-wrap gap-1.5">
-                      {suggestionData.categories.map((c) => (
+                      {suggestionData.categories?.map((c) => (
                         <Link
                           key={c.id}
                           href={`/category/${c.slug}`}
@@ -536,13 +536,13 @@ export function SearchClient() {
                 )}
 
                 {/* Term Suggestions */}
-                {suggestionData.suggestions.length > 0 && (
+                {(suggestionData.suggestions?.length ?? 0) > 0 && (
                   <div className="space-y-1">
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       Search Suggestions
                     </span>
                     <div className="space-y-0.5">
-                      {suggestionData.suggestions.map((term) => (
+                      {suggestionData.suggestions?.map((term) => (
                         <button
                           key={term}
                           type="button"
@@ -558,13 +558,13 @@ export function SearchClient() {
                 )}
 
                 {/* Top Matching Product Previews */}
-                {suggestionData.products.length > 0 && (
+                {(suggestionData.products?.length ?? 0) > 0 && (
                   <div className="space-y-2 border-t border-border/60 pt-3">
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       Product Matches
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {suggestionData.products.map((p) => (
+                      {suggestionData.products?.map((p) => (
                         <Link
                           key={p.id}
                           href={`/products/${p.slug}`}

@@ -55,6 +55,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build shared packages
+        run: npm run build:packages
+
       - name: Run monorepo typecheck
         run: npm run typecheck
 
@@ -73,6 +76,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Build shared packages
+        run: npm run build:packages
 
       - name: Run package and application tests
         run: npm run test
@@ -153,6 +159,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Build shared packages
+        run: npm run build:packages
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium

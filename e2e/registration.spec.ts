@@ -23,7 +23,7 @@ test.describe("E2E — Customer Registration Flow", () => {
     // Verify validation errors are displayed
     await expect(page.getByText(/first name is required/i)).toBeVisible();
     await expect(page.getByText(/last name is required/i)).toBeVisible();
-    await expect(page.getByText(/invalid email/i)).toBeVisible();
+    await expect(page.getByText(/valid email address/i)).toBeVisible();
   });
 
   test("successfully submits valid registration and redirects to OTP verification", async ({
@@ -52,10 +52,10 @@ test.describe("E2E — Customer Registration Flow", () => {
 
     await page.goto("/register");
 
-    await page.getByPlaceholder("John").fill("Ananya");
-    await page.getByPlaceholder("Doe").fill("Sharma");
-    await page.getByPlaceholder("name@example.com").fill("ananya.sharma@example.com");
-    await page.getByPlaceholder("••••••••").fill("VeyoraSecure2026!");
+    await page.locator('input[name="firstName"]').fill("Ananya");
+    await page.locator('input[name="lastName"]').fill("Sharma");
+    await page.locator('input[name="email"]').fill("ananya.sharma@example.com");
+    await page.locator('input[name="password"]').fill("VeyoraSecure2026!");
 
     const submitBtn = page.getByRole("button", { name: /create account/i });
     await submitBtn.click();

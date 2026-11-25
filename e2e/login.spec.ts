@@ -14,7 +14,7 @@ test.describe("E2E — Customer Authentication & Login Flow", () => {
   test("toggles password visibility on show/hide icon click", async ({ page }) => {
     await page.goto("/login");
 
-    const passwordInput = page.getByPlaceholder("••••••••");
+    const passwordInput = page.locator('input[name="password"]');
     await expect(passwordInput).toHaveAttribute("type", "password");
 
     // Click show password toggle
@@ -37,14 +37,18 @@ test.describe("E2E — Customer Authentication & Login Flow", () => {
           success: false,
           code: "INVALID_CREDENTIALS",
           message: "Invalid email or password combination.",
+          error: {
+            code: "INVALID_CREDENTIALS",
+            message: "Invalid email or password combination.",
+          },
         }),
       });
     });
 
     await page.goto("/login");
 
-    await page.getByPlaceholder("name@example.com").fill("wrong@example.com");
-    await page.getByPlaceholder("••••••••").fill("WrongPassword123!");
+    await page.locator('input[name="email"]').fill("wrong@example.com");
+    await page.locator('input[name="password"]').fill("WrongPassword123!");
 
     const submitBtn = page.getByRole("button", { name: /sign in/i });
     await submitBtn.click();
@@ -76,8 +80,8 @@ test.describe("E2E — Customer Authentication & Login Flow", () => {
 
     await page.goto("/login?redirect=/shop");
 
-    await page.getByPlaceholder("name@example.com").fill("patron@veyora.com");
-    await page.getByPlaceholder("••••••••").fill("VeyoraSecure2026!");
+    await page.locator('input[name="email"]').fill("patron@veyora.com");
+    await page.locator('input[name="password"]').fill("VeyoraSecure2026!");
 
     const submitBtn = page.getByRole("button", { name: /sign in/i });
     await submitBtn.click();

@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("E2E — Product Catalog Browsing & Search Relevance", () => {
   test.beforeEach(async ({ page }) => {
     // Mock category list and search API
-    await page.route("**/api/v1/categories", async (route) => {
+    await page.route("**/api/v1/categories*", async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -17,16 +17,28 @@ test.describe("E2E — Product Catalog Browsing & Search Relevance", () => {
       });
     });
 
+    await page.route("**/api/v1/brands*", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          success: true,
+          data: [],
+        }),
+      });
+    });
+
     await page.route("**/api/v1/search/suggestions*", async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
           success: true,
-          data: [
-            { text: "Chanderi Silk Kurti", type: "product", slug: "chanderi-silk-kurti" },
-            { text: "Bandhani Silk Lehenga", type: "product", slug: "bandhani-silk-lehenga" },
-          ],
+          data: {
+            suggestions: ["Chanderi Silk Kurti", "Bandhani Silk Lehenga"],
+            products: [],
+            categories: [],
+          },
         }),
       });
     });
@@ -37,34 +49,34 @@ test.describe("E2E — Product Catalog Browsing & Search Relevance", () => {
         contentType: "application/json",
         body: JSON.stringify({
           success: true,
-          data: {
-            products: [
-              {
-                id: "prod-kurti-01",
-                title: "Chanderi Silk Kurti Set with Organza Dupatta",
-                slug: "chanderi-silk-kurti-set-organza-dupatta",
-                price: 185.0,
-                compareAtPrice: 240.0,
-                stock: 24,
-                status: "active",
-                images: [
-                  {
-                    url: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1000",
-                    isPrimary: true,
-                  },
-                ],
-              },
-            ],
+          data: [
+            {
+              id: "prod-kurti-01",
+              title: "Chanderi Silk Kurti Set with Organza Dupatta",
+              slug: "chanderi-silk-kurti-set-organza-dupatta",
+              price: 185.0,
+              compareAtPrice: 240.0,
+              stock: 24,
+              status: "active",
+              images: [
+                {
+                  url: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1000",
+                  isPrimary: true,
+                },
+              ],
+            },
+          ],
+          meta: {
             total: 1,
             page: 1,
             limit: 20,
             totalPages: 1,
-            facets: {
-              categories: [{ id: "cat-1", name: "Kurtis & Sets", count: 1 }],
-              priceRange: { min: 185, max: 185 },
-              inStockCount: 1,
-              outOfStockCount: 0,
-            },
+          },
+          facets: {
+            categories: [{ id: "cat-1", name: "Kurtis & Sets", count: 1 }],
+            priceRange: { min: 185, max: 185 },
+            inStockCount: 1,
+            outOfStockCount: 0,
           },
         }),
       });

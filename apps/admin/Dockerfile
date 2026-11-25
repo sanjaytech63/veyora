@@ -25,7 +25,7 @@ RUN npm ci
 
 # Build shared packages and compile Next.js application
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npm run build:packages && npm run build --workspace=@veyora/admin
+RUN mkdir -p apps/admin/public && npm run build:packages && npm run build --workspace=@veyora/admin
 
 # ------------------------------------------------------------------------------
 # Stage 2: Production Runner

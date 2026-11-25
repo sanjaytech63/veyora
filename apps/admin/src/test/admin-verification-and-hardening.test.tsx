@@ -9,6 +9,7 @@ import {
   adminOrderKeys,
 } from "../lib/api/query-keys";
 import { QueryClient } from "@tanstack/react-query";
+import robots from "../app/robots";
 
 describe("Task 21 — Admin Application Verification & Hardening", () => {
   let queryClient: QueryClient;
@@ -251,6 +252,16 @@ describe("Task 21 — Admin Application Verification & Hardening", () => {
 
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["admin-orders"] });
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["admin-unfulfilled-orders"] });
+    });
+  });
+
+  describe("7. Administrative SEO Directives", () => {
+    it("admin robots.txt strictly disallows all search engine indexing", () => {
+      const adminResult = robots();
+      const rule = Array.isArray(adminResult.rules) ? adminResult.rules[0] : adminResult.rules;
+
+      expect(rule?.disallow).toEqual(["/"]);
+      expect(adminResult.sitemap).toBeUndefined();
     });
   });
 });
