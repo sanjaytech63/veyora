@@ -2,15 +2,17 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Product, ProductVariant } from "@veyora/types";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { ProductGallery } from "@/components/storefront/product-gallery";
 import { VariantSelector } from "@/components/storefront/variant-selector";
 import { StockBadge } from "@/components/storefront/stock-badge";
-import { ProductAccordion } from "@/components/storefront/product-accordion";
-import { ProductGrid } from "@/components/storefront/product-grid";
 import { WishlistButton } from "@/components/storefront/wishlist-button";
 import { ProductReviews } from "@/components/storefront/product-reviews";
 import { useRelatedProducts, useCategories } from "@/hooks/use-catalog";
@@ -27,6 +29,14 @@ import {
   RotateCcw,
   Star,
   Check,
+  MapPin,
+  Zap,
+  Ruler,
+  Leaf,
+  Layers,
+  Shirt,
+  LoaderCircle,
+  ArrowRight,
 } from "lucide-react";
 
 interface ProductDetailsClientProps {
@@ -34,350 +44,509 @@ interface ProductDetailsClientProps {
 }
 
 export function ProductDetailsClient({ initialProduct }: ProductDetailsClientProps) {
+  const router = useRouter();
   const { setCartDrawerOpen } = useUIStore();
   const { addToCartAsync, isAddingToCart } = useCart();
   const { data: categories = [] } = useCategories();
   const [product] = React.useState<Product>(initialProduct);
-
-  // Selected variant
   const [selectedVariant, setSelectedVariant] = React.useState<ProductVariant | null>(
-    product.variants && product.variants.length > 0 && product.variants[0]
-      ? product.variants[0]
-      : null
+    product.variants?.find((variant) => variant.stock > 0) || product.variants?.[0] || null
   );
-
-  // Quantity stepper
   const [quantity, setQuantity] = React.useState(1);
   const [addedSuccess, setAddedSuccess] = React.useState(false);
+  const [pincode, setPincode] = React.useState("");
+  const [pincodeStatus, setPincodeStatus] = React.useState<
+    "idle" | "loading" | "invalid" | "unavailable"
+  >("idle");
 
-  // Active pricing and stock
-  const currentPrice = selectedVariant ? selectedVariant.price : product.price;
+  const currentPrice = selectedVariant?.price ?? product.price;
   const currentCompareAt = product.compareAtPrice;
-  const currentSku = selectedVariant ? selectedVariant.sku : product.sku;
-  const currentStock = selectedVariant ? selectedVariant.stock : product.stock;
-
-  const isDiscounted = currentCompareAt && currentCompareAt > currentPrice;
+  const currentSku = selectedVariant?.sku ?? product.sku;
+  const currentStock = selectedVariant?.stock ?? product.stock;
+  const isDiscounted = typeof currentCompareAt === "number" && currentCompareAt > currentPrice;
   const discountPercent = isDiscounted
-    ? Math.round(((currentCompareAt! - currentPrice) / currentCompareAt!) * 100)
+    ? Math.round(((currentCompareAt - currentPrice) / currentCompareAt) * 100)
     : 0;
 
-  // Related products query
   const { data: relatedProducts = [], isLoading: relatedLoading } = useRelatedProducts(
     product.id,
     product.categoryId,
     4
   );
 
-  const categoryName = React.useMemo(() => {
-    return categories.find((c) => c.id === product.categoryId)?.name || "Haute Couture";
-  }, [categories, product.categoryId]);
+  const categoryName =
+    categories.find((category) => category.id === product.categoryId)?.name ||
+    product.category?.name ||
+    "Catalog";
 
-  const handleAddToCart = async () => {
+  const formatPrice = (value: number) =>
+    new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(value);
+
+  const variantId = selectedVariant
+    ? (selectedVariant as unknown as { _id?: string })._id?.toString() ||
+      selectedVariant.sku ||
+      undefined
+    : undefined;
+
+  const prepareCartItem = async () => {
     if (currentStock <= 0) {
       notifyWarning("This item is currently out of stock.");
-      return;
+      return false;
     }
+    await addToCartAsync({
+      productId: product.id,
+      quantity,
+      variantId,
+    });
+    return true;
+  };
 
+  const handleAddToCart = async () => {
     try {
-      await addToCartAsync({
-        productId: product.id,
-        quantity,
-        variantId: selectedVariant
-          ? (selectedVariant as unknown as { _id?: string })._id?.toString() || selectedVariant.sku
-          : undefined,
-      });
+      const prepared = await prepareCartItem();
+      if (!prepared) return;
       setAddedSuccess(true);
       setCartDrawerOpen(true);
-      setTimeout(() => setAddedSuccess(false), 2500);
+      window.setTimeout(() => setAddedSuccess(false), 2500);
     } catch {
-      // Handled by mutation toast
+      // Existing mutation handles API error feedback.
     }
   };
 
+  const handleBuyNow = async () => {
+    try {
+      const prepared = await prepareCartItem();
+      if (prepared) router.push("/checkout");
+    } catch {
+      // Existing mutation handles API error feedback.
+    }
+  };
+
+  const handlePincodeCheck = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!/^\d{6}$/.test(pincode.trim())) {
+      setPincodeStatus("invalid");
+      return;
+    }
+    setPincodeStatus("loading");
+    window.setTimeout(() => setPincodeStatus("unavailable"), 350);
+  };
+
   return (
-    <div className="py-8 md:py-12 space-y-16 pb-20 md:pb-12">
-      <Container size="xl" className="space-y-12">
-        {/* Breadcrumb Trail */}
+    <div className="pb-24 md:pb-12">
+      <Container size="xl" className="py-5 md:py-7">
         <nav
           aria-label="Breadcrumb"
-          className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap"
+          className="mb-5 flex items-center gap-1.5 overflow-hidden text-[11px] text-muted-foreground"
         >
-          <Link href="/" className="hover:text-foreground transition-colors">
+          <Link href="/" className="shrink-0 transition-colors hover:text-foreground">
             Home
           </Link>
-          <ChevronRight className="h-3 w-3" />
-          <Link href="/shop" className="hover:text-foreground transition-colors">
+          <ChevronRight className="h-3 w-3 shrink-0" />
+          <Link href="/shop" className="shrink-0 transition-colors hover:text-foreground">
             Shop
           </Link>
-          <ChevronRight className="h-3 w-3" />
-          <span className="text-muted-foreground">{categoryName}</span>
-          <ChevronRight className="h-3 w-3" />
-          <span className="font-semibold text-foreground truncate max-w-[200px] sm:max-w-none">
-            {product.title}
-          </span>
+          <ChevronRight className="h-3 w-3 shrink-0" />
+          {product.category ? (
+            <>
+              <Link
+                href={`/category/${product.category.slug}`}
+                className="max-w-28 shrink-0 truncate transition-colors hover:text-foreground"
+              >
+                {categoryName}
+              </Link>
+              <ChevronRight className="h-3 w-3 shrink-0" />
+            </>
+          ) : null}
+          <span className="truncate font-medium text-foreground">{product.title}</span>
         </nav>
 
-        {/* Product Details Two-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
-          {/* Left Column: Image Gallery Stage */}
-          <div className="lg:col-span-7 lg:sticky lg:top-24">
-            <ProductGallery
-              images={product.images || []}
-              title={product.title}
-              selectedVariantImage={selectedVariant?.image}
-            />
-          </div>
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(420px,1.1fr)_minmax(300px,.82fr)_280px] xl:grid-cols-[minmax(480px,1.2fr)_minmax(330px,.85fr)_300px]">
+          <ProductGallery
+            images={product.images || []}
+            title={product.title}
+            selectedVariantImage={selectedVariant?.image}
+            className="lg:sticky lg:top-24"
+          />
 
-          {/* Right Column: Buying Stage & Details */}
-          <div className="lg:col-span-5 space-y-8">
-            {/* Header info */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-primary">
-                  {categoryName}
-                </span>
-                <a
-                  href="#reviews-section"
-                  className="flex items-center gap-1.5 text-foreground/90 hover:opacity-80 transition-opacity cursor-pointer group"
-                  title="View Client Reviews"
-                >
-                  <div className="flex items-center text-amber-400">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-3.5 w-3.5 ${
-                          i <
-                          Math.round(
-                            product.averageRating && product.averageRating > 0
-                              ? product.averageRating
-                              : 5
-                          )
-                            ? "fill-amber-400 text-amber-400"
-                            : "text-muted/60"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-xs font-semibold">
-                    {product.averageRating && product.averageRating > 0
-                      ? product.averageRating.toFixed(1)
-                      : "5.0"}
-                  </span>
-                  <span className="text-xs text-muted-foreground group-hover:underline">
-                    ({product.reviewCount !== undefined ? product.reviewCount : 0} reviews)
-                  </span>
-                </a>
-              </div>
+          <div className="min-w-0 space-y-5">
+            <div className="flex flex-wrap items-center gap-2">
+              {product.tags?.some((tag) => tag.toLowerCase().includes("bestseller")) ? (
+                <Badge className="rounded-sm px-2 py-1 text-[9px] uppercase">Bestseller</Badge>
+              ) : null}
+              {product.tags?.some((tag) => tag.toLowerCase().includes("new")) ? (
+                <Badge variant="outline" className="rounded-sm px-2 py-1 text-[9px] uppercase">
+                  New Arrival
+                </Badge>
+              ) : null}
+            </div>
 
-              <h1 className="text-2xl sm:text-3xl xl:text-4xl font-extrabold tracking-tight text-foreground leading-tight">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
+                {categoryName}
+              </p>
+              <h1 className="mt-2 text-[27px] font-semibold leading-tight tracking-tight text-foreground sm:text-[32px]">
                 {product.title}
               </h1>
+              {product.description ? (
+                <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">
+                  {product.description}
+                </p>
+              ) : null}
+            </div>
 
-              <div className="flex items-center gap-3 pt-1">
-                <div className="flex items-baseline gap-2.5">
-                  <span className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-                    ${currentPrice.toFixed(2)}
+            {typeof product.averageRating === "number" && product.averageRating > 0 ? (
+              <a
+                href="#reviews-section"
+                className="flex items-center gap-2 text-xs text-foreground"
+              >
+                <span className="flex items-center text-amber-500">
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <Star
+                      key={index}
+                      className={
+                        index < Math.round(product.averageRating ?? 0)
+                          ? "h-3.5 w-3.5 fill-current"
+                          : "h-3.5 w-3.5 text-muted"
+                      }
+                    />
+                  ))}
+                </span>
+                <strong>{product.averageRating.toFixed(1)}</strong>
+                <span className="text-muted-foreground">({product.reviewCount ?? 0} reviews)</span>
+              </a>
+            ) : null}
+
+            <div className="flex items-baseline gap-2 border-b border-border/70 pb-5">
+              <span className="text-[28px] font-bold tracking-tight text-foreground">
+                {formatPrice(currentPrice)}
+              </span>
+              {isDiscounted ? (
+                <>
+                  <span className="text-sm text-muted-foreground line-through">
+                    {formatPrice(currentCompareAt)}
                   </span>
-                  {isDiscounted && (
-                    <span className="text-base text-muted-foreground line-through">
-                      ${currentCompareAt!.toFixed(2)}
-                    </span>
-                  )}
-                </div>
-
-                {isDiscounted && (
-                  <Badge
-                    variant="destructive"
-                    className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                  >
-                    Save {discountPercent}%
+                  <Badge variant="destructive" className="rounded-sm px-2 py-1 text-[10px]">
+                    {discountPercent}% OFF
                   </Badge>
-                )}
-              </div>
+                </>
+              ) : null}
             </div>
 
-            {/* Description */}
-            <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
-
-            {/* Live Stock Status Indicator */}
-            <div className="rounded-2xl border border-border/60 bg-muted/20 p-3.5 flex items-center justify-between">
-              <span className="text-xs font-semibold text-foreground">Availability</span>
-              <StockBadge
-                stock={currentStock}
-                trackQuantity={product.trackQuantity}
-                showTextDetail={true}
-              />
-            </div>
-
-            {/* Interactive Variant Selectors */}
-            {product.variants && product.variants.length > 0 && (
+            {product.variants?.length ? (
               <VariantSelector
                 variants={product.variants}
                 selectedVariant={selectedVariant}
-                onSelectVariant={(v) => {
-                  setSelectedVariant(v);
-                  if (quantity > v.stock && v.stock > 0) {
-                    setQuantity(v.stock);
-                  }
+                onSelectVariant={(variant) => {
+                  setSelectedVariant(variant);
+                  if (quantity > variant.stock && variant.stock > 0) setQuantity(variant.stock);
                 }}
               />
-            )}
+            ) : null}
 
-            {/* Quantity Selector & Add to Bag */}
-            <div className="space-y-4 pt-2">
-              <div className="flex items-center gap-3">
-                {/* Quantity Stepper */}
-                <div className="flex items-center rounded-2xl border border-border/80 bg-card p-1 shadow-2xs">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 rounded-xl"
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    disabled={quantity <= 1 || currentStock <= 0}
-                    aria-label="Decrease quantity"
-                  >
-                    <Minus className="h-3.5 w-3.5" />
-                  </Button>
-                  <span className="w-12 text-center text-sm font-bold text-foreground tabular-nums">
-                    {quantity}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 rounded-xl"
-                    onClick={() => setQuantity((q) => Math.min(currentStock || 99, q + 1))}
-                    disabled={
-                      currentStock <= 0 || (product.trackQuantity && quantity >= currentStock)
-                    }
-                    aria-label="Increase quantity"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
+            <div className="flex items-center justify-between">
+              <StockBadge
+                stock={currentStock}
+                trackQuantity={product.trackQuantity}
+                showTextDetail
+              />
+              <span className="text-[10px] text-muted-foreground">SKU: {currentSku}</span>
+            </div>
 
-                {/* Primary Add Button */}
+            <div className="flex items-center gap-2">
+              <div className="flex h-11 items-center rounded-md border border-border/80 bg-card">
                 <Button
-                  size="lg"
-                  className="flex-1 rounded-2xl font-bold text-sm shadow-md shadow-primary/10 gap-2 h-12"
-                  disabled={currentStock <= 0 || isAddingToCart}
-                  onClick={handleAddToCart}
+                  variant="ghost"
+                  size="icon"
+                  className="h-11 w-10 rounded-none"
+                  onClick={() => setQuantity((value) => Math.max(1, value - 1))}
+                  disabled={quantity <= 1 || currentStock <= 0}
+                  aria-label="Decrease quantity"
                 >
-                  {addedSuccess ? (
-                    <>
-                      <Check className="h-4 w-4" />
-                      Added to Bag
-                    </>
-                  ) : currentStock <= 0 ? (
-                    "Out of Stock"
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <span className="w-9 text-center text-sm font-semibold tabular-nums">
+                  {quantity}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-11 w-10 rounded-none"
+                  onClick={() => setQuantity((value) => Math.min(currentStock || 99, value + 1))}
+                  disabled={
+                    currentStock <= 0 || (product.trackQuantity && quantity >= currentStock)
+                  }
+                  aria-label="Increase quantity"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <WishlistButton
+                productId={product.id}
+                variant="outline"
+                size="icon"
+                className="h-11 w-11 rounded-md"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                className="h-12 rounded-md text-xs font-semibold"
+                disabled={currentStock <= 0 || isAddingToCart}
+                onClick={handleAddToCart}
+              >
+                {isAddingToCart ? (
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                ) : addedSuccess ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <ShoppingBag className="h-4 w-4" />
+                )}
+                {addedSuccess ? "Added" : "Add to Cart"}
+              </Button>
+              <Button
+                variant="outline"
+                className="h-12 rounded-md text-xs font-semibold"
+                disabled={currentStock <= 0 || isAddingToCart}
+                onClick={handleBuyNow}
+              >
+                <Zap className="h-4 w-4" />
+                Buy Now
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-3 border-y border-border/70 py-3">
+              {[
+                { icon: Truck, title: "Shipping", text: "At checkout" },
+                { icon: RotateCcw, title: "Returns", text: "Policy applies" },
+                { icon: ShieldCheck, title: "Payment", text: "Secure checkout" },
+              ].map((item) => (
+                <div key={item.title} className="flex items-center gap-2 px-2 first:pl-0">
+                  <item.icon className="h-4 w-4 shrink-0 text-primary" />
+                  <div>
+                    <p className="text-[10px] font-semibold text-foreground">{item.title}</p>
+                    <p className="text-[9px] text-muted-foreground">{item.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <aside className="space-y-4 lg:sticky lg:top-24">
+            <form
+              onSubmit={handlePincodeCheck}
+              className="rounded-md border border-border/70 bg-card p-4"
+            >
+              <h2 className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                <MapPin className="h-4 w-4 text-primary" />
+                Check Delivery
+              </h2>
+              <div className="mt-3 flex gap-2">
+                <label htmlFor="product-pincode" className="sr-only">
+                  Indian delivery pincode
+                </label>
+                <Input
+                  id="product-pincode"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={pincode}
+                  onChange={(event) =>
+                    setPincode(event.target.value.replace(/\D/g, "").slice(0, 6))
+                  }
+                  placeholder="Enter pincode"
+                  className="h-10 text-xs"
+                  aria-invalid={pincodeStatus === "invalid"}
+                />
+                <Button
+                  type="submit"
+                  variant="outline"
+                  size="sm"
+                  className="h-10 shrink-0 rounded-md px-3 text-xs"
+                  disabled={pincodeStatus === "loading"}
+                >
+                  {pincodeStatus === "loading" ? (
+                    <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <>
-                      <ShoppingBag className="h-4 w-4" />
-                      Add to Bag • ${(currentPrice * quantity).toFixed(2)}
-                    </>
+                    "Check"
                   )}
                 </Button>
+              </div>
+              {pincodeStatus === "invalid" ? (
+                <p role="alert" className="mt-2 text-[10px] text-destructive">
+                  Enter a valid 6-digit Indian pincode.
+                </p>
+              ) : null}
+              {pincodeStatus === "unavailable" ? (
+                <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
+                  Delivery estimates are not available from a connected service yet.
+                </p>
+              ) : null}
+            </form>
 
-                {/* Wishlist Button */}
-                <WishlistButton
-                  productId={product.id}
-                  variant="outline"
-                  size="icon"
-                  className="h-12 w-12 rounded-2xl border-border/80"
-                />
+            <section className="rounded-md border border-border/70 bg-card p-3">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-xs font-semibold text-foreground">You May Also Like</h2>
+                {relatedProducts.length > 1 ? (
+                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                ) : null}
               </div>
-            </div>
-
-            {/* Value Proposition Highlights */}
-            <div className="grid grid-cols-3 gap-3 pt-2 text-center text-xs text-muted-foreground border-t border-border/60">
-              <div className="p-2 space-y-1">
-                <Truck className="h-4 w-4 mx-auto text-primary" />
-                <p className="font-semibold text-foreground text-[11px]">Shipping Options</p>
-                <p className="text-[10px]">Calculated at checkout</p>
-              </div>
-              <div className="p-2 space-y-1">
-                <ShieldCheck className="h-4 w-4 mx-auto text-primary" />
-                <p className="font-semibold text-foreground text-[11px]">Fabric Details</p>
-                <p className="text-[10px]">Listed per garment</p>
-              </div>
-              <div className="p-2 space-y-1">
-                <RotateCcw className="h-4 w-4 mx-auto text-primary" />
-                <p className="font-semibold text-foreground text-[11px]">Return Guidance</p>
-                <p className="text-[10px]">Review at checkout</p>
-              </div>
-            </div>
-
-            {/* Product Accordion (Specs, Shipping, Materials) */}
-            <ProductAccordion attributes={product.attributes || []} sku={currentSku} />
-          </div>
+              {relatedLoading ? (
+                <div className="grid grid-cols-2 gap-2">
+                  {[0, 1].map((item) => (
+                    <div key={item} className="aspect-[4/5] animate-pulse rounded-md bg-muted" />
+                  ))}
+                </div>
+              ) : relatedProducts.length > 0 ? (
+                <div className="grid grid-cols-2 gap-2">
+                  {relatedProducts.slice(0, 2).map((related) => (
+                    <Link
+                      key={related.id}
+                      href={`/products/${related.slug}`}
+                      className="group min-w-0"
+                    >
+                      <div className="relative aspect-[4/5] overflow-hidden rounded-md bg-muted">
+                        {related.images?.[0]?.url ? (
+                          <OptimizedImage
+                            src={related.images[0].url}
+                            alt={related.title}
+                            fill
+                            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                            sizes="140px"
+                            showLoader={false}
+                          />
+                        ) : null}
+                        <WishlistButton
+                          productId={related.id}
+                          className="absolute right-1.5 top-1.5 h-7 w-7 rounded-full border border-white/30 bg-black/35 text-white"
+                        />
+                      </div>
+                      <p className="mt-2 truncate text-[10px] font-semibold text-foreground">
+                        {related.title}
+                      </p>
+                      <p className="mt-1 text-[10px] font-bold text-foreground">
+                        {formatPrice(related.price)}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[10px] leading-4 text-muted-foreground">
+                  No related products are available.
+                </p>
+              )}
+            </section>
+          </aside>
         </div>
 
-        {/* Customer Reviews & Feedback Section */}
-        <ProductReviews productId={product.id} productTitle={product.title} />
+        <section className="mt-10 border-t border-border/70 pt-6" id="reviews-section">
+          <Tabs defaultValue="description" className="w-full">
+            <TabsList className="h-auto w-full justify-start overflow-x-auto rounded-none border-b border-border/70 bg-transparent p-0">
+              {[
+                ["description", "Description"],
+                ["fabric", "Fabric & Material"],
+                ["size", "Size Guide"],
+                ["care", "Care Instructions"],
+                ["reviews", `Reviews (${product.reviewCount ?? 0})`],
+              ].map((tab) => {
+                const [value, label] = tab as [string, string];
+                return (
+                  <TabsTrigger
+                    key={value}
+                    value={value}
+                    className="h-11 shrink-0 rounded-none border-b-2 border-transparent px-4 text-xs data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary"
+                  >
+                    {label}
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
 
-        {/* Related Products Recommendation Grid */}
-        {relatedProducts.length > 0 && (
-          <section className="space-y-8 pt-12 border-t border-border/60">
-            <div className="space-y-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-primary">
-                Complete the Ensemble
-              </span>
-              <h2 className="text-2xl font-extrabold tracking-tight text-foreground">
-                You May Also Admire
-              </h2>
+            <TabsContent
+              value="description"
+              className="pt-5 text-sm leading-6 text-muted-foreground"
+            >
+              {product.description || "Product description is not available."}
+              <p className="mt-3 text-xs font-medium text-foreground">Variant SKU: {currentSku}</p>
+            </TabsContent>
+            <TabsContent value="fabric" className="pt-5">
+              {product.attributes?.length ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {product.attributes.map((attribute) => (
+                    <div
+                      key={`${attribute.name}-${attribute.value}`}
+                      className="rounded-md border border-border/70 p-3 text-xs"
+                    >
+                      <span className="text-muted-foreground">{attribute.name}</span>
+                      <p className="mt-1 font-semibold text-foreground">{attribute.value}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Fabric and material details are not available for this product.
+                </p>
+              )}
+            </TabsContent>
+            <TabsContent value="size" className="pt-5 text-sm text-muted-foreground">
+              Available garment sizes are listed in the size and fit control above. Brand-specific
+              measurement data has not been supplied.
+            </TabsContent>
+            <TabsContent value="care" className="pt-5 text-sm text-muted-foreground">
+              Follow the care label supplied with the garment. Delicate and embroidered fabrics may
+              require professional dry cleaning.
+            </TabsContent>
+            <TabsContent value="reviews" className="pt-5">
+              <ProductReviews productId={product.id} productTitle={product.title} />
+            </TabsContent>
+          </Tabs>
+        </section>
+
+        <section className="mt-6 grid grid-cols-2 border-y border-border/70 sm:grid-cols-4">
+          {[
+            { icon: Leaf, title: "Fabric", value: "Not supplied" },
+            { icon: Layers, title: "Pattern", value: "Not supplied" },
+            { icon: Shirt, title: "Fit", value: "Not supplied" },
+            { icon: Ruler, title: "Length", value: "Not supplied" },
+          ].map((item, index) => (
+            <div
+              key={item.title}
+              className={`flex items-center gap-3 px-3 py-4 ${
+                index % 2 === 1 ? "border-l border-border/70" : ""
+              } sm:border-l sm:first:border-l-0`}
+            >
+              <item.icon className="h-4 w-4 shrink-0 text-primary" />
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {item.title}
+                </p>
+                <p className="mt-0.5 text-xs font-semibold text-foreground">{item.value}</p>
+              </div>
             </div>
-
-            <ProductGrid
-              products={relatedProducts}
-              categories={categories}
-              loading={relatedLoading}
-              columns={4}
-            />
-          </section>
-        )}
+          ))}
+        </section>
       </Container>
 
-      {/* Mobile Sticky Add-to-Bag Action Bar (Mobile eCommerce Clothing Store Figma Reference) */}
-      <div className="md:hidden fixed bottom-[60px] inset-x-0 z-30 border-t border-border/80 bg-background/95 backdrop-blur-xl px-4 py-2.5 shadow-xl">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex flex-col">
-            <span className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">
-              Total Price
-            </span>
-            <span className="text-lg font-bold text-foreground tabular-nums">
-              ${(currentPrice * quantity).toFixed(2)}
-            </span>
+      <div className="fixed inset-x-0 bottom-[56px] z-30 border-t border-border/70 bg-background/95 px-3 py-2 backdrop-blur-md md:hidden">
+        <div className="flex items-center gap-2">
+          <div className="min-w-20">
+            <p className="text-[9px] text-muted-foreground">Total</p>
+            <p className="text-sm font-bold text-foreground">
+              {formatPrice(currentPrice * quantity)}
+            </p>
           </div>
-
-          <div className="flex items-center gap-2">
-            <WishlistButton
-              productId={product.id}
-              variant="outline"
-              size="icon"
-              className="h-10 w-10 rounded-xl border-border/80"
-            />
-
-            <Button
-              size="default"
-              className="rounded-xl px-5 font-semibold text-xs h-10 shadow-sm"
-              disabled={currentStock <= 0 || isAddingToCart}
-              onClick={handleAddToCart}
-              aria-label="Quick add to cart"
-            >
-              {addedSuccess ? (
-                <>
-                  <Check className="h-4 w-4 mr-1.5" />
-                  Added
-                </>
-              ) : currentStock <= 0 ? (
-                "Sold Out"
-              ) : (
-                <>
-                  <ShoppingBag className="h-4 w-4 mr-1.5" />
-                  Add to Cart
-                </>
-              )}
-            </Button>
-          </div>
+          <Button
+            className="h-11 flex-1 rounded-md text-xs font-semibold"
+            disabled={currentStock <= 0 || isAddingToCart}
+            onClick={handleAddToCart}
+          >
+            <ShoppingBag className="h-4 w-4" />
+            Add to Cart
+          </Button>
         </div>
       </div>
     </div>

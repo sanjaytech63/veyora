@@ -7,6 +7,11 @@ vi.mock("next/font/google", () => ({
     className: "font-poppins",
     style: { fontFamily: "Poppins" },
   }),
+  Playfair_Display: () => ({
+    variable: "--font-playfair",
+    className: "font-playfair",
+    style: { fontFamily: "Playfair Display" },
+  }),
 }));
 
 vi.mock("next/navigation", () => ({

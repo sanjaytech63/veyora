@@ -242,8 +242,8 @@ describe("Customer Storefront - Fashion E-Commerce", () => {
       renderWithQuery(<ProductDetailsClient initialProduct={mockProduct} />);
 
       expect(screen.getByRole("heading", { name: mockProduct.title })).toBeInTheDocument();
-      expect(screen.getByText(mockProduct.description)).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /add to bag/i })).toBeInTheDocument();
+      expect(screen.getAllByText(mockProduct.description).length).toBeGreaterThan(0);
+      expect(screen.getAllByRole("button", { name: /add to cart/i }).length).toBeGreaterThan(0);
     });
 
     it("allows incrementing and decrementing quantity", () => {
@@ -259,11 +259,16 @@ describe("Customer Storefront - Fashion E-Commerce", () => {
       expect(screen.getByText("1", { selector: "span.tabular-nums" })).toBeInTheDocument();
     });
 
-    it("renders specifications accordion with active variant SKU", () => {
+    it("renders product tabs with active variant SKU", () => {
       renderWithQuery(<ProductDetailsClient initialProduct={mockProduct} />);
 
-      expect(screen.getByText(/garment specifications & fabric details/i)).toBeInTheDocument();
-      expect(screen.getByText(mockProduct.variants![0]!.sku)).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: "Description" })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: "Fabric & Material" })).toBeInTheDocument();
+      expect(
+        screen.getAllByText(
+          new RegExp(mockProduct.variants![0]!.sku!.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+        ).length
+      ).toBeGreaterThan(0);
     });
   });
 

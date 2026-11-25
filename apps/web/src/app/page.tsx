@@ -1,479 +1,231 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/ui/container";
-import type { Category, Product } from "@veyora/types";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/ui/optimized-image";
-import { EmptyState } from "@/components/ui/empty-state";
 import { ProductGrid } from "@/components/storefront/product-grid";
-import { CuratedCollectionClient } from "@/components/storefront/curated-collection-client";
+import { HeroCarousel } from "@/components/home/hero-carousel";
 import {
   getCachedCategories,
   getCachedFeaturedProducts,
   getCachedProducts,
 } from "@/lib/cache/catalog-cache";
-import {
-  ArrowRight,
-  ArrowUpRight,
-  ShieldCheck,
-  Truck,
-  RotateCcw,
-  Sparkles,
-  Shirt,
-  Crown,
-  Gem,
-  Layers,
-  Flame,
-} from "lucide-react";
+import { ArrowRight, RotateCcw, ShieldCheck, Sparkles, Truck } from "lucide-react";
+import type { Category, Product } from "@veyora/types";
 
 export const metadata: Metadata = {
-  title: "Veyora — Minimal Fashion & Precision Hardware",
+  title: "Veyora — Premium Indian Fashion",
   description:
-    "Minimalist, editorial fashion & precision hardware e-commerce platform. Designed for tactile clarity, enduring aesthetics, and acoustic excellence.",
-};
-
-const categoryIcons: Record<string, React.ElementType> = {
-  kurtis: Shirt,
-  "ethnic-wear": Crown,
-  sarees: Gem,
-  dresses: Sparkles,
-  "co-ords": Layers,
-  accessories: Sparkles,
+    "Discover contemporary Indian fashion, curated kurtis, and refined occasionwear from Veyora.",
 };
 
 export default async function StorefrontHomePage() {
   let categories: Category[] = [];
   let featuredProducts: Product[] = [];
-  let initialCollectionProducts: Product[] = [];
+  let collectionProducts: Product[] = [];
 
-  try {
-    const [cats, feat, col] = await Promise.allSettled([
-      getCachedCategories(),
-      getCachedFeaturedProducts(4),
-      getCachedProducts({ limit: 8 }),
-    ]);
+  await Promise.allSettled([
+    getCachedCategories(),
+    getCachedFeaturedProducts(5),
+    getCachedProducts({ limit: 10 }),
+  ]).then(([categoryResult, featuredResult, productResult]) => {
+    if (categoryResult.status === "fulfilled") categories = categoryResult.value || [];
+    if (featuredResult.status === "fulfilled") featuredProducts = featuredResult.value || [];
+    if (productResult.status === "fulfilled") collectionProducts = productResult.value || [];
+  });
 
-    if (cats.status === "fulfilled") categories = cats.value || [];
-    if (feat.status === "fulfilled") featuredProducts = feat.value || [];
-    if (col.status === "fulfilled") initialCollectionProducts = col.value || [];
-  } catch {
-    // Graceful fallback for offline build / mock
-  }
-
-  const heroProduct = featuredProducts[0];
-  const firstCategory = categories[0];
-  const secondCategory = categories[1];
+  const heroProducts = featuredProducts.length ? featuredProducts : collectionProducts.slice(0, 3);
+  const topPicks = featuredProducts.length ? featuredProducts : collectionProducts.slice(0, 5);
+  const activeCategory =
+    categories.find((category) => category.status === "active") ?? categories[0];
 
   return (
-    <div className="space-y-24 md:space-y-32 pb-28">
-      {/* 1. Fashion Editorial Hero Section (100% Server Rendered) */}
-      <section className="relative overflow-hidden border-b border-border/60 bg-background pt-10 pb-20 md:pt-16 md:pb-28">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(#00000010_1px,transparent_1px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_75%_65%_at_50%_40%,#000_60%,transparent_100%)] dark:bg-[radial-gradient(#ffffff10_1px,transparent_1px)]"
-        />
+    <div className="pb-16">
+      <HeroCarousel products={heroProducts} />
 
-        <Container size="xl" className="relative z-10">
-          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-10">
-            {/* Left Column: Haute Couture Typography & Actions */}
-            <div className="lg:col-span-7 space-y-8 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2.5 rounded-full border border-border/80 bg-card/80 px-3.5 py-1.5 text-xs font-medium text-foreground shadow-2xs backdrop-blur-md">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-                </span>
-                <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-                  The Festive Edit // 2026
-                </span>
-                <span className="h-3 w-[1px] bg-border" />
-                <span>Handcrafted Indian Couture</span>
-              </div>
-
-              <h1 className="text-4xl font-extrabold tracking-[-0.035em] text-foreground sm:text-6xl xl:text-[68px] leading-[1.04]">
-                Heritage craft.{" "}
-                <span className="bg-gradient-to-r from-foreground via-foreground/80 to-muted-foreground bg-clip-text text-transparent">
-                  Modern elegance.
-                </span>
-              </h1>
-
-              <p className="mx-auto max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg lg:mx-0">
-                Handwoven Chanderi silks, pure mulmul block prints, and regal Banarasi brocades.
-                Bespoke Indian ethnic wear and contemporary silhouettes tailored for celebration.
-              </p>
-
-              <div className="flex flex-col items-center justify-center gap-3.5 pt-1 sm:flex-row lg:justify-start">
-                <Button
-                  asChild
-                  size="lg"
-                  className="h-12 w-full rounded-full px-8 text-sm font-semibold shadow-lg shadow-primary/15 transition-all hover:scale-[1.02] sm:w-auto"
-                >
-                  <Link href="/shop" className="inline-flex items-center gap-2">
-                    Explore All Collections
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-
-                <Button
-                  asChild
-                  variant="outline"
-                  size="lg"
-                  className="h-12 w-full rounded-full border-border/80 bg-background/60 px-8 text-sm font-semibold backdrop-blur-sm hover:bg-muted/60 sm:w-auto"
-                >
-                  <Link href={firstCategory ? `/category/${firstCategory.slug}` : "/shop"}>
-                    {firstCategory ? `Shop ${firstCategory.name}` : "Explore Atelier"}
-                  </Link>
-                </Button>
-              </div>
-
-              {/* Trust Bar */}
-              <div className="grid grid-cols-1 gap-3 border-t border-border/60 pt-7 text-xs text-muted-foreground sm:grid-cols-3">
-                <div className="flex items-center justify-center gap-2 lg:justify-start">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full border border-border/80 bg-card text-foreground">
-                    <Truck className="h-3.5 w-3.5" />
-                  </div>
-                  <span>Express Worldwide Shipping</span>
+      {activeCategory ? (
+        <section className="border-b border-border/60 bg-card/50 py-5">
+          <Container size="xl">
+            <div className="flex items-center justify-between gap-4">
+              <Link
+                href={`/category/${activeCategory.slug}`}
+                className="group flex min-w-0 flex-1 items-center gap-4"
+              >
+                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-border bg-muted sm:h-20 sm:w-20">
+                  {activeCategory ? (
+                    <OptimizedImage
+                      src="/veyora-kurti-primary.jpg"
+                      fallbackSrc="/veyora-kurti-primary.jpg"
+                      showLoader={false}
+                      alt={activeCategory.name}
+                      width={160}
+                      height={160}
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  ) : null}
                 </div>
-                <div className="flex items-center justify-center gap-2 lg:justify-start">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full border border-border/80 bg-card text-foreground">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                  </div>
-                  <span>Quality Fabric Selection</span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-foreground">
+                    {activeCategory.name}
+                  </p>
+                  <p className="mt-1 truncate text-xs text-muted-foreground">
+                    {activeCategory.description || "Explore the available collection"}
+                  </p>
                 </div>
-                <div className="flex items-center justify-center gap-2 lg:justify-start">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full border border-border/80 bg-card text-foreground">
-                    <RotateCcw className="h-3.5 w-3.5" />
-                  </div>
-                  <span>Size Guidance Available</span>
-                </div>
-              </div>
+                <ArrowRight className="ml-auto h-4 w-4 shrink-0 text-primary transition-transform group-hover:translate-x-1" />
+              </Link>
             </div>
+          </Container>
+        </section>
+      ) : null}
 
-            {/* Right Column: Hero Fashion Campaign Stage */}
-            <div className="lg:col-span-5">
-              <div className="group relative mx-auto aspect-[4/4.8] max-w-md lg:max-w-none rounded-[30px] border border-border/80 bg-card/60 p-2.5 shadow-[0_32px_64px_-20px_rgba(0,0,0,0.12)] backdrop-blur-xl dark:shadow-[0_32px_64px_-20px_rgba(0,0,0,0.6)]">
-                <div className="relative h-full w-full overflow-hidden rounded-[22px] bg-zinc-950 ring-1 ring-inset ring-white/10 flex flex-col justify-end">
-                  {heroProduct && heroProduct.images?.[0]?.url ? (
-                    <>
-                      <OptimizedImage
-                        src={heroProduct.images[0].url}
-                        alt={heroProduct.title}
-                        fill
-                        priority
-                        className="h-full w-full object-cover object-center transition-transform duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
-                        sizes="(max-width: 1024px) 100vw, 42vw"
-                      />
-                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/30" />
-
-                      {/* Top Spec Pill */}
-                      <div className="absolute left-4 right-4 top-4 flex items-center justify-between">
-                        <span className="rounded-full border border-white/15 bg-black/50 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-zinc-200 backdrop-blur-md">
-                          {heroProduct.sku ? `EDITION // ${heroProduct.sku}` : "FESTIVE // 2026"}
-                        </span>
-                        <span className="rounded-full border border-emerald-400/30 bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-300 backdrop-blur-md">
-                          {heroProduct.stock > 0 ? "In Stock" : "Handcrafted Atelier"}
-                        </span>
-                      </div>
-
-                      {/* Floating Glassmorphic Product Card */}
-                      <Link
-                        href={`/products/${heroProduct.slug}`}
-                        className="relative z-10 mx-4 mb-4 block rounded-2xl border border-white/15 bg-zinc-950/75 p-4 text-white shadow-2xl backdrop-blur-xl transition-all duration-300 hover:border-white/35 hover:bg-zinc-950/90"
-                      >
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-zinc-400">
-                              <span>Featured Garment</span>
-                              {heroProduct.averageRating ? (
-                                <>
-                                  <span>•</span>
-                                  <span className="text-amber-400">
-                                    ★ {heroProduct.averageRating.toFixed(1)}
-                                  </span>
-                                </>
-                              ) : null}
-                            </div>
-                            <h2 className="text-sm sm:text-base font-semibold tracking-tight text-white line-clamp-1">
-                              {heroProduct.title}
-                            </h2>
-                          </div>
-
-                          <div className="flex items-center gap-3 shrink-0">
-                            <div className="text-right tabular-nums">
-                              <div className="text-base font-bold text-white">
-                                ${heroProduct.price.toFixed(2)}
-                              </div>
-                              {heroProduct.compareAtPrice &&
-                                heroProduct.compareAtPrice > heroProduct.price && (
-                                  <div className="text-[11px] text-zinc-400 line-through">
-                                    ${heroProduct.compareAtPrice.toFixed(2)}
-                                  </div>
-                                )}
-                            </div>
-                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-zinc-950 transition-transform duration-300 group-hover:scale-105">
-                              <ArrowUpRight className="h-4 w-4" />
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
-                    </>
-                  ) : (
-                    <div className="relative z-10 p-8 space-y-4 text-white text-center flex flex-col items-center justify-center h-full">
-                      <div className="h-14 w-14 rounded-2xl border border-white/20 bg-white/10 flex items-center justify-center text-amber-400 shadow-xl backdrop-blur-md">
-                        <Sparkles className="h-7 w-7" />
-                      </div>
-                      <div className="space-y-1">
-                        <div className="font-mono text-[10px] uppercase tracking-widest text-zinc-400">
-                          Haute Couture Edit // 2026
-                        </div>
-                        <h3 className="text-xl font-bold tracking-tight">
-                          Veyora Atelier Collections
-                        </h3>
-                        <p className="text-xs text-zinc-400 max-w-xs leading-relaxed">
-                          Handcrafted Indian traditional silhouettes and couture curated for festive
-                          celebrations.
-                        </p>
-                      </div>
-                      <Button
-                        asChild
-                        size="sm"
-                        className="rounded-full px-6 text-xs font-semibold bg-white text-zinc-950 hover:bg-zinc-200"
-                      >
-                        <Link href="/shop" className="inline-flex items-center gap-1.5">
-                          Browse Storefront Catalog
-                          <ArrowRight className="h-3.5 w-3.5" />
-                        </Link>
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </Container>
-      </section>
-
-      {/* 2. Shop by Category — Fashion Department Cards (100% Server Rendered) */}
-      <section id="categories">
-        <Container size="xl" className="space-y-10">
-          <div className="flex flex-col justify-between gap-4 border-b border-border/60 pb-6 sm:flex-row sm:items-end">
+      <section className="py-12 sm:py-16">
+        <Container size="xl" className="space-y-7">
+          <div className="flex items-end justify-between gap-4">
             <div>
-              <span className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                01 // Curated Departments
-              </span>
-              <h2 className="mt-1.5 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
-                Shop by Category
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
+                Trending Now
+              </p>
+              <h2 className="mt-2 text-3xl font-medium tracking-tight text-foreground sm:text-[38px]">
+                Our Top Picks
               </h2>
             </div>
             <Link
               href="/shop"
-              className="group inline-flex items-center gap-1.5 text-xs font-semibold text-foreground transition-colors hover:text-primary"
+              className="hidden items-center gap-1.5 text-xs font-semibold text-primary sm:flex"
             >
-              <span>Explore All Garments</span>
-              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {categories.length === 0 ? (
-              <div className="col-span-full rounded-3xl border border-dashed border-border/80 bg-muted/20 py-16 px-4">
-                <EmptyState
-                  icon={<Shirt className="h-6 w-6 text-muted-foreground" />}
-                  title="No fashion categories found"
-                  description="Categories published through the admin dashboard will appear here."
-                  action={
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      className="rounded-full px-5 text-xs font-semibold"
-                    >
-                      <Link href="/shop">Browse Storefront</Link>
-                    </Button>
-                  }
-                />
-              </div>
-            ) : (
-              categories.map((cat, idx) => {
-                const Icon = categoryIcons[cat.slug] || Sparkles;
-                const indexNumber = String(idx + 1).padStart(2, "0");
-                return (
-                  <Link
-                    key={cat.id}
-                    href={`/category/${cat.slug}`}
-                    className="group relative flex flex-col justify-between overflow-hidden rounded-[24px] border border-border/60 bg-card/80 p-6 min-h-[220px] transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-foreground/25 hover:bg-card hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.08)]"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border/80 bg-background text-foreground shadow-2xs transition-colors duration-300 group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground">
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs text-muted-foreground/70">
-                          /{indexNumber}
-                        </span>
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full border border-transparent text-muted-foreground transition-all duration-300 group-hover:border-border group-hover:bg-background group-hover:text-foreground">
-                          <ArrowUpRight className="h-3.5 w-3.5" />
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="mt-8 space-y-1.5">
-                      <h3 className="text-xl font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">
-                        {cat.name}
-                      </h3>
-                      <p className="text-xs leading-relaxed text-muted-foreground line-clamp-2">
-                        {cat.description ||
-                          "Handcrafted garments and bespoke traditional silhouettes."}
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })
-            )}
-          </div>
-        </Container>
-      </section>
-
-      {/* 3. New Arrivals Showcase */}
-      <section>
-        <Container size="xl" className="space-y-10">
-          <div className="flex flex-col justify-between gap-4 border-b border-border/60 pb-6 sm:flex-row sm:items-end">
-            <div>
-              <div className="inline-flex items-center gap-1.5 font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                <Flame className="h-3.5 w-3.5 text-amber-500" />
-                <span>02 // Just Dropped</span>
-              </div>
-              <h2 className="mt-1.5 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
-                New Arrivals
-              </h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Discover the latest styles and fresh additions to your festive and everyday
-                wardrobe.
-              </p>
-            </div>
-            <Link
-              href="/new-arrivals"
-              className="group inline-flex items-center gap-1.5 text-xs font-semibold text-foreground transition-colors hover:text-primary"
-            >
-              <span>View All New Arrivals</span>
-              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+              View All Products
+              <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
           <ProductGrid
-            products={featuredProducts}
+            products={topPicks}
             categories={categories}
-            columns={4}
-            emptyTitle="No garments available yet"
-            emptyDescription="New fashion pieces will appear here as soon as they are published."
+            columns={5}
+            emptyTitle="No featured garments available"
+            emptyDescription="New Veyora products will appear here when they are published."
           />
+
+          <Link
+            href="/shop"
+            className="flex items-center justify-center gap-1.5 text-xs font-semibold text-primary sm:hidden"
+          >
+            View All Products
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </Container>
       </section>
 
-      {/* 4. Artisanal Heritage Campaign Banner (100% Server Rendered) */}
-      <section>
-        <Container size="xl">
-          <div className="relative overflow-hidden rounded-[28px] border border-zinc-800/90 bg-zinc-950 p-8 text-white shadow-2xl sm:p-12 md:p-16">
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:48px_48px]"
-            />
-
-            <div className="relative z-10 grid grid-cols-1 items-end gap-10 lg:grid-cols-12">
-              <div className="lg:col-span-8 space-y-6">
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3.5 py-1 font-mono text-[11px] uppercase tracking-widest text-zinc-300">
-                  <Sparkles className="h-3 w-3 text-amber-400" />
-                  <span>Artisan Philosophy // Haute Couture</span>
+      {activeCategory ? (
+        <section className="pb-12 sm:pb-16">
+          <Container size="xl">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Link
+                href="/new-arrivals"
+                className="group relative min-h-[220px] overflow-hidden rounded-md border border-border/70 bg-card"
+              >
+                {topPicks[0] ? (
+                  <OptimizedImage
+                    src="/veyora-kurti-festive.jpg"
+                    fallbackSrc="/veyora-kurti-primary.jpg"
+                    showLoader={false}
+                    alt="Festive fashion selection"
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                ) : null}
+                <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/70 to-transparent" />
+                <div className="relative z-10 max-w-[220px] px-7 py-8 sm:px-10 sm:py-10">
+                  <p className="text-[26px] leading-[1.05] font-medium text-foreground">
+                    Festive Edit
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">Explore current arrivals</p>
+                  <span className="mt-5 inline-flex items-center gap-1.5 text-xs font-semibold text-primary">
+                    Shop Now
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </span>
                 </div>
+              </Link>
 
-                <h2 className="text-3xl font-extrabold tracking-[-0.03em] leading-[1.08] sm:text-4xl md:text-5xl">
-                  Centuries of Indian weaving, cut for contemporary life.
-                </h2>
-
-                <p className="max-w-2xl text-sm leading-relaxed text-zinc-400 sm:text-base">
-                  Every Veyora collection explores heritage Indian craft through regional textiles,
-                  considered details, and contemporary silhouettes. Product materials and garment
-                  specifications are listed individually for a clear, informed selection.
-                </p>
-
-                <div className="flex flex-wrap items-center gap-3.5 pt-2">
-                  <Button
-                    asChild
-                    size="lg"
-                    className="h-12 rounded-full bg-white px-7 text-sm font-semibold text-zinc-950 hover:bg-zinc-200"
-                  >
-                    <Link
-                      href={
-                        secondCategory
-                          ? `/category/${secondCategory.slug}`
-                          : firstCategory
-                            ? `/category/${firstCategory.slug}`
-                            : "/shop"
-                      }
-                    >
-                      {secondCategory
-                        ? `Explore ${secondCategory.name}`
-                        : firstCategory
-                          ? `Explore ${firstCategory.name}`
-                          : "Explore Storefront"}
-                    </Link>
-                  </Button>
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="lg"
-                    className="h-12 rounded-full border-zinc-700 bg-transparent px-7 text-sm font-semibold text-white hover:bg-white/10"
-                  >
-                    <Link href="/collections">Explore Curated Collections</Link>
-                  </Button>
+              <Link
+                href={`/category/${activeCategory.slug}`}
+                className="group relative min-h-[220px] overflow-hidden rounded-md border border-border/70 bg-card"
+              >
+                {activeCategory ? (
+                  <OptimizedImage
+                    src="/veyora-kurti-detail.jpg"
+                    fallbackSrc="/veyora-kurti-primary.jpg"
+                    showLoader={false}
+                    alt={activeCategory.name}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                ) : null}
+                <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/65 to-transparent" />
+                <div className="relative z-10 max-w-[260px] px-7 py-8 sm:px-10 sm:py-10">
+                  <p className="text-[26px] leading-[1.05] font-medium text-foreground">
+                    Handcrafted
+                    <br />
+                    with Heritage
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">Discover timeless elegance</p>
+                  <span className="mt-5 inline-flex items-center gap-1.5 text-xs font-semibold text-primary">
+                    Explore Collection
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </span>
                 </div>
-              </div>
-
-              {/* Right Column: Fabric Specs Pillar */}
-              <div className="lg:col-span-4">
-                <div className="grid grid-cols-2 gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-md">
-                  <div className="space-y-1 border-b border-white/10 pb-3">
-                    <div className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">
-                      Weaves
-                    </div>
-                    <div className="text-sm font-semibold text-zinc-100">
-                      Chanderi &amp; Katan Silk
-                    </div>
-                  </div>
-                  <div className="space-y-1 border-b border-white/10 pb-3">
-                    <div className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">
-                      Craft
-                    </div>
-                    <div className="font-mono text-sm font-semibold text-zinc-100">
-                      Hand Gota Patti
-                    </div>
-                  </div>
-                  <div className="space-y-1 pt-1">
-                    <div className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">
-                      Cotton
-                    </div>
-                    <div className="text-sm font-semibold text-zinc-100">Mulmul Cotton</div>
-                  </div>
-                  <div className="space-y-1 pt-1">
-                    <div className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">
-                      Dyes
-                    </div>
-                    <div className="text-sm font-semibold text-zinc-100">Natural Herbal Dyes</div>
-                  </div>
-                </div>
-              </div>
+              </Link>
             </div>
+          </Container>
+        </section>
+      ) : null}
 
-            <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-amber-500/10 blur-3xl" />
-            <div className="pointer-events-none absolute bottom-0 right-1/3 -mb-24 h-72 w-72 rounded-full bg-emerald-500/15 blur-3xl" />
+      <section className="border-y border-border/60 bg-card/40 py-6">
+        <Container size="xl">
+          <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
+            {[
+              { icon: Truck, title: "Free Shipping", text: "On qualifying orders" },
+              { icon: ShieldCheck, title: "Secure Payments", text: "Protected checkout" },
+              { icon: RotateCcw, title: "Easy Returns", text: "Clear return options" },
+              { icon: Sparkles, title: "Premium Quality", text: "Carefully selected fabrics" },
+            ].map((item) => (
+              <div key={item.title} className="flex items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-background">
+                  <item.icon className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-foreground">{item.title}</p>
+                  <p className="mt-0.5 text-[10px] text-muted-foreground">{item.text}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </Container>
       </section>
 
-      {/* 5. Interactive Wardrobe Collections by Department (Client Leaf Boundary) */}
-      <CuratedCollectionClient
-        categories={categories}
-        initialProducts={initialCollectionProducts}
-      />
+      <section className="py-12 sm:py-16">
+        <Container size="xl">
+          <div className="flex flex-col items-start justify-between gap-5 border-b border-border/70 pb-8 md:flex-row md:items-end">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
+                Veyora Newsletter
+              </p>
+              <h2 className="mt-2 text-3xl font-medium tracking-tight text-foreground">
+                Stay in Style
+              </h2>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Get exclusive offers and style updates.
+              </p>
+            </div>
+            <Button asChild variant="outline" className="h-11 rounded-sm px-6 text-xs">
+              <Link href="/shop">Explore the Collection</Link>
+            </Button>
+          </div>
+        </Container>
+      </section>
     </div>
   );
 }

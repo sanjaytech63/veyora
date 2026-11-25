@@ -92,7 +92,7 @@ describe("NotificationListItem", () => {
     expect(screen.getByText("Order Dispatched")).toBeInTheDocument();
     expect(screen.getByText(/Your royal Banarasi silk order/i)).toBeInTheDocument();
     expect(screen.getByText("Shipping")).toBeInTheDocument();
-    expect(screen.getByText(/5m ago/i)).toBeInTheDocument();
+    expect(screen.getByText(/^\d{1,2} [A-Z][a-z]{2}$/)).toBeInTheDocument();
   });
 
   it("calls onMarkRead and onSelect when clicked if unread", () => {
@@ -202,14 +202,14 @@ describe("Notification Formatters & Target URL Resolver", () => {
     expect(systemStyle.badgeLabel).toBe("Atelier");
   });
 
-  it("formats relative timestamps accurately", () => {
+  it("formats timestamps as stable absolute dates", () => {
     const now = new Date();
-    expect(formatNotificationTime(now.toISOString())).toBe("Just now");
+    expect(formatNotificationTime(now.toISOString())).toMatch(/^\d{1,2} [A-Z][a-z]{2}$/);
 
     const twoHoursAgo = new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString();
-    expect(formatNotificationTime(twoHoursAgo)).toBe("2h ago");
+    expect(formatNotificationTime(twoHoursAgo)).toMatch(/^\d{1,2} [A-Z][a-z]{2}$/);
 
     const threeDaysAgo = new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString();
-    expect(formatNotificationTime(threeDaysAgo)).toBe("3d ago");
+    expect(formatNotificationTime(threeDaysAgo)).toMatch(/^\d{1,2} [A-Z][a-z]{2}$/);
   });
 });

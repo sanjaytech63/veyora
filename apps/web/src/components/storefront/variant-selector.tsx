@@ -13,14 +13,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 interface VariantSelectorProps {
   variants: ProductVariant[];
@@ -204,73 +196,14 @@ export function VariantSelector({
               </DialogTrigger>
               <DialogContent className="max-w-md rounded-3xl p-6">
                 <DialogHeader>
-                  <DialogTitle className="text-lg font-bold">Apparel Size Chart</DialogTitle>
+                  <DialogTitle className="text-lg font-bold">Size &amp; Fit Guide</DialogTitle>
                   <DialogDescription className="text-xs text-muted-foreground">
-                    Standard garment body measurements in inches for Kurtis, Dresses, and Ensembles.
+                    Brand-specific measurement data is not currently available.
                   </DialogDescription>
                 </DialogHeader>
-
-                <div className="py-2">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="text-xs">
-                        <TableHead className="font-bold">Size</TableHead>
-                        <TableHead>Bust (in)</TableHead>
-                        <TableHead>Waist (in)</TableHead>
-                        <TableHead>Hip (in)</TableHead>
-                        <TableHead>Length (in)</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="text-xs">
-                      <TableRow>
-                        <TableCell className="font-bold">XS</TableCell>
-                        <TableCell>32 - 33</TableCell>
-                        <TableCell>26 - 27</TableCell>
-                        <TableCell>36 - 37</TableCell>
-                        <TableCell>44</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-bold">S</TableCell>
-                        <TableCell>34 - 35</TableCell>
-                        <TableCell>28 - 29</TableCell>
-                        <TableCell>38 - 39</TableCell>
-                        <TableCell>45</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-bold">M</TableCell>
-                        <TableCell>36 - 37</TableCell>
-                        <TableCell>30 - 31</TableCell>
-                        <TableCell>40 - 41</TableCell>
-                        <TableCell>45</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-bold">L</TableCell>
-                        <TableCell>38 - 40</TableCell>
-                        <TableCell>32 - 34</TableCell>
-                        <TableCell>42 - 44</TableCell>
-                        <TableCell>46</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-bold">XL</TableCell>
-                        <TableCell>41 - 43</TableCell>
-                        <TableCell>35 - 37</TableCell>
-                        <TableCell>45 - 47</TableCell>
-                        <TableCell>46</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-bold">XXL</TableCell>
-                        <TableCell>44 - 46</TableCell>
-                        <TableCell>38 - 40</TableCell>
-                        <TableCell>48 - 50</TableCell>
-                        <TableCell>47</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-
-                <div className="rounded-xl border border-border/60 bg-muted/30 p-3 text-[11px] text-muted-foreground leading-relaxed">
-                  <strong>Fit Advice:</strong> If you are between sizes, we recommend ordering one
-                  size up for traditional straight and A-line kurtis.
+                <div className="rounded-md border border-border/70 bg-muted/30 p-4 text-xs text-muted-foreground">
+                  Use the garment label and the available size options before ordering. Measurements
+                  and fit guidance should be confirmed from the product details supplied by Veyora.
                 </div>
               </DialogContent>
             </Dialog>

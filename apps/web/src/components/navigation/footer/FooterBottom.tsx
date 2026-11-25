@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import { SERVICES } from "@veyora/config";
 import { cn } from "@/lib/utils";
@@ -7,7 +9,11 @@ interface FooterBottomProps {
 }
 
 export function FooterBottom({ className }: FooterBottomProps) {
-  const currentYear = new Date().getFullYear();
+  const [currentYear, setCurrentYear] = React.useState(2026);
+
+  React.useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
 
   return (
     <div
