@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import { AppProviders } from "@/providers/app-providers";
 import { StoreLayout } from "@/components/layout/store-layout";
-import { WebSiteJsonLd } from "@/components/storefront/json-ld";
+import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/storefront/json-ld";
+import { siteConfig } from "@/config/site";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -10,53 +11,53 @@ const poppins = Poppins({
   weight: ["300", "400", "500", "600", "700"],
   variable: "--font-poppins",
   display: "swap",
+  fallback: [
+    "system-ui",
+    "-apple-system",
+    "BlinkMacSystemFont",
+    "Segoe UI",
+    "Roboto",
+    "sans-serif",
+  ],
+  adjustFontFallback: true,
+  preload: true,
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://veyora.store";
-
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(siteConfig.url),
   title: {
-    default: "Veyora — Minimal Fashion & Precision Hardware",
-    template: "%s | Veyora",
+    default: siteConfig.defaultTitle,
+    template: siteConfig.titleTemplate,
   },
-  description:
-    "Minimalist, editorial fashion & precision hardware e-commerce platform. Designed for tactile clarity, enduring aesthetics, and acoustic excellence.",
-  keywords: [
-    "minimal fashion",
-    "precision hardware",
-    "acoustic listening",
-    "desk instruments",
-    "curated fashion",
-    "veyora atelier",
-  ],
-  authors: [{ name: "Veyora Atelier" }],
-  creator: "Veyora",
+  description: siteConfig.description,
+  keywords: [...siteConfig.keywords],
+  authors: [{ name: siteConfig.author.name, url: siteConfig.author.url }],
+  creator: siteConfig.creator,
+  publisher: siteConfig.publisher,
   alternates: {
     canonical: "/",
   },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: siteUrl,
-    siteName: "Veyora Atelier",
-    title: "Veyora — Minimal Fashion & Precision Hardware",
-    description:
-      "Minimalist, editorial fashion & precision hardware e-commerce platform. Designed for tactile clarity, enduring aesthetics, and acoustic excellence.",
+    url: siteConfig.url,
+    siteName: siteConfig.name,
+    title: siteConfig.defaultTitle,
+    description: siteConfig.description,
     images: [
       {
-        url: `${siteUrl}/og-image.jpg`,
+        url: siteConfig.ogImage,
         width: 1200,
         height: 630,
-        alt: "Veyora Atelier Storefront",
+        alt: `${siteConfig.name} — ${siteConfig.tagline}`,
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Veyora — Minimal Fashion & Precision Hardware",
-    description:
-      "Minimalist, editorial fashion & precision hardware e-commerce platform. Designed for tactile clarity and enduring aesthetics.",
+    title: siteConfig.defaultTitle,
+    description: siteConfig.description,
+    images: [siteConfig.ogImage],
     creator: "@veyora",
   },
   robots: {
@@ -76,6 +77,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={poppins.variable} suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans text-foreground antialiased selection:bg-primary/20 selection:text-primary">
+        <OrganizationJsonLd />
         <WebSiteJsonLd />
         <AppProviders>
           <StoreLayout>{children}</StoreLayout>

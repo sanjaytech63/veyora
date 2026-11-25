@@ -21,12 +21,14 @@ const SocketContext = React.createContext<SocketContextValue>({
 export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [socket, setSocket] = React.useState<Socket | null>(null);
   const [isConnected, setIsConnected] = React.useState(false);
-  const { user, isAuthenticated } = useAuthStore();
+  // Narrow selectors: only re-evaluate on auth status or user ID change, not on full store updates
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const userId = useAuthStore((s) => s.user?.id);
   const queryClient = useQueryClient();
 
   React.useEffect(() => {
     // Only connect when authenticated with active session
-    if (!isAuthenticated || !user) {
+    if (!isAuthenticated || !userId) {
       if (socket) {
         socket.disconnect();
         setSocket(null);
@@ -102,11 +104,12 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     return () => {
       newSocket.disconnect();
     };
-  }, [isAuthenticated, user, queryClient]);
+  }, [isAuthenticated, userId, queryClient]);
 
-  return (
-    <SocketContext.Provider value={{ socket, isConnected }}>{children}</SocketContext.Provider>
-  );
+  // Memoize context value to prevent unnecessary re-renders in useSocket() consumers
+  const contextValue = React.useMemo(() => ({ socket, isConnected }), [socket, isConnected]);
+
+  return <SocketContext.Provider value={contextValue}>{children}</SocketContext.Provider>;
 }
 
 export const useSocket = () => React.useContext(SocketContext);

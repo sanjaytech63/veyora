@@ -217,7 +217,7 @@ describe("Customer Storefront - Fashion E-Commerce", () => {
       );
 
       expect(screen.getByText(/color/i)).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "S" })).toBeInTheDocument();
+      expect(screen.getByRole("radio", { name: /size: s/i })).toBeInTheDocument();
     });
 
     it("triggers onSelectVariant callback when user clicks a variant swatch", () => {

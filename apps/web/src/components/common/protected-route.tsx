@@ -18,7 +18,11 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   React.useEffect(() => {
     if (!isInitializing && !isAuthenticated) {
-      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+      const redirectQuery =
+        pathname && pathname !== "/" && pathname !== "/account" && pathname !== "/login"
+          ? `?redirect=${encodeURIComponent(pathname)}`
+          : "";
+      router.push(`/login${redirectQuery}`);
     }
   }, [isAuthenticated, isInitializing, pathname, router]);
 
@@ -27,7 +31,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!isAuthenticated) {
-    return null;
+    return <AuthLoadingScreen message="Redirecting to sign in..." />;
   }
 
   return <>{children}</>;

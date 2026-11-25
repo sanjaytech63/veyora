@@ -10,7 +10,8 @@ import { ShieldCheck, ChevronLeft, ChevronRight, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function AdminSidebar() {
-  const { sidebarCollapsed, toggleSidebar } = useAdminUIStore();
+  const sidebarCollapsed = useAdminUIStore((s) => s.sidebarCollapsed);
+  const toggleSidebar = useAdminUIStore((s) => s.toggleSidebar);
 
   return (
     <aside

@@ -179,10 +179,15 @@ export function ProductCard({
           <span className="font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground truncate max-w-[150px]">
             {categoryName || "Handcrafted Couture"}
           </span>
-          <div className="inline-flex items-center gap-1 rounded-md bg-muted/60 px-1.5 py-0.5 text-[11px] font-medium text-foreground/80 tabular-nums shrink-0">
-            <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
-            <span>4.9</span>
-          </div>
+          {typeof product.averageRating === "number" && product.averageRating > 0 ? (
+            <div
+              className="inline-flex items-center gap-1 rounded-md bg-muted/60 px-1.5 py-0.5 text-[11px] font-medium text-foreground/80 tabular-nums shrink-0"
+              aria-label={`Rating: ${product.averageRating.toFixed(1)} out of 5 stars`}
+            >
+              <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" aria-hidden="true" />
+              <span>{product.averageRating.toFixed(1)}</span>
+            </div>
+          ) : null}
         </div>
 
         {/* Title */}
@@ -203,7 +208,8 @@ export function ProductCard({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      aria-label={`Color: ${c.name}`}
+                      aria-label={`Color: ${c.name}${isSelected ? ", selected" : ""}`}
+                      aria-pressed={isSelected}
                       title={c.name}
                       onMouseEnter={() => {
                         setActiveColor(c.name);
@@ -215,7 +221,7 @@ export function ProductCard({
                         if (c.image) setActiveImage(c.image);
                       }}
                       className={cn(
-                        "relative h-3.5 w-3.5 rounded-full p-0 transition-all duration-200 focus:outline-none",
+                        "relative h-3.5 w-3.5 rounded-full p-0 transition-all duration-200 focus:outline-none after:absolute after:-inset-1.5",
                         getSwatchClass(c.name),
                         isSelected
                           ? "scale-110 ring-2 ring-foreground ring-offset-2 ring-offset-card"

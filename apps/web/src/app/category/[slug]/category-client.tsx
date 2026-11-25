@@ -65,7 +65,7 @@ export function CategoryClient({ initialCategory }: CategoryClientProps) {
         </nav>
 
         {/* Category Hero Banner */}
-        <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-r from-muted/60 via-card to-card p-8 sm:p-12 shadow-xs">
+        <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-linear-to-r from-muted/60 via-card to-card p-8 sm:p-12 shadow-xs">
           <div className="max-w-2xl space-y-4">
             <span className="text-xs font-bold uppercase tracking-wider text-primary">
               Category Collection
@@ -127,7 +127,7 @@ export function CategoryClient({ initialCategory }: CategoryClientProps) {
               value={sortBy}
               onValueChange={(val: "newest" | "price_asc" | "price_desc") => setSortBy(val)}
             >
-              <SelectTrigger className="w-[170px] rounded-xl text-xs font-medium border-border/60">
+              <SelectTrigger className="w-42.5 rounded-xl text-xs font-medium border-border/60">
                 <SelectValue placeholder="Sort order" />
               </SelectTrigger>
               <SelectContent align="end">

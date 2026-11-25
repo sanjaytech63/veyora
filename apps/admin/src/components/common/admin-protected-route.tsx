@@ -24,7 +24,10 @@ export function AdminProtectedRoute({ children }: AdminProtectedRouteProps) {
       !isInitializing &&
       (!isAuthenticated || !admin || (admin.role !== "admin" && admin.role !== "superadmin"))
     ) {
-      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+      const redirectQuery =
+        pathname && pathname !== "/" ? `?redirect=${encodeURIComponent(pathname)}` : "";
+      const destination = `/login${redirectQuery}`;
+      router.push(destination);
     }
   }, [admin, isAuthenticated, isInitializing, pathname, router]);
 
@@ -37,7 +40,7 @@ export function AdminProtectedRoute({ children }: AdminProtectedRouteProps) {
   }
 
   if (!isAuthenticated || !admin || (admin.role !== "admin" && admin.role !== "superadmin")) {
-    return null;
+    return <AdminAuthLoadingScreen message="Redirecting to administrator sign in..." />;
   }
 
   return <>{children}</>;

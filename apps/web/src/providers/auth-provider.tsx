@@ -5,7 +5,9 @@ import { useAuthStore } from "@/stores/auth-store";
 import { authApi } from "@/lib/api/auth-api";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { setAuth, setUnauthenticated } = useAuthStore();
+  // Use narrow action selectors so AuthProvider never re-renders on auth state changes
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const setUnauthenticated = useAuthStore((s) => s.setUnauthenticated);
   const initRef = React.useRef(false);
 
   React.useEffect(() => {

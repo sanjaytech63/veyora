@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { AuthUser } from "@veyora/types";
 import { apiClient } from "@/lib/api/api-client";
 import { adminAuthApi } from "@/lib/api/admin-auth-api";
+import { clearQueryClient } from "@/lib/api/query-client";
 
 export type AdminAuthStatus = "initializing" | "authenticated" | "unauthenticated";
 
@@ -37,23 +38,27 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
 
   setAdmin: (admin) => set({ admin }),
 
-  clearAdminAuth: () =>
+  clearAdminAuth: () => {
+    clearQueryClient();
     set({
       status: "unauthenticated",
       admin: null,
       accessToken: null,
       isAuthenticated: false,
       isLoading: false,
-    }),
+    });
+  },
 
-  setUnauthenticated: () =>
+  setUnauthenticated: () => {
+    clearQueryClient();
     set({
       status: "unauthenticated",
       admin: null,
       accessToken: null,
       isAuthenticated: false,
       isLoading: false,
-    }),
+    });
+  },
 
   setLoading: (isLoading) =>
     set({

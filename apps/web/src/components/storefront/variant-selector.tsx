@@ -134,7 +134,7 @@ export function VariantSelector({
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3" role="radiogroup" aria-label="Color options">
             {colors.map((color) => {
               const isSelected = selectedVariant?.color === color;
               const matchingVar = variants.find((v) => v.color === color);
@@ -146,8 +146,10 @@ export function VariantSelector({
                   type="button"
                   variant="ghost"
                   size="icon"
+                  role="radio"
                   onClick={() => handleColorChange(color)}
-                  aria-label={`Select ${color}`}
+                  aria-label={`Color: ${color}${isSelected ? ", selected" : ""}${isOutOfStock ? " (out of stock)" : ""}`}
+                  aria-checked={isSelected}
                   title={`${color}${isOutOfStock ? " (Out of Stock)" : ""}`}
                   className={cn(
                     "relative flex h-9 w-9 items-center justify-center rounded-full transition-all ring-offset-background p-0",
@@ -274,7 +276,7 @@ export function VariantSelector({
             </Dialog>
           </div>
 
-          <div className="flex flex-wrap gap-2.5">
+          <div className="flex flex-wrap gap-2.5" role="radiogroup" aria-label="Size options">
             {sizes.map((size) => {
               const isSelected = selectedVariant?.size === size;
               const matchingVar = variants.find(
@@ -287,10 +289,13 @@ export function VariantSelector({
                 <Button
                   key={size}
                   type="button"
+                  role="radio"
                   variant={isSelected ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleSizeChange(size)}
                   disabled={isOutOfStock}
+                  aria-label={`Size: ${size}${isSelected ? ", selected" : ""}${isOutOfStock ? " (out of stock)" : ""}`}
+                  aria-checked={isSelected}
                   className={cn(
                     "rounded-xl px-4 py-2 text-xs font-semibold tracking-tight transition-all",
                     isSelected ? "shadow-xs" : "hover:border-foreground/40 hover:bg-accent/40",

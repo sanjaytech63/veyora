@@ -3,6 +3,7 @@
 import * as React from "react";
 import { io, Socket } from "socket.io-client";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAdminAuthStore } from "@/stores/admin-auth-store";
 import { SOCKET_EVENTS } from "@veyora/config";
 import { toast } from "sonner";
 
@@ -19,9 +20,22 @@ const AdminSocketContext = React.createContext<AdminSocketContextValue>({
 export function AdminSocketProvider({ children }: { children: React.ReactNode }) {
   const [socket, setSocket] = React.useState<Socket | null>(null);
   const [isConnected, setIsConnected] = React.useState(false);
+  // Narrow selectors: only re-evaluate on auth status or admin ID change
+  const isAuthenticated = useAdminAuthStore((s) => s.isAuthenticated);
+  const adminId = useAdminAuthStore((s) => s.admin?.id);
   const queryClient = useQueryClient();
 
   React.useEffect(() => {
+    // Only connect when authenticated with active admin session
+    if (!isAuthenticated || !adminId) {
+      if (socket) {
+        socket.disconnect();
+        setSocket(null);
+        setIsConnected(false);
+      }
+      return;
+    }
+
     const socketUrl =
       process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:4000";
 
@@ -80,13 +94,12 @@ export function AdminSocketProvider({ children }: { children: React.ReactNode })
     return () => {
       newSocket.disconnect();
     };
-  }, [queryClient]);
+  }, [isAuthenticated, adminId, queryClient]);
 
-  return (
-    <AdminSocketContext.Provider value={{ socket, isConnected }}>
-      {children}
-    </AdminSocketContext.Provider>
-  );
+  // Memoize context value to prevent unnecessary re-renders in useAdminSocket() consumers
+  const contextValue = React.useMemo(() => ({ socket, isConnected }), [socket, isConnected]);
+
+  return <AdminSocketContext.Provider value={contextValue}>{children}</AdminSocketContext.Provider>;
 }
 
 export const useAdminSocket = () => React.useContext(AdminSocketContext);

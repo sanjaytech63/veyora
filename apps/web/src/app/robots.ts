@@ -1,8 +1,7 @@
 import { MetadataRoute } from "next";
+import { siteConfig } from "@/config/site";
 
 export default function robots(): MetadataRoute.Robots {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://veyora.store";
-
   return {
     rules: [
       {
@@ -14,8 +13,17 @@ export default function robots(): MetadataRoute.Robots {
           "/checkout",
           "/checkout/*",
           "/cart",
+          "/cart/*",
+          "/account",
+          "/account/*",
+          "/profile",
+          "/profile/*",
           "/orders",
           "/orders/*",
+          "/search",
+          "/search/*",
+          "/wishlist",
+          "/wishlist/*",
           "/api",
           "/api/*",
           "/login",
@@ -26,6 +34,7 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: `${siteUrl}/sitemap.xml`,
+    sitemap: `${siteConfig.url}/sitemap.xml`,
+    host: siteConfig.url,
   };
 }

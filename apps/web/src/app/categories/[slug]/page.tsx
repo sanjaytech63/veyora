@@ -1,4 +1,10 @@
-import CategoryPage, { generateMetadata } from "../../category/[slug]/page";
+import { redirect } from "next/navigation";
 
-export { generateMetadata };
-export default CategoryPage;
+interface PageProps {
+  params: Promise<{ slug: string }>;
+}
+
+export default async function CategoriesRedirectPage({ params }: PageProps) {
+  const { slug } = await params;
+  redirect(`/category/${slug}`);
+}

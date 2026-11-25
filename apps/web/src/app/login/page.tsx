@@ -29,11 +29,16 @@ import {
 import { toast } from "sonner";
 import { ApiClientError } from "@/lib/api/api-client";
 import { ShoppingBag, LoaderCircle, Eye, EyeOff } from "lucide-react";
+import { getSafeRedirectUrl } from "@veyora/utils";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectPath = searchParams.get("redirect") || "/";
+  const rawRedirect = searchParams.get("redirect");
+  const redirectPath = React.useMemo(() => {
+    const safe = getSafeRedirectUrl(rawRedirect, "/");
+    return safe === "/login" ? "/" : safe;
+  }, [rawRedirect]);
   const { setAuth, isAuthenticated } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
@@ -148,9 +153,8 @@ function LoginForm() {
                           type="button"
                           onClick={() => setShowPassword((prev) => !prev)}
                           disabled={isSubmitting}
-                          className="absolute right-0 top-0 h-full px-3 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-r-md cursor-pointer disabled:pointer-events-none"
+                          className="absolute right-0 top-0 h-full px-3 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-r-md cursor-pointer disabled:pointer-events-none"
                           aria-label={showPassword ? "Hide password" : "Show password"}
-                          tabIndex={-1}
                         >
                           {showPassword ? (
                             <EyeOff className="h-4 w-4" aria-hidden="true" />

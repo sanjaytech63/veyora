@@ -46,7 +46,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           ref={ref}
           type="search"
           role="searchbox"
-          aria-label="Search luxury menswear and apparel catalog"
+          aria-label="Search fashion and apparel catalog"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={onKeyDown}

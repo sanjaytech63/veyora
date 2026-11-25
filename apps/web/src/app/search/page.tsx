@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Metadata } from "next";
 import { SearchClient } from "./search-client";
+import { siteConfig, getCanonicalUrl } from "@/config/site";
 
 interface SearchPageProps {
   searchParams: Promise<{ q?: string; page?: string }>;
@@ -8,27 +9,25 @@ interface SearchPageProps {
 
 export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
   const { q } = await searchParams;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://veyora.store";
-  const title = q ? `Search: "${q}" | Veyora Atelier` : "Search Catalog | Veyora Atelier";
-  const canonicalUrl = q ? `/search?q=${encodeURIComponent(q)}` : "/search";
+  const title = q ? `Search: "${q}"` : "Search Catalog";
 
   return {
     title,
     description: q
-      ? `Search results for "${q}" across precision hardware, acoustic listening gear, and minimal couture at Veyora Atelier.`
-      : "Search precision hardware, acoustic listening gear, and desk instruments crafted by Veyora.",
+      ? `Search results for "${q}" on ${siteConfig.brandName}. ${siteConfig.tagline}`
+      : `Search curated fashion and apparel on ${siteConfig.brandName}.`,
     alternates: {
-      canonical: canonicalUrl,
+      canonical: getCanonicalUrl("/search"),
     },
-    openGraph: {
-      title,
-      description: `Explore discoverable catalog results for hardware and apparel on Veyora.`,
-      url: `${siteUrl}${canonicalUrl}`,
-      type: "website",
-    },
+    // Search pages must NEVER be indexed to avoid duplicate content and crawler traps
     robots: {
-      index: !q,
-      follow: true,
+      index: false,
+      follow: false,
+      nocache: true,
+      googleBot: {
+        index: false,
+        follow: false,
+      },
     },
   };
 }

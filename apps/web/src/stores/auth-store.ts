@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { AuthUser } from "@veyora/types";
 import { apiClient } from "@/lib/api/api-client";
 import { authApi } from "@/lib/api/auth-api";
+import { clearQueryClient } from "@/lib/api/query-client";
 
 export type AuthStatus = "initializing" | "authenticated" | "unauthenticated";
 
@@ -37,23 +38,27 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setUser: (user) => set({ user }),
 
-  clearAuth: () =>
+  clearAuth: () => {
+    clearQueryClient();
     set({
       status: "unauthenticated",
       user: null,
       accessToken: null,
       isAuthenticated: false,
       isLoading: false,
-    }),
+    });
+  },
 
-  setUnauthenticated: () =>
+  setUnauthenticated: () => {
+    clearQueryClient();
     set({
       status: "unauthenticated",
       user: null,
       accessToken: null,
       isAuthenticated: false,
       isLoading: false,
-    }),
+    });
+  },
 
   setLoading: (isLoading) =>
     set({

@@ -17,31 +17,83 @@ export function useWishlist() {
 
   const addToWishlistMutation = useMutation({
     mutationFn: (productId: string) => wishlistApi.addToWishlist({ productId }),
+    onMutate: async (productId: string) => {
+      await queryClient.cancelQueries({ queryKey: wishlistKeys.current() });
+      const previousWishlist = queryClient.getQueryData<WishlistDto>(wishlistKeys.current());
+
+      if (previousWishlist) {
+        queryClient.setQueryData<WishlistDto>(wishlistKeys.current(), {
+          ...previousWishlist,
+          items: [
+            ...previousWishlist.items,
+            {
+              id: productId,
+              productId,
+              title: "Garment Selection",
+              slug: productId,
+              price: 0,
+              stock: 1,
+              isAvailable: true,
+              addedAt: new Date().toISOString(),
+            },
+          ],
+          itemCount: previousWishlist.items.length + 1,
+        });
+      }
+
+      return { previousWishlist };
+    },
+    onError: (error: Error, _variables, context) => {
+      if (context?.previousWishlist) {
+        queryClient.setQueryData(wishlistKeys.current(), context.previousWishlist);
+      }
+      toast.error("Could not save to wishlist", {
+        description: error.message || "Please try again.",
+      });
+    },
     onSuccess: (updatedWishlist) => {
       queryClient.setQueryData(wishlistKeys.current(), updatedWishlist);
-      queryClient.invalidateQueries({ queryKey: wishlistKeys.current() });
       toast.success("Saved to Personal Collection", {
         description: "Garment saved to your personal atelier wishlist.",
       });
     },
-    onError: (error: Error) => {
-      toast.error("Could not save to wishlist", {
-        description: error.message || "Please try again.",
-      });
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: wishlistKeys.current() });
     },
   });
 
   const removeFromWishlistMutation = useMutation({
     mutationFn: (productId: string) => wishlistApi.removeFromWishlist(productId),
-    onSuccess: (updatedWishlist) => {
-      queryClient.setQueryData(wishlistKeys.current(), updatedWishlist);
-      queryClient.invalidateQueries({ queryKey: wishlistKeys.current() });
-      toast.success("Removed from wishlist");
+    onMutate: async (productId: string) => {
+      await queryClient.cancelQueries({ queryKey: wishlistKeys.current() });
+      const previousWishlist = queryClient.getQueryData<WishlistDto>(wishlistKeys.current());
+
+      if (previousWishlist) {
+        queryClient.setQueryData<WishlistDto>(wishlistKeys.current(), {
+          ...previousWishlist,
+          items: previousWishlist.items.filter(
+            (i) => i.productId !== productId && i.id !== productId
+          ),
+          itemCount: Math.max(0, previousWishlist.items.length - 1),
+        });
+      }
+
+      return { previousWishlist };
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _variables, context) => {
+      if (context?.previousWishlist) {
+        queryClient.setQueryData(wishlistKeys.current(), context.previousWishlist);
+      }
       toast.error("Could not remove from wishlist", {
         description: error.message || "Please try again.",
       });
+    },
+    onSuccess: (updatedWishlist) => {
+      queryClient.setQueryData(wishlistKeys.current(), updatedWishlist);
+      toast.success("Removed from wishlist");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: wishlistKeys.current() });
     },
   });
 

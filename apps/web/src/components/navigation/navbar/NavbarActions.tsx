@@ -52,10 +52,10 @@ export function NavbarActions({ onOpenSearch, className }: NavbarActionsProps) {
   };
 
   return (
-    <div className={cn("flex items-center gap-1.5 sm:gap-2", className)}>
-      {/* Search Trigger */}
-      <SearchTrigger onClick={onOpenSearch} variant="pill" className="hidden lg:flex" />
-      <SearchTrigger onClick={onOpenSearch} variant="icon" className="lg:hidden" />
+    <div className={cn("flex items-center gap-1 sm:gap-1.5 md:gap-2 shrink-0", className)}>
+      {/* Search Trigger — compact icon on laptops/medium screens, expanded pill on large desktops */}
+      <SearchTrigger onClick={onOpenSearch} variant="pill" className="hidden xl:flex" />
+      <SearchTrigger onClick={onOpenSearch} variant="icon" className="xl:hidden" />
 
       {/* Wishlist Action */}
       <Button
@@ -168,7 +168,7 @@ export function NavbarActions({ onOpenSearch, className }: NavbarActionsProps) {
           asChild
           variant="default"
           size="sm"
-          className="hidden sm:inline-flex rounded-full text-xs px-4 h-8 font-semibold shadow-xs"
+          className="inline-flex rounded-full text-xs px-3 sm:px-4 h-8 font-semibold shadow-xs shrink-0"
         >
           <Link href="/login">Sign In</Link>
         </Button>

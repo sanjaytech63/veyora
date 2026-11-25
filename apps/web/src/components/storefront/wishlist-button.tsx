@@ -40,6 +40,7 @@ export function WishlistButton({
       disabled={isPending}
       onClick={handleClick}
       aria-label={active ? "Remove from personal collection" : "Save to personal collection"}
+      aria-pressed={active}
       className={cn(
         "transition-all duration-200",
         active && "text-rose-500 hover:text-rose-600",
