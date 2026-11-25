@@ -12,6 +12,14 @@ function notificationId(normalized: NormalizedApiError): string {
 
 export function notifyApiError(error: unknown, fallbackMessage?: string): NormalizedApiError {
   const normalized = normalizeApiError(error, fallbackMessage);
+  if (
+    normalized.code === "CLIENT_ABORTED" ||
+    normalized.code === "CANCELLED" ||
+    normalized.code === "ABORTED"
+  ) {
+    return normalized;
+  }
+
   const id = notificationId(normalized);
   const now = Date.now();
   const previous = recentNotifications.get(id);
@@ -23,11 +31,6 @@ export function notifyApiError(error: unknown, fallbackMessage?: string): Normal
     description: normalized.requestId ? `Request ID: ${normalized.requestId}` : undefined,
   });
   return normalized;
-}
-
-export function notifySuccess(message: string, description?: string): void {
-  const id = `success:${message}:${description ?? ""}`;
-  toast.success(message, { id, description });
 }
 
 export function notifyApiSuccess(result: unknown): boolean {

@@ -16,7 +16,7 @@ import { ProductReviews } from "@/components/storefront/product-reviews";
 import { useRelatedProducts, useCategories } from "@/hooks/use-catalog";
 import { useUIStore } from "@/stores/ui-store";
 import { useCart } from "@/lib/hooks/use-cart";
-import { toast } from "sonner";
+import { notifyWarning } from "@/lib/notifications";
 import {
   ChevronRight,
   Minus,
@@ -74,7 +74,7 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
 
   const handleAddToCart = async () => {
     if (currentStock <= 0) {
-      toast.error("This item is currently out of stock.");
+      notifyWarning("This item is currently out of stock.");
       return;
     }
 

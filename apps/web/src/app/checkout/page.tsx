@@ -39,7 +39,6 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { notifyApiError, notifyApiSuccess, notifyWarning } from "@/lib/notifications";
-import { toast } from "sonner";
 import {
   AddressDto,
   CreateAddressPayload,
@@ -163,9 +162,7 @@ export default function CheckoutPage() {
     e.preventDefault();
 
     if (!email) {
-      toast.error("Contact details required", {
-        description: "Please provide a valid patron email address.",
-      });
+      notifyWarning("Contact details required", "Please provide a valid patron email address.");
       return;
     }
 
@@ -174,9 +171,7 @@ export default function CheckoutPage() {
     if (selectedAddressId !== "new") {
       const saved = addresses.find((a) => a.id === selectedAddressId);
       if (!saved) {
-        toast.error("Selected address not found", {
-          description: "Please pick or enter a delivery address.",
-        });
+        notifyWarning("Selected address not found", "Please pick or enter a delivery address.");
         return;
       }
       resolvedShippingAddress = {
@@ -192,9 +187,10 @@ export default function CheckoutPage() {
       };
     } else {
       if (!firstName || !street || !city || !state || !postalCode) {
-        toast.error("Incomplete delivery destination", {
-          description: "First name, street, city, state and postal code are strictly required.",
-        });
+        notifyWarning(
+          "Incomplete delivery destination",
+          "First name, street, city, state and postal code are strictly required."
+        );
         return;
       }
       resolvedShippingAddress = {
@@ -231,9 +227,10 @@ export default function CheckoutPage() {
         !billingState ||
         !billingPostalCode
       ) {
-        toast.error("Incomplete billing address", {
-          description: "Please complete all required billing address fields.",
-        });
+        notifyWarning(
+          "Incomplete billing address",
+          "Please complete all required billing address fields."
+        );
         return;
       }
       resolvedBillingAddress = {
@@ -328,15 +325,14 @@ export default function CheckoutPage() {
           },
         });
 
-        rzp.on("payment.failed", function (response: any) {
-          notifyApiError({
-            code: "PAYMENT_FAILED",
-            statusCode: 400,
-            message:
-              response.error?.description && typeof response.error.description === "string"
-                ? response.error.description
-                : "Payment could not be completed.",
-          });
+        rzp.on("payment.failed", function (_response: any) {
+          notifyApiError(
+            {
+              code: "PAYMENT_FAILED",
+              statusCode: 400,
+            },
+            "Unable to complete payment. Please try again."
+          );
           setIsProcessingPayment(false);
         });
 

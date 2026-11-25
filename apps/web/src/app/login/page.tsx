@@ -26,7 +26,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { notifyApiError, notifyApiSuccess, notifyWarning } from "@/lib/notifications";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 import { ApiClientError } from "@/lib/api/api-client";
 import { ShoppingBag, LoaderCircle, Eye, EyeOff } from "lucide-react";
 import { getSafeRedirectUrl } from "@veyora/utils";
@@ -71,7 +71,7 @@ function LoginForm() {
           err.details?.some((d) => d.code === "EMAIL_NOT_VERIFIED");
 
         if (isEmailNotVerified) {
-          notifyWarning("Email verification required.");
+          notifyApiError(err);
           router.push(`/verify-otp?email=${encodeURIComponent(values.email)}`);
           return;
         }

@@ -9,7 +9,7 @@ const toastMocks = vi.hoisted(() => ({
 
 vi.mock("@/components/ui/sonner", () => ({ toast: toastMocks }));
 
-import { notifyApiError, notifyApiSuccess, notifySuccess } from "../lib/notifications";
+import { notifyApiError, notifyApiSuccess } from "../lib/notifications";
 
 describe("Web notification adapter", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -29,14 +29,6 @@ describe("Web notification adapter", () => {
     );
   });
 
-  it("uses backend success text without inventing a business message", () => {
-    notifySuccess("Profile updated successfully.");
-    expect(toastMocks.success).toHaveBeenCalledWith(
-      "Profile updated successfully.",
-      expect.objectContaining({ id: expect.stringContaining("success:") })
-    );
-  });
-
   it("notifies from a canonical success envelope", () => {
     const shown = notifyApiSuccess({
       success: true,
@@ -53,5 +45,84 @@ describe("Web notification adapter", () => {
 
   it("does not fabricate success for a missing backend message", () => {
     expect(notifyApiSuccess({ success: true, data: { id: "cart-1" } })).toBe(false);
+  });
+
+  it("uses a generic fallback without exposing missing error details", () => {
+    notifyApiError({}, "Unable to complete payment. Please try again.");
+    expect(toastMocks.error).toHaveBeenCalledWith(
+      "Unable to complete payment. Please try again.",
+      expect.objectContaining({ id: expect.stringContaining("INTERNAL_SERVER_ERROR") })
+    );
+  });
+
+  it("does not notify for aborted client requests", () => {
+    const normalized = notifyApiError({
+      success: false,
+      code: "CLIENT_ABORTED",
+      message: "Request aborted by client",
+    });
+    expect(normalized.code).toBe("CLIENT_ABORTED");
+    expect(toastMocks.error).not.toHaveBeenCalled();
+  });
+
+  it("suppresses duplicate errors within the adapter window", () => {
+    const error = {
+      success: false,
+      code: "PAYMENT_FAILED",
+      message: "Payment could not be completed.",
+    };
+
+    notifyApiError(error);
+    notifyApiError(error);
+
+    expect(toastMocks.error).toHaveBeenCalledTimes(1);
+  });
+
+  it("requires a backend success message for cart and checkout confirmation", () => {
+    expect(
+      notifyApiSuccess({
+        success: true,
+        code: "CART_ITEM_ADDED",
+        data: { id: "cart-1" },
+      })
+    ).toBe(false);
+
+    expect(
+      notifyApiSuccess({
+        success: true,
+        code: "ORDER_PLACED",
+        message: "Order placed successfully.",
+        data: { id: "order-1" },
+      })
+    ).toBe(true);
+  });
+
+  it("handles payment verification only through backend-confirmed success text", () => {
+    expect(
+      notifyApiSuccess({
+        success: true,
+        code: "PAYMENT_PENDING",
+        data: { status: "pending" },
+      })
+    ).toBe(false);
+
+    expect(
+      notifyApiSuccess({
+        success: true,
+        code: "PAYMENT_VERIFIED",
+        message: "Payment confirmed and verified.",
+        data: { status: "captured" },
+      })
+    ).toBe(true);
+  });
+
+  it("uses stable email-verification codes for authentication behavior", () => {
+    const normalized = notifyApiError({
+      success: false,
+      code: "EMAIL_NOT_VERIFIED",
+      message: "Please verify your email address.",
+    });
+
+    expect(normalized.code).toBe("EMAIL_NOT_VERIFIED");
   });
 });

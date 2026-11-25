@@ -6,7 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/stores/auth-store";
 import { SOCKET_EVENTS } from "@veyora/config";
 import { NotificationDto } from "@veyora/types";
-import { toast } from "sonner";
+import { notifyInfo } from "@/lib/notifications";
 
 interface SocketContextValue {
   socket: Socket | null;
@@ -59,10 +59,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     newSocket.on(
       SOCKET_EVENTS.SERVER_TO_CLIENT.NOTIFICATION_NEW,
       (notification: NotificationDto) => {
-        // Show gentle in-app notification toast
-        toast.info(notification.title, {
-          description: notification.message,
-        });
+        notifyInfo(notification.title, notification.message);
 
         // Refresh queries
         queryClient.invalidateQueries({ queryKey: ["notifications"] });

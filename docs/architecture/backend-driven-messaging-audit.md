@@ -1270,3 +1270,7 @@ The infrastructure is complete for subsequent page-by-page frontend migration, b
 Task 14 migrated the Web application's customer-facing business mutations to the Task 13 notification foundation. Cart, wishlist, addresses, profile/avatar, authentication, checkout, orders, payments, notifications, and reviews use backend success messages or the shared error normalizer.
 
 Frontend code no longer branches on backend message text. Email verification behavior uses the `EMAIL_NOT_VERIFIED` code. Payment success is displayed only after backend verification. Background socket state updates invalidate queries without inventing frontend-authored success copy.
+
+Desktop and mobile logout now normalize backend/logout failures while preserving local auth cleanup. Socket notification events use the Web notification adapter. Aborted or cancelled requests remain silent. Gateway callback descriptions are not presented as backend-confirmed payment messages; verification failures use normalized backend errors or a generic payment fallback.
+
+Task 14B completed the remaining Web audit. Cart, wishlist, profile/avatar, addresses, orders, reviews, notifications, tracking, checkout, and payment call sites are migrated or explicitly classified. Direct Sonner imports now occur only in the shared notification infrastructure; non-backend field and availability guidance uses `notifyWarning`/`notifyInfo`, not fabricated backend success copy.

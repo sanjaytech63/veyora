@@ -11,7 +11,7 @@ import { useUIStore } from "@/stores/ui-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCart } from "@/lib/hooks/use-cart";
 import { authApi } from "@/lib/api/auth-api";
-import { notifyApiSuccess } from "@/lib/notifications";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 import {
   Menu,
   Search,
@@ -56,8 +56,8 @@ export function NavbarMobile({ onOpenSearch, className }: NavbarMobileProps) {
     try {
       const response = await authApi.logout();
       notifyApiSuccess(response);
-    } catch {
-      // Continue cleanup
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       clearAuth();
       setMobileNavOpen(false);

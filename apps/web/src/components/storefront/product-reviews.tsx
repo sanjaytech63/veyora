@@ -23,11 +23,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { reviewApi } from "@/lib/api/review-api";
 import { useAuthStore } from "@/stores/auth-store";
 import { ReviewDto, ProductRatingSummary } from "@veyora/types";
-import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
+import { notifyApiError, notifyApiSuccess, notifyInfo, notifyWarning } from "@/lib/notifications";
 
 interface ProductReviewsProps {
   productId: string;
@@ -118,11 +117,11 @@ export function ProductReviews({ productId, productTitle }: ProductReviewsProps)
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!titleInput.trim() || titleInput.trim().length < 2) {
-      toast.error("Please provide a review headline (minimum 2 characters).");
+      notifyWarning("Please provide a review headline (minimum 2 characters).");
       return;
     }
     if (!commentInput.trim() || commentInput.trim().length < 5) {
-      toast.error("Please provide a detailed review comment (minimum 5 characters).");
+      notifyWarning("Please provide a detailed review comment (minimum 5 characters).");
       return;
     }
 
@@ -150,7 +149,7 @@ export function ProductReviews({ productId, productTitle }: ProductReviewsProps)
   // Handle Vote Helpful
   const handleMarkHelpful = async (reviewId: string) => {
     if (votedReviews.has(reviewId)) {
-      toast.info("You have already voted on this review.");
+      notifyInfo("You have already voted on this review.");
       return;
     }
 
