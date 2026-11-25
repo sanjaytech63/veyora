@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { addressApi } from "../api/address-api";
 import { addressKeys } from "../api/query-keys";
 import { AddressDto, CreateAddressPayload, UpdateAddressPayload } from "@veyora/types";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 
 export function useAddresses() {
   const queryClient = useQueryClient();
@@ -17,54 +17,46 @@ export function useAddresses() {
 
   const createAddressMutation = useMutation({
     mutationFn: (payload: CreateAddressPayload) => addressApi.createAddress(payload),
-    onSuccess: () => {
+    onSuccess: (address) => {
       queryClient.invalidateQueries({ queryKey: addressKeys.list() });
-      toast.success("Delivery address saved");
+      notifyApiSuccess(address);
     },
-    onError: (error: Error) => {
-      toast.error("Could not save address", {
-        description: error.message || "Please check the required fields.",
-      });
+    onError: (error: unknown) => {
+      notifyApiError(error);
     },
   });
 
   const updateAddressMutation = useMutation({
     mutationFn: ({ addressId, payload }: { addressId: string; payload: UpdateAddressPayload }) =>
       addressApi.updateAddress(addressId, payload),
-    onSuccess: () => {
+    onSuccess: (address) => {
       queryClient.invalidateQueries({ queryKey: addressKeys.list() });
-      toast.success("Address updated");
+      notifyApiSuccess(address);
     },
-    onError: (error: Error) => {
-      toast.error("Could not update address", {
-        description: error.message || "Please try again.",
-      });
+    onError: (error: unknown) => {
+      notifyApiError(error);
     },
   });
 
   const deleteAddressMutation = useMutation({
     mutationFn: (addressId: string) => addressApi.deleteAddress(addressId),
-    onSuccess: () => {
+    onSuccess: (address) => {
       queryClient.invalidateQueries({ queryKey: addressKeys.list() });
-      toast.success("Address removed");
+      notifyApiSuccess(address);
     },
-    onError: (error: Error) => {
-      toast.error("Could not remove address", {
-        description: error.message || "Please try again.",
-      });
+    onError: (error: unknown) => {
+      notifyApiError(error);
     },
   });
 
   const setDefaultAddressMutation = useMutation({
     mutationFn: (addressId: string) => addressApi.setDefaultAddress(addressId),
-    onSuccess: () => {
+    onSuccess: (address) => {
       queryClient.invalidateQueries({ queryKey: addressKeys.list() });
-      toast.success("Default delivery address updated");
+      notifyApiSuccess(address);
     },
-    onError: (error: Error) => {
-      toast.error("Could not set default address", {
-        description: error.message || "Please try again.",
-      });
+    onError: (error: unknown) => {
+      notifyApiError(error);
     },
   });
 

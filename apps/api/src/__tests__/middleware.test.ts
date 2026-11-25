@@ -75,7 +75,7 @@ describe("API Middleware Suite", () => {
       expect(res.status).toBe(422);
       expect(res.body.success).toBe(false);
       expect(res.body.code).toBe("VALIDATION_ERROR");
-      expect(res.body.message).toBe("Validation failed");
+      expect(res.body.message).toBe("Please review the submitted information.");
 
       // Verify standardized errors mapping
       expect(res.body).toHaveProperty("errors");

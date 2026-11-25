@@ -7,6 +7,7 @@ import { otpService } from "./otp.service";
 import { AuthUser, AuthTokens, SessionInfo, OtpType } from "@veyora/types";
 import { RegisterInput, LoginInput, ResetPasswordInput } from "@veyora/validators";
 import {
+  AppError,
   BadRequestError,
   ConflictError,
   ForbiddenError,
@@ -160,19 +161,30 @@ export class AuthService {
     const normalizedEmail = input.email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail });
 
-    if (!user || !user.isActive) {
-      throw new UnauthorizedError("Invalid email or password.");
+    if (!user) {
+      throw new UnauthorizedError("Invalid email or password.", undefined, "INVALID_CREDENTIALS");
+    }
+
+    if (!user.isActive) {
+      throw new AppError({
+        statusCode: 403,
+        code: "ACCOUNT_INACTIVE",
+        message: "Your account has been deactivated. Please contact customer support.",
+      });
     }
 
     const isMatch = await passwordService.comparePassword(input.password, user.passwordHash);
     if (!isMatch) {
-      throw new UnauthorizedError("Invalid email or password.");
+      throw new UnauthorizedError("Invalid email or password.", undefined, "INVALID_CREDENTIALS");
     }
 
     if (!user.isEmailVerified) {
-      throw new UnauthorizedError("Please verify your email address before logging in.", [
-        { field: "email", message: "Email not verified", code: "EMAIL_NOT_VERIFIED" },
-      ]);
+      throw new AppError({
+        statusCode: 401,
+        code: "EMAIL_NOT_VERIFIED",
+        message: "Please verify your email address before signing in.",
+        details: [{ field: "email", message: "Email not verified", code: "EMAIL_NOT_VERIFIED" }],
+      });
     }
 
     const familyId = crypto.randomUUID();
@@ -213,13 +225,21 @@ export class AuthService {
     const normalizedEmail = input.email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail });
 
-    if (!user || !user.isActive) {
-      throw new UnauthorizedError("Invalid email or password.");
+    if (!user) {
+      throw new UnauthorizedError("Invalid email or password.", undefined, "INVALID_CREDENTIALS");
+    }
+
+    if (!user.isActive) {
+      throw new AppError({
+        statusCode: 403,
+        code: "ACCOUNT_INACTIVE",
+        message: "Your account has been deactivated. Please contact customer support.",
+      });
     }
 
     const isMatch = await passwordService.comparePassword(input.password, user.passwordHash);
     if (!isMatch) {
-      throw new UnauthorizedError("Invalid email or password.");
+      throw new UnauthorizedError("Invalid email or password.", undefined, "INVALID_CREDENTIALS");
     }
 
     if (user.role !== "admin" && user.role !== "superadmin") {
@@ -227,7 +247,11 @@ export class AuthService {
         { userId: user._id.toString(), email: user.email, role: user.role },
         "Unauthorized admin login attempt."
       );
-      throw new ForbiddenError("Access denied. Administrator privileges required.");
+      throw new ForbiddenError(
+        "Access denied. Administrator privileges required.",
+        undefined,
+        "FORBIDDEN"
+      );
     }
 
     const familyId = crypto.randomUUID();
@@ -266,14 +290,18 @@ export class AuthService {
     meta?: RequestMetadata
   ): Promise<{ user: AuthUser; tokens: AuthTokens }> {
     if (!rawRefreshToken) {
-      throw new UnauthorizedError("Refresh token is required.");
+      throw new UnauthorizedError("Refresh token is required.", undefined, "INVALID_REFRESH_TOKEN");
     }
 
     let payload: { sub: string; sessionId: string; familyId: string };
     try {
       payload = tokenService.verifyRefreshToken(rawRefreshToken);
     } catch {
-      throw new UnauthorizedError("Invalid or expired refresh token.");
+      throw new UnauthorizedError(
+        "Invalid or expired refresh token.",
+        undefined,
+        "INVALID_REFRESH_TOKEN"
+      );
     }
 
     const hashedToken = tokenService.hashToken(rawRefreshToken);
@@ -288,7 +316,9 @@ export class AuthService {
       );
       await Session.updateMany({ familyId: payload.familyId }, { isRevoked: true });
       throw new UnauthorizedError(
-        "Security alert: Refresh token reuse detected. All sessions have been revoked. Please log in again."
+        "Security alert: Refresh token reuse detected. All sessions have been revoked. Please log in again.",
+        undefined,
+        "SESSION_REVOKED"
       );
     }
 
@@ -332,20 +362,32 @@ export class AuthService {
         "Attempt to use an already revoked session token. Revoking entire token family."
       );
       await Session.updateMany({ familyId: session.familyId }, { isRevoked: true });
-      throw new UnauthorizedError("Session has been revoked. Please log in again.");
+      throw new UnauthorizedError(
+        "Session has been revoked. Please log in again.",
+        undefined,
+        "SESSION_REVOKED"
+      );
     }
 
     if (session.expiresAt.getTime() < Date.now()) {
       session.isRevoked = true;
       await session.save();
-      throw new UnauthorizedError("Session expired. Please log in again.");
+      throw new UnauthorizedError(
+        "Session expired. Please log in again.",
+        undefined,
+        "SESSION_EXPIRED"
+      );
     }
 
     const user = await User.findById(session.userId);
     if (!user || !user.isActive) {
       session.isRevoked = true;
       await session.save();
-      throw new UnauthorizedError("User account is inactive or not found.");
+      throw new UnauthorizedError(
+        "User account is inactive or not found.",
+        undefined,
+        "ACCOUNT_INACTIVE"
+      );
     }
 
     // ROTATION: Revoke the used session and issue a new one in the same family

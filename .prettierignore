@@ -7,6 +7,7 @@ node_modules/
 dist/
 build/
 .next/
+.next-e2e/
 out/
 .turbo/
 *.tsbuildinfo
@@ -42,4 +43,6 @@ test-results/
 # Git and tooling
 .git/
 .husky/
+.terraform/
+.terraform.lock.hcl
 package-lock.json

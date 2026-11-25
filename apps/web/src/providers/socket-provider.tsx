@@ -6,7 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/stores/auth-store";
 import { SOCKET_EVENTS } from "@veyora/config";
 import { NotificationDto } from "@veyora/types";
-import { toast } from "sonner";
+import { notifyInfo } from "@/lib/notifications";
 
 interface SocketContextValue {
   socket: Socket | null;
@@ -59,10 +59,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     newSocket.on(
       SOCKET_EVENTS.SERVER_TO_CLIENT.NOTIFICATION_NEW,
       (notification: NotificationDto) => {
-        // Show gentle in-app notification toast
-        toast.info(notification.title, {
-          description: notification.message,
-        });
+        notifyInfo(notification.title, notification.message);
 
         // Refresh queries
         queryClient.invalidateQueries({ queryKey: ["notifications"] });
@@ -78,10 +75,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     // 3. Listen for order status transitions
     newSocket.on(
       SOCKET_EVENTS.SERVER_TO_CLIENT.ORDER_UPDATED,
-      (orderData: { orderNumber: string; status: string }) => {
-        toast.success(`Order #${orderData.orderNumber} Status Updated`, {
-          description: `Current atelier status: ${orderData.status.toUpperCase()}`,
-        });
+      (_orderData: { orderNumber: string; status: string }) => {
         queryClient.invalidateQueries({ queryKey: ["orders"] });
         queryClient.invalidateQueries({ queryKey: ["order"] });
       }
@@ -90,10 +84,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     // 4. Listen for shipment dispatch updates
     newSocket.on(
       SOCKET_EVENTS.SERVER_TO_CLIENT.SHIPMENT_UPDATED,
-      (shipmentData: { trackingNumber: string; status: string }) => {
-        toast.info("Shipment Transit Update", {
-          description: `AWB #${shipmentData.trackingNumber}: ${shipmentData.status}`,
-        });
+      (_shipmentData: { trackingNumber: string; status: string }) => {
         queryClient.invalidateQueries({ queryKey: ["orders"] });
         queryClient.invalidateQueries({ queryKey: ["order"] });
       }

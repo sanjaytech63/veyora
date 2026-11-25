@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { cartApi } from "../api/cart-api";
 import { cartKeys } from "../api/query-keys";
 import { CartDto, AddToCartPayload, ApplyCouponPayload } from "@veyora/types";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 
 export function useCart() {
   const queryClient = useQueryClient();
@@ -20,14 +20,10 @@ export function useCart() {
     onSuccess: (updatedCart) => {
       queryClient.setQueryData(cartKeys.current(), updatedCart);
       queryClient.invalidateQueries({ queryKey: cartKeys.current() });
-      toast.success("Garment added to bag", {
-        description: "Your selection has been added to your shopping bag.",
-      });
+      notifyApiSuccess(updatedCart);
     },
     onError: (error: Error) => {
-      toast.error("Could not add to bag", {
-        description: error.message || "An unexpected issue occurred.",
-      });
+      notifyApiError(error);
     },
   });
 
@@ -39,9 +35,7 @@ export function useCart() {
       queryClient.invalidateQueries({ queryKey: cartKeys.current() });
     },
     onError: (error: Error) => {
-      toast.error("Could not update bag", {
-        description: error.message || "An unexpected error occurred.",
-      });
+      notifyApiError(error);
     },
   });
 
@@ -50,12 +44,10 @@ export function useCart() {
     onSuccess: (updatedCart) => {
       queryClient.setQueryData(cartKeys.current(), updatedCart);
       queryClient.invalidateQueries({ queryKey: cartKeys.current() });
-      toast.success("Garment removed from bag");
+      notifyApiSuccess(updatedCart);
     },
     onError: (error: Error) => {
-      toast.error("Could not remove garment", {
-        description: error.message || "Please try again.",
-      });
+      notifyApiError(error);
     },
   });
 
@@ -64,12 +56,10 @@ export function useCart() {
     onSuccess: (updatedCart) => {
       queryClient.setQueryData(cartKeys.current(), updatedCart);
       queryClient.invalidateQueries({ queryKey: cartKeys.current() });
-      toast.success("Shopping bag cleared");
+      notifyApiSuccess(updatedCart);
     },
     onError: (error: Error) => {
-      toast.error("Could not clear bag", {
-        description: error.message || "Please try again.",
-      });
+      notifyApiError(error);
     },
   });
 
@@ -78,14 +68,10 @@ export function useCart() {
     onSuccess: (updatedCart) => {
       queryClient.setQueryData(cartKeys.current(), updatedCart);
       queryClient.invalidateQueries({ queryKey: cartKeys.current() });
-      toast.success("Privilege code applied", {
-        description: `${updatedCart.discountPercent}% discount activated on your order!`,
-      });
+      notifyApiSuccess(updatedCart);
     },
     onError: (error: Error) => {
-      toast.error("Invalid coupon code", {
-        description: error.message || "Please enter a valid promotional code.",
-      });
+      notifyApiError(error);
     },
   });
 
@@ -94,12 +80,10 @@ export function useCart() {
     onSuccess: (updatedCart) => {
       queryClient.setQueryData(cartKeys.current(), updatedCart);
       queryClient.invalidateQueries({ queryKey: cartKeys.current() });
-      toast.success("Coupon removed");
+      notifyApiSuccess(updatedCart);
     },
     onError: (error: Error) => {
-      toast.error("Could not remove coupon", {
-        description: error.message || "Please try again.",
-      });
+      notifyApiError(error);
     },
   });
 

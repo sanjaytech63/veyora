@@ -84,7 +84,7 @@ resource "aws_iam_role_policy" "api_s3_access" {
 resource "aws_iam_role" "ecs_worker_task" {
   name = "${local.name_prefix}-worker-task-role"
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [{ Action = "sts:AssumeRole", Effect = "Allow", Principal = { Service = "ecs-tasks.amazonaws.com" } }]
   })
 }
@@ -92,7 +92,7 @@ resource "aws_iam_role" "ecs_worker_task" {
 resource "aws_iam_role" "ecs_web_task" {
   name = "${local.name_prefix}-web-task-role"
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [{ Action = "sts:AssumeRole", Effect = "Allow", Principal = { Service = "ecs-tasks.amazonaws.com" } }]
   })
 }
@@ -100,7 +100,7 @@ resource "aws_iam_role" "ecs_web_task" {
 resource "aws_iam_role" "ecs_admin_task" {
   name = "${local.name_prefix}-admin-task-role"
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [{ Action = "sts:AssumeRole", Effect = "Allow", Principal = { Service = "ecs-tasks.amazonaws.com" } }]
   })
 }
@@ -130,9 +130,7 @@ resource "aws_iam_role" "github_deployer" {
         Condition = {
           StringEquals = {
             "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-          }
-          StringLike = {
-            "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:*"
+            "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:ref:refs/heads/main"
           }
         }
       }
@@ -148,9 +146,8 @@ resource "aws_iam_role_policy" "github_deployer_permissions" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = [
-          "ecr:GetAuthorizationToken",
+        Effect = "Allow"
+        Action = [
           "ecr:BatchCheckLayerAvailability",
           "ecr:GetDownloadUrlForLayer",
           "ecr:BatchGetImage",
@@ -159,22 +156,43 @@ resource "aws_iam_role_policy" "github_deployer_permissions" {
           "ecr:UploadLayerPart",
           "ecr:CompleteLayerUpload"
         ]
-        Resource = "*"
+        Resource = [for repository in aws_ecr_repository.services : repository.arn]
       },
       {
-        Effect   = "Allow"
-        Action   = [
-          "ecs:DescribeServices",
-          "ecs:UpdateService",
-          "ecs:DescribeTaskDefinition",
-          "ecs:RegisterTaskDefinition"
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken",
         ]
         Resource = "*"
       },
       {
-        Effect   = "Allow"
-        Action   = ["iam:PassRole"]
-        Resource = [aws_iam_role.ecs_task_execution.arn, aws_iam_role.ecs_api_task.arn]
+        Effect = "Allow"
+        Action = ["ecs:DescribeServices", "ecs:UpdateService"]
+        Resource = [
+          "arn:aws:ecs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:service/${aws_ecs_cluster.main.name}/${aws_ecs_service.api.name}",
+          "arn:aws:ecs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:service/${aws_ecs_cluster.main.name}/${aws_ecs_service.worker.name}",
+          "arn:aws:ecs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:service/${aws_ecs_cluster.main.name}/${aws_ecs_service.web.name}",
+          "arn:aws:ecs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:service/${aws_ecs_cluster.main.name}/${aws_ecs_service.admin.name}"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = ["ecs:DescribeTaskDefinition", "ecs:RegisterTaskDefinition"]
+        Resource = [
+          for family in ["veyora-api", "veyora-worker", "veyora-web", "veyora-admin"] :
+          "arn:aws:ecs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:task-definition/${family}:*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = ["iam:PassRole"]
+        Resource = [
+          aws_iam_role.ecs_task_execution.arn,
+          aws_iam_role.ecs_api_task.arn,
+          aws_iam_role.ecs_worker_task.arn,
+          aws_iam_role.ecs_web_task.arn,
+          aws_iam_role.ecs_admin_task.arn
+        ]
       },
       {
         Effect   = "Allow"

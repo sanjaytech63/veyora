@@ -171,7 +171,19 @@ export async function serverAdminFetch<T>(
       if (isJson) {
         try {
           const errorPayload = (await response.json()) as ApiResponseError;
-          if (errorPayload && errorPayload.error) {
+          if (
+            errorPayload &&
+            typeof (errorPayload as unknown as { message?: unknown }).message === "string"
+          ) {
+            const canonical = errorPayload as unknown as {
+              code?: string;
+              message: string;
+              details?: unknown;
+            };
+            errorMessage = canonical.message;
+            errorCode = canonical.code || errorCode;
+            errorDetails = canonical.details;
+          } else if (errorPayload && errorPayload.error) {
             errorMessage = errorPayload.error.message || errorMessage;
             errorCode = errorPayload.error.code || errorCode;
             errorDetails = errorPayload.error.details;

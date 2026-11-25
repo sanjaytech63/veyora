@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+interface TestCookieStore {
+  get(name: string): { value: string } | undefined;
+}
+
 // Strict Next.js 16 runtime simulation: Calling cookies() inside "use cache" throws!
-const mockCookies = vi.fn<any>(() => {
+const mockCookies = vi.fn<() => Promise<TestCookieStore>>(() => {
   throw new Error(
     "Route '/': cookies() can't be read inside 'use cache'. Read it outside the cached function."
   );
@@ -137,12 +141,12 @@ describe("Next.js 16 'use cache' Compliance & Runtime Verification", () => {
 
   describe("Authenticated Endpoints", () => {
     it("serverFetch with requireAuth and no token reads cookies()", async () => {
-      mockCookies.mockReturnValueOnce({
+      mockCookies.mockResolvedValueOnce({
         get: (key: string) => {
           if (key === "refreshToken") return { value: "mock-refresh-token" };
           return undefined;
         },
-      } as any);
+      });
 
       await serverFetch("/protected/data", { requireAuth: true });
       expect(mockCookies).toHaveBeenCalled();

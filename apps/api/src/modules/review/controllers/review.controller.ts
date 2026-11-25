@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from "express";
+import { ApiReviewCode } from "@veyora/types";
 import { reviewService } from "../services/review.service";
+import { sendSuccess } from "../../../utils/response";
 import {
   CreateReviewInput,
   ModerateReviewInput,
@@ -20,11 +22,12 @@ export class ReviewController {
 
       const review = await reviewService.createReview(userId, productId, payload);
 
-      res.status(201).json({
-        success: true,
-        data: review,
+      sendSuccess(res, {
+        statusCode: 201,
+        code: ApiReviewCode.REVIEW_CREATED,
         message: "Your review has been submitted and is pending moderation.",
-        timestamp: new Date().toISOString(),
+        data: review,
+        extra: { timestamp: new Date().toISOString() },
       });
     } catch (error) {
       next(error);
@@ -42,10 +45,22 @@ export class ReviewController {
 
       const result = await reviewService.getProductReviews(productId, query);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiReviewCode.REVIEWS_FETCHED,
+        message: "Product reviews retrieved successfully.",
         data: result,
-        timestamp: new Date().toISOString(),
+        meta: {
+          pagination: {
+            page: result.pagination.page,
+            limit: result.pagination.limit,
+            total: result.pagination.total,
+            totalPages: result.pagination.totalPages,
+            hasNextPage: result.pagination.page < result.pagination.totalPages,
+            hasPrevPage: result.pagination.page > 1,
+          },
+        },
+        extra: { timestamp: new Date().toISOString() },
       });
     } catch (error) {
       next(error);
@@ -61,10 +76,12 @@ export class ReviewController {
       const productId = req.params["productId"] as string;
       const summary = await reviewService.getProductRatingSummary(productId);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiReviewCode.REVIEW_SUMMARY_FETCHED,
+        message: "Product rating summary retrieved successfully.",
         data: summary,
-        timestamp: new Date().toISOString(),
+        extra: { timestamp: new Date().toISOString() },
       });
     } catch (error) {
       next(error);
@@ -80,10 +97,22 @@ export class ReviewController {
       const query = req.query as unknown as AdminReviewQueryInput;
       const result = await reviewService.listAdminReviews(query);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiReviewCode.ADMIN_REVIEWS_FETCHED,
+        message: "Admin reviews retrieved successfully.",
         data: result,
-        timestamp: new Date().toISOString(),
+        meta: {
+          pagination: {
+            page: result.pagination.page,
+            limit: result.pagination.limit,
+            total: result.pagination.total,
+            totalPages: result.pagination.totalPages,
+            hasNextPage: result.pagination.page < result.pagination.totalPages,
+            hasPrevPage: result.pagination.page > 1,
+          },
+        },
+        extra: { timestamp: new Date().toISOString() },
       });
     } catch (error) {
       next(error);
@@ -99,10 +128,12 @@ export class ReviewController {
       const id = req.params["id"] as string;
       const review = await reviewService.getReviewById(id);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiReviewCode.REVIEW_FETCHED,
+        message: "Review retrieved successfully.",
         data: review,
-        timestamp: new Date().toISOString(),
+        extra: { timestamp: new Date().toISOString() },
       });
     } catch (error) {
       next(error);
@@ -121,11 +152,12 @@ export class ReviewController {
 
       const review = await reviewService.moderateReview(id, adminId, payload);
 
-      res.status(200).json({
-        success: true,
-        data: review,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiReviewCode.REVIEW_MODERATED,
         message: `Review has been successfully ${payload.status}.`,
-        timestamp: new Date().toISOString(),
+        data: review,
+        extra: { timestamp: new Date().toISOString() },
       });
     } catch (error) {
       next(error);
@@ -141,11 +173,12 @@ export class ReviewController {
       const id = req.params["id"] as string;
       const result = await reviewService.deleteReview(id);
 
-      res.status(200).json({
-        success: true,
-        data: result,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiReviewCode.REVIEW_DELETED,
         message: "Review deleted successfully.",
-        timestamp: new Date().toISOString(),
+        data: result,
+        extra: { timestamp: new Date().toISOString() },
       });
     } catch (error) {
       next(error);
@@ -163,10 +196,22 @@ export class ReviewController {
 
       const result = await reviewService.getUserReviews(userId, query);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiReviewCode.CUSTOMER_REVIEWS_FETCHED,
+        message: "Customer reviews retrieved successfully.",
         data: result,
-        timestamp: new Date().toISOString(),
+        meta: {
+          pagination: {
+            page: result.pagination.page,
+            limit: result.pagination.limit,
+            total: result.pagination.total,
+            totalPages: result.pagination.totalPages,
+            hasNextPage: result.pagination.page < result.pagination.totalPages,
+            hasPrevPage: result.pagination.page > 1,
+          },
+        },
+        extra: { timestamp: new Date().toISOString() },
       });
     } catch (error) {
       next(error);
@@ -182,10 +227,12 @@ export class ReviewController {
       const id = req.params["id"] as string;
       const result = await reviewService.markHelpful(id);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiReviewCode.REVIEW_HELPFUL_RECORDED,
+        message: "Review marked as helpful.",
         data: result,
-        timestamp: new Date().toISOString(),
+        extra: { timestamp: new Date().toISOString() },
       });
     } catch (error) {
       next(error);

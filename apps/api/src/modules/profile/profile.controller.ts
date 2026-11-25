@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
+import { ApiProfileCode } from "@veyora/types";
 import { profileService } from "./profile.service";
 import { UnauthorizedError } from "@veyora/utils";
+import { sendSuccess } from "../../utils/response";
 
 export class ProfileController {
   public async getProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -9,10 +11,12 @@ export class ProfileController {
         throw new UnauthorizedError("Authentication is required.");
       }
       const profile = await profileService.getProfile(req.user.id);
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiProfileCode.PROFILE_FETCHED,
+        message: "Profile retrieved successfully.",
         data: profile,
-        timestamp: new Date().toISOString(),
+        extra: { timestamp: new Date().toISOString() },
       });
     } catch (error) {
       next(error);
@@ -25,11 +29,12 @@ export class ProfileController {
         throw new UnauthorizedError("Authentication is required.");
       }
       const profile = await profileService.updateProfile(req.user.id, req.body);
-      res.status(200).json({
-        success: true,
-        data: profile,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiProfileCode.PROFILE_UPDATED,
         message: "Profile updated successfully.",
-        timestamp: new Date().toISOString(),
+        data: profile,
+        extra: { timestamp: new Date().toISOString() },
       });
     } catch (error) {
       next(error);
@@ -46,10 +51,12 @@ export class ProfileController {
         throw new UnauthorizedError("Authentication is required.");
       }
       const signatureData = profileService.getAvatarUploadSignature(req.user.id, req.user.role);
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiProfileCode.AVATAR_SIGNATURE_GENERATED,
+        message: "Avatar upload signature generated successfully.",
         data: signatureData,
-        timestamp: new Date().toISOString(),
+        extra: { timestamp: new Date().toISOString() },
       });
     } catch (error) {
       next(error);
@@ -62,11 +69,12 @@ export class ProfileController {
         throw new UnauthorizedError("Authentication is required.");
       }
       const profile = await profileService.updateAvatar(req.user.id, req.body, req.user.role);
-      res.status(200).json({
-        success: true,
-        data: profile,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiProfileCode.AVATAR_UPDATED,
         message: "Profile avatar updated successfully.",
-        timestamp: new Date().toISOString(),
+        data: profile,
+        extra: { timestamp: new Date().toISOString() },
       });
     } catch (error) {
       next(error);
@@ -79,11 +87,12 @@ export class ProfileController {
         throw new UnauthorizedError("Authentication is required.");
       }
       const profile = await profileService.removeAvatar(req.user.id);
-      res.status(200).json({
-        success: true,
-        data: profile,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiProfileCode.AVATAR_REMOVED,
         message: "Profile avatar removed successfully.",
-        timestamp: new Date().toISOString(),
+        data: profile,
+        extra: { timestamp: new Date().toISOString() },
       });
     } catch (error) {
       next(error);
@@ -100,10 +109,12 @@ export class ProfileController {
         throw new UnauthorizedError("Authentication is required.");
       }
       const completion = await profileService.getProfileCompletion(req.user.id);
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiProfileCode.PROFILE_COMPLETION_FETCHED,
+        message: "Profile completion metrics retrieved successfully.",
         data: completion,
-        timestamp: new Date().toISOString(),
+        extra: { timestamp: new Date().toISOString() },
       });
     } catch (error) {
       next(error);

@@ -51,9 +51,12 @@ test.describe("E2E — Customer Authentication & Login Flow", () => {
     await page.locator('input[name="password"]').fill("WrongPassword123!");
 
     const submitBtn = page.getByRole("button", { name: /sign in/i });
+    const loginResponse = page.waitForResponse((response) =>
+      response.url().endsWith("/api/v1/auth/login")
+    );
     await submitBtn.click();
+    expect((await loginResponse).status()).toBe(401);
 
-    await expect(page.getByText(/sign in failed/i)).toBeVisible();
     await expect(page.getByText(/invalid email or password combination/i)).toBeVisible();
   });
 

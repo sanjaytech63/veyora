@@ -34,7 +34,7 @@ import { adminInventoryApi } from "@/lib/api/admin-inventory-api";
 import { adminInventoryKeys, adminCatalogKeys } from "@/lib/api/query-keys";
 import { InventoryItem } from "@veyora/types";
 import { AdjustStockInput } from "@veyora/validators";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess, notifyWarning } from "@/lib/notifications";
 import {
   Boxes,
   Package,
@@ -80,15 +80,15 @@ export function InventoryListClient() {
 
   const adjustStockMutation = useMutation({
     mutationFn: (payload: AdjustStockInput) => adminInventoryApi.adjustStock(payload),
-    onSuccess: () => {
+    onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: adminInventoryKeys.all });
       queryClient.invalidateQueries({ queryKey: adminCatalogKeys.all });
       queryClient.invalidateQueries({ queryKey: ["admin-inventory", "stats"] });
-      toast.success(`Inventory updated for SKU ${selectedItem?.sku}`);
+      notifyApiSuccess(updated);
       setDialogOpen(false);
     },
     onError: (err: unknown) => {
-      toast.error(err instanceof Error ? err.message : "Failed to adjust stock.");
+      notifyApiError(err);
     },
     onSettled: () => {
       setSubmitting(false);
@@ -109,11 +109,11 @@ export function InventoryListClient() {
     e.preventDefault();
     if (!selectedItem) return;
     if (typeof adjQuantity !== "number" || adjQuantity < 0) {
-      toast.error("Valid adjustment quantity is required.");
+      notifyWarning("Valid adjustment quantity is required.");
       return;
     }
     if (!adjReason.trim()) {
-      toast.error("Adjustment reason is required.");
+      notifyWarning("Adjustment reason is required.");
       return;
     }
 
@@ -130,7 +130,7 @@ export function InventoryListClient() {
 
       adjustStockMutation.mutate(payload);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to adjust stock.");
+      notifyApiError(err);
       setSubmitting(false);
     }
   };

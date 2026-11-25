@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { wishlistApi } from "../api/wishlist-api";
 import { wishlistKeys } from "../api/query-keys";
 import { WishlistDto } from "@veyora/types";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 
 export function useWishlist() {
   const queryClient = useQueryClient();
@@ -47,15 +47,11 @@ export function useWishlist() {
       if (context?.previousWishlist) {
         queryClient.setQueryData(wishlistKeys.current(), context.previousWishlist);
       }
-      toast.error("Could not save to wishlist", {
-        description: error.message || "Please try again.",
-      });
+      notifyApiError(error);
     },
     onSuccess: (updatedWishlist) => {
       queryClient.setQueryData(wishlistKeys.current(), updatedWishlist);
-      toast.success("Saved to Personal Collection", {
-        description: "Garment saved to your personal atelier wishlist.",
-      });
+      notifyApiSuccess(updatedWishlist);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: wishlistKeys.current() });
@@ -84,13 +80,11 @@ export function useWishlist() {
       if (context?.previousWishlist) {
         queryClient.setQueryData(wishlistKeys.current(), context.previousWishlist);
       }
-      toast.error("Could not remove from wishlist", {
-        description: error.message || "Please try again.",
-      });
+      notifyApiError(error);
     },
     onSuccess: (updatedWishlist) => {
       queryClient.setQueryData(wishlistKeys.current(), updatedWishlist);
-      toast.success("Removed from wishlist");
+      notifyApiSuccess(updatedWishlist);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: wishlistKeys.current() });
@@ -102,12 +96,10 @@ export function useWishlist() {
     onSuccess: (updatedWishlist) => {
       queryClient.setQueryData(wishlistKeys.current(), updatedWishlist);
       queryClient.invalidateQueries({ queryKey: wishlistKeys.current() });
-      toast.success("Wishlist cleared");
+      notifyApiSuccess(updatedWishlist);
     },
     onError: (error: Error) => {
-      toast.error("Could not clear wishlist", {
-        description: error.message || "Please try again.",
-      });
+      notifyApiError(error);
     },
   });
 

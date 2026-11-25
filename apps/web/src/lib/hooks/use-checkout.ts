@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { checkoutApi } from "../api/checkout-api";
 import { checkoutKeys, cartKeys, orderKeys } from "../api/query-keys";
 import { CheckoutValidationDto, CreateOrderPayload, OrderDto } from "@veyora/types";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 
 export function useCheckout(shippingMethod: "standard" | "express" = "standard") {
   const queryClient = useQueryClient();
@@ -21,15 +21,10 @@ export function useCheckout(shippingMethod: "standard" | "express" = "standard")
       // Invalidate cart so bag becomes empty across UI
       queryClient.invalidateQueries({ queryKey: cartKeys.current() });
       queryClient.invalidateQueries({ queryKey: orderKeys.list() });
-      toast.success("Order Placed Successfully", {
-        description: `Order #${order.orderNumber} confirmed.`,
-      });
+      notifyApiSuccess(order);
     },
     onError: (error: Error) => {
-      toast.error("Checkout Failed", {
-        description:
-          error.message || "We could not place your order. Please check item stock or address.",
-      });
+      notifyApiError(error);
     },
   });
 

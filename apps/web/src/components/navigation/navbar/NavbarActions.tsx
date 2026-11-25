@@ -20,7 +20,7 @@ import { useWishlist } from "@/lib/hooks/use-wishlist";
 import { useCart } from "@/lib/hooks/use-cart";
 import { useUIStore } from "@/stores/ui-store";
 import { authApi } from "@/lib/api/auth-api";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 import { cn } from "@/lib/utils";
 
 interface NavbarActionsProps {
@@ -36,18 +36,22 @@ export function NavbarActions({ onOpenSearch, className }: NavbarActionsProps) {
   const cartCount = totals.itemCount;
 
   const [mounted, setMounted] = React.useState(false);
+  const logoutInFlight = React.useRef(false);
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
   const handleLogout = async () => {
+    if (logoutInFlight.current) return;
+    logoutInFlight.current = true;
     try {
-      await authApi.logout();
-    } catch {
-      // Continue cleanup even if network fails
+      const response = await authApi.logout();
+      notifyApiSuccess(response);
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       clearAuth();
-      toast.success("Signed out successfully");
+      logoutInFlight.current = false;
     }
   };
 

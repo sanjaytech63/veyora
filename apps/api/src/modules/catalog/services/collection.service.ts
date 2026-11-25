@@ -70,7 +70,7 @@ export class CollectionService {
   async updateCollection(id: string, input: UpdateCollectionInput): Promise<CollectionType> {
     const collection = await Collection.findById(id);
     if (!collection) {
-      throw new NotFoundError("Collection not found.");
+      throw new NotFoundError("Collection not found.", undefined, "COLLECTION_NOT_FOUND");
     }
 
     if (input.name && input.name.trim() !== collection.name) {
@@ -101,7 +101,7 @@ export class CollectionService {
   async deleteCollection(id: string): Promise<void> {
     const collection = await Collection.findById(id);
     if (!collection) {
-      throw new NotFoundError("Collection not found.");
+      throw new NotFoundError("Collection not found.", undefined, "COLLECTION_NOT_FOUND");
     }
 
     await Collection.deleteOne({ _id: id });
@@ -115,7 +115,7 @@ export class CollectionService {
     );
 
     if (!collection) {
-      throw new NotFoundError("Collection not found.");
+      throw new NotFoundError("Collection not found.", undefined, "COLLECTION_NOT_FOUND");
     }
 
     return this.toCollectionDto(collection);

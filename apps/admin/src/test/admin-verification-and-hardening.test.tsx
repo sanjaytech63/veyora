@@ -112,8 +112,8 @@ describe("Task 21 — Admin Application Verification & Hardening", () => {
       client.setRefreshTokenHandler(refreshHandler);
 
       let initialCallCount = 0;
-      const mockFetch = vi.fn().mockImplementation(async (url: string, opts: any) => {
-        const headers = opts.headers as Headers;
+      const mockFetch = vi.fn().mockImplementation(async (url: string, opts: RequestInit = {}) => {
+        const headers = new Headers(opts.headers);
         const auth = headers.get("Authorization");
 
         if (auth !== "Bearer new-refreshed-token-456") {
@@ -205,7 +205,7 @@ describe("Task 21 — Admin Application Verification & Hardening", () => {
         email: "customer@gmail.com",
         firstName: "Normal",
         lastName: "Customer",
-        role: "customer" as any,
+        role: "customer",
         permissions: [],
         isEmailVerified: true,
       };

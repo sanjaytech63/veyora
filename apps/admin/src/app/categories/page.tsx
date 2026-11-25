@@ -32,7 +32,7 @@ import {
 import { adminCatalogApi } from "@/lib/api/admin-catalog-api";
 import { Category } from "@veyora/types";
 import { CreateCategoryInput, UpdateCategoryInput } from "@veyora/validators";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess, notifyWarning } from "@/lib/notifications";
 import {
   FolderTree,
   Plus,
@@ -66,7 +66,7 @@ export default function CategoriesPage() {
       const data = await adminCatalogApi.getCategories();
       setCategories(data);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to load categories.");
+      notifyApiError(err);
     } finally {
       setLoading(false);
     }
@@ -103,7 +103,7 @@ export default function CategoriesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      toast.error("Category name is required.");
+      notifyWarning("Category name is required.");
       return;
     }
 
@@ -119,8 +119,8 @@ export default function CategoriesPage() {
           order: Number(order),
           status,
         };
-        await adminCatalogApi.updateCategory(editingCategory.id, payload);
-        toast.success("Category updated successfully.");
+        const updated = await adminCatalogApi.updateCategory(editingCategory.id, payload);
+        notifyApiSuccess(updated);
       } else {
         const payload: CreateCategoryInput = {
           name: name.trim(),
@@ -131,14 +131,14 @@ export default function CategoriesPage() {
           order: Number(order),
           status,
         };
-        await adminCatalogApi.createCategory(payload);
-        toast.success("Category created successfully.");
+        const created = await adminCatalogApi.createCategory(payload);
+        notifyApiSuccess(created);
       }
 
       setDialogOpen(false);
       loadCategories();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to save category.");
+      notifyApiError(err);
     } finally {
       setSubmitting(false);
     }
@@ -147,13 +147,11 @@ export default function CategoriesPage() {
   const handleDelete = async (cat: Category) => {
     if (!confirm(`Are you sure you want to delete category "${cat.name}"?`)) return;
     try {
-      await adminCatalogApi.deleteCategory(cat.id);
-      toast.success("Category deleted.");
+      const deleted = await adminCatalogApi.deleteCategory(cat.id);
+      notifyApiSuccess(deleted);
       loadCategories();
     } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Cannot delete category with children or products."
-      );
+      notifyApiError(err);
     }
   };
 

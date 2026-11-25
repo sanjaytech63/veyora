@@ -35,10 +35,9 @@ import {
   AlertTriangle,
   MessageSquare,
 } from "lucide-react";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 import { adminReviewApi } from "@/lib/api/admin-review-api";
 import { ReviewDto, AdminReviewStats, ReviewStatus } from "@veyora/types";
-import { ApiClientError } from "@/lib/api/api-client";
 
 export default function AdminReviewsPage() {
   const [reviews, setReviews] = React.useState<ReviewDto[]>([]);
@@ -95,8 +94,7 @@ export default function AdminReviewsPage() {
       setTotalPages(response.pagination.totalPages);
       setTotalCount(response.pagination.total);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : "Failed to load reviews";
-      toast.error("Error Loading Reviews", { description: message });
+      notifyApiError(err);
     } finally {
       setIsLoading(false);
     }
@@ -109,14 +107,11 @@ export default function AdminReviewsPage() {
   // Handle Quick Approval
   const handleApprove = async (review: ReviewDto) => {
     try {
-      await adminReviewApi.moderateReview(review.id, { status: "approved" });
-      toast.success("Review Approved", {
-        description: `Feedback from ${review.customerName} is now published on the storefront.`,
-      });
+      const approved = await adminReviewApi.moderateReview(review.id, { status: "approved" });
+      notifyApiSuccess(approved);
       loadReviews();
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : "Approval failed";
-      toast.error("Error Approving Review", { description: message });
+      notifyApiError(err);
     }
   };
 
@@ -132,19 +127,16 @@ export default function AdminReviewsPage() {
     if (!selectedReviewForReject) return;
     setIsModerating(true);
     try {
-      await adminReviewApi.moderateReview(selectedReviewForReject.id, {
+      const rejected = await adminReviewApi.moderateReview(selectedReviewForReject.id, {
         status: "rejected",
         rejectionReason: rejectionReason.trim(),
       });
-      toast.warning("Review Rejected", {
-        description: `Review flagged as rejected. Reason: "${rejectionReason.trim()}".`,
-      });
+      notifyApiSuccess(rejected);
       setRejectionModalOpen(false);
       setSelectedReviewForReject(null);
       loadReviews();
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : "Rejection failed";
-      toast.error("Error Rejecting Review", { description: message });
+      notifyApiError(err);
     } finally {
       setIsModerating(false);
     }
@@ -156,12 +148,11 @@ export default function AdminReviewsPage() {
       return;
     }
     try {
-      await adminReviewApi.deleteReview(reviewId);
-      toast.success("Review Deleted Permanently");
+      const deleted = await adminReviewApi.deleteReview(reviewId);
+      notifyApiSuccess(deleted);
       loadReviews();
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : "Deletion failed";
-      toast.error("Could Not Delete Review", { description: message });
+      notifyApiError(err);
     }
   };
 

@@ -25,7 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 import { ApiClientError } from "@/lib/api/api-client";
 import { UserPlus, LoaderCircle, Eye, EyeOff } from "lucide-react";
 
@@ -48,20 +48,14 @@ export default function RegisterPage() {
     setIsSubmitting(true);
     try {
       const response = await authApi.register(values);
-      toast.success("Account created successfully!", {
-        description: response.otp
-          ? `Verification code: ${response.otp}`
-          : "Please enter the 6-digit verification code sent to your email.",
-      });
+      notifyApiSuccess(response);
       const otpQuery = response.otp ? `&otp=${encodeURIComponent(response.otp)}` : "";
       router.push(`/verify-otp?email=${encodeURIComponent(values.email)}${otpQuery}`);
     } catch (err) {
       if (err instanceof ApiClientError) {
-        toast.error("Registration Failed", {
-          description: err.message,
-        });
+        notifyApiError(err);
       } else {
-        toast.error("An unexpected error occurred. Please try again.");
+        notifyApiError(err);
       }
     } finally {
       setIsSubmitting(false);

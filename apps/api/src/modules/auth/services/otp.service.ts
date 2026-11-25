@@ -36,17 +36,29 @@ export class OtpService {
     const otpRecord = await Otp.findOne({ email: normalizedEmail, type });
 
     if (!otpRecord) {
-      throw new BadRequestError("Invalid or expired OTP. Please request a new code.");
+      throw new BadRequestError(
+        "Invalid or expired OTP. Please request a new code.",
+        undefined,
+        "OTP_INVALID"
+      );
     }
 
     if (otpRecord.expiresAt.getTime() < Date.now()) {
       await Otp.deleteOne({ _id: otpRecord._id });
-      throw new BadRequestError("OTP has expired. Please request a new code.");
+      throw new BadRequestError(
+        "OTP has expired. Please request a new code.",
+        undefined,
+        "OTP_EXPIRED"
+      );
     }
 
     if (otpRecord.attempts >= otpRecord.maxAttempts) {
       await Otp.deleteOne({ _id: otpRecord._id });
-      throw new BadRequestError("Maximum OTP attempts exceeded. Please request a new code.");
+      throw new BadRequestError(
+        "Maximum OTP attempts exceeded. Please request a new code.",
+        undefined,
+        "OTP_INVALID"
+      );
     }
 
     const providedHash = this.hashOtp(otp);
@@ -54,7 +66,11 @@ export class OtpService {
       otpRecord.attempts += 1;
       await otpRecord.save();
       const remaining = otpRecord.maxAttempts - otpRecord.attempts;
-      throw new BadRequestError(`Invalid OTP code. ${remaining} attempt(s) remaining.`);
+      throw new BadRequestError(
+        `Invalid OTP code. ${remaining} attempt(s) remaining.`,
+        undefined,
+        "OTP_INVALID"
+      );
     }
 
     // Success -> delete record to prevent replay

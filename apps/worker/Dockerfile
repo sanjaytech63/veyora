@@ -21,6 +21,7 @@ COPY packages/ ./packages/
 COPY apps/worker/ ./apps/worker/
 
 # Install dependencies deterministically
+RUN npm install --global npm@11.21.0
 RUN npm ci
 
 # Compile TypeScript packages and build worker distribution

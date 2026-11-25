@@ -23,7 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
+import { notifyApiError } from "@/lib/notifications";
 import {
   History,
   Shield,
@@ -51,8 +51,8 @@ export default function AuditLogsPage() {
       setLoading(true);
       const res = await adminRbacApi.listAuditLogs({ limit: 100 });
       setLogs(res.logs);
-    } catch {
-      toast.error("Failed to load security audit logs");
+    } catch (err) {
+      notifyApiError(err);
     } finally {
       setLoading(false);
     }

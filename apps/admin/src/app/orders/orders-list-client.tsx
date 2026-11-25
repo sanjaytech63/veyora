@@ -49,7 +49,7 @@ import {
   MapPin,
   ExternalLink,
 } from "lucide-react";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 
 const VALID_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   pending: ["confirmed", "cancelled"],
@@ -165,9 +165,7 @@ export function OrdersListClient() {
       adminOrdersApi.updateOrderStatus(orderId, payload),
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: adminOrderKeys.all });
-      toast.success("Order status updated", {
-        description: `Order #${updated.orderNumber} is now ${updated.status}.`,
-      });
+      notifyApiSuccess(updated);
       setStatusModalOpen(false);
       setOrderToUpdate(null);
       if (selectedOrder && selectedOrder.id === updated.id) {
@@ -175,9 +173,7 @@ export function OrdersListClient() {
       }
     },
     onError: (err: Error) => {
-      toast.error("Status update rejected", {
-        description: err.message || "Invalid state machine transition.",
-      });
+      notifyApiError(err);
     },
   });
 
@@ -225,9 +221,7 @@ export function OrdersListClient() {
       queryClient.invalidateQueries({ queryKey: adminOrderKeys.all });
       queryClient.invalidateQueries({ queryKey: adminOrderKeys.unfulfilled() });
       queryClient.invalidateQueries({ queryKey: ["admin-payments"] });
-      toast.success("Refund processed successfully", {
-        description: `Refund ID ${refund.refundId} for $${refund.amount.toFixed(2)} processed via gateway.`,
-      });
+      notifyApiSuccess(refund);
       setRefundModalOpen(false);
       setOrderToRefund(null);
       refetch();
@@ -236,9 +230,7 @@ export function OrdersListClient() {
       }
     },
     onError: (err: Error) => {
-      toast.error("Refund declined", {
-        description: err.message || "Gateway declined the refund transaction.",
-      });
+      notifyApiError(err);
     },
   });
 

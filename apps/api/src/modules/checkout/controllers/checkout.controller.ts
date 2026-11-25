@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { checkoutService } from "../services/checkout.service";
-import { AdminOrderListQuery, OrderStatus } from "@veyora/types";
+import { AdminOrderListQuery, OrderStatus, ApiCheckoutCode, ApiOrderCode } from "@veyora/types";
+import { sendSuccess } from "../../../utils/response";
 
 export class CheckoutController {
   public async validateCheckout(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -11,10 +12,11 @@ export class CheckoutController {
         req.guestId,
         shippingMethod
       );
-      res.status(200).json({
-        success: true,
-        data: summary,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiCheckoutCode.CHECKOUT_VALIDATED,
         message: "Checkout validated successfully.",
+        data: summary,
       });
     } catch (error) {
       next(error);
@@ -24,10 +26,11 @@ export class CheckoutController {
   public async createOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const order = await checkoutService.createOrder(req.user?.id, req.guestId, req.body);
-      res.status(201).json({
-        success: true,
-        data: order,
+      sendSuccess(res, {
+        statusCode: 201,
+        code: ApiOrderCode.ORDER_CREATED,
         message: "Order placed successfully.",
+        data: order,
       });
     } catch (error) {
       next(error);
@@ -41,10 +44,11 @@ export class CheckoutController {
         req.user?.id,
         req.guestId
       );
-      res.status(200).json({
-        success: true,
-        data: order,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiOrderCode.ORDER_FETCHED,
         message: "Order retrieved successfully.",
+        data: order,
       });
     } catch (error) {
       next(error);
@@ -54,10 +58,11 @@ export class CheckoutController {
   public async listOrders(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const orders = await checkoutService.listOrders(req.user?.id, req.guestId);
-      res.status(200).json({
-        success: true,
-        data: orders,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiOrderCode.ORDERS_FETCHED,
         message: "Orders retrieved successfully.",
+        data: orders,
       });
     } catch (error) {
       next(error);
@@ -73,10 +78,11 @@ export class CheckoutController {
         req.body?.reason,
         false
       );
-      res.status(200).json({
-        success: true,
-        data: order,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiOrderCode.ORDER_CANCELLED,
         message: "Order cancelled successfully.",
+        data: order,
       });
     } catch (error) {
       next(error);
@@ -99,10 +105,17 @@ export class CheckoutController {
       };
 
       const result = await checkoutService.adminListOrders(query);
-      res.status(200).json({
-        success: true,
-        data: result,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiOrderCode.ADMIN_ORDERS_FETCHED,
         message: "Admin orders retrieved successfully.",
+        data: result,
+        meta: {
+          page: result.page,
+          limit: result.limit,
+          total: result.total,
+          totalPages: result.totalPages,
+        },
       });
     } catch (error) {
       next(error);
@@ -117,10 +130,11 @@ export class CheckoutController {
         undefined,
         true
       );
-      res.status(200).json({
-        success: true,
-        data: order,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiOrderCode.ADMIN_ORDER_FETCHED,
         message: "Admin order retrieved successfully.",
+        data: order,
       });
     } catch (error) {
       next(error);
@@ -160,10 +174,11 @@ export class CheckoutController {
         }
       );
 
-      res.status(200).json({
-        success: true,
-        data: order,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiOrderCode.ORDER_STATUS_UPDATED,
         message: `Order status updated to ${body.status}.`,
+        data: order,
       });
     } catch (error) {
       next(error);
@@ -179,10 +194,11 @@ export class CheckoutController {
         req.body?.reason,
         true
       );
-      res.status(200).json({
-        success: true,
-        data: order,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiOrderCode.ORDER_CANCELLED,
         message: "Order cancelled by administrator.",
+        data: order,
       });
     } catch (error) {
       next(error);

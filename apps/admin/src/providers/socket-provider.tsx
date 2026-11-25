@@ -5,7 +5,7 @@ import { io, Socket } from "socket.io-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAdminAuthStore } from "@/stores/admin-auth-store";
 import { SOCKET_EVENTS } from "@veyora/config";
-import { toast } from "sonner";
+import { notifyInfo } from "@/lib/notifications";
 
 interface AdminSocketContextValue {
   socket: Socket | null;
@@ -58,9 +58,10 @@ export function AdminSocketProvider({ children }: { children: React.ReactNode })
     newSocket.on(
       SOCKET_EVENTS.SERVER_TO_CLIENT.ADMIN_ORDER_NEW,
       (orderData: { orderNumber: string; total?: number }) => {
-        toast.info("New Couture Reservation Placed", {
-          description: `Order #${orderData.orderNumber} - Authorized total: ₹${orderData.total || 0}`,
-        });
+        notifyInfo(
+          "New Couture Reservation Placed",
+          `Order #${orderData.orderNumber} - Authorized total: ₹${orderData.total || 0}`
+        );
         queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
         queryClient.invalidateQueries({ queryKey: ["admin-unfulfilled-orders"] });
       }

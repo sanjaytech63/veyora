@@ -52,6 +52,7 @@ resource "aws_ecs_task_definition" "api" {
         { name = "NODE_ENV", value = "production" },
         { name = "PORT", value = "4000" },
         { name = "API_PREFIX", value = "/api/v1" },
+        { name = "CORS_ORIGIN", value = "https://${var.domain_name},https://admin.${var.domain_name}" },
         { name = "LOG_LEVEL", value = "info" }
       ]
       secrets = [
@@ -64,7 +65,10 @@ resource "aws_ecs_task_definition" "api" {
         { name = "COOKIE_SECRET", valueFrom = "${aws_secretsmanager_secret.api_secrets.arn}:COOKIE_SECRET::" },
         { name = "RAZORPAY_KEY_ID", valueFrom = "${aws_secretsmanager_secret.api_secrets.arn}:RAZORPAY_KEY_ID::" },
         { name = "RAZORPAY_KEY_SECRET", valueFrom = "${aws_secretsmanager_secret.api_secrets.arn}:RAZORPAY_KEY_SECRET::" },
-        { name = "RAZORPAY_WEBHOOK_SECRET", valueFrom = "${aws_secretsmanager_secret.api_secrets.arn}:RAZORPAY_WEBHOOK_SECRET::" }
+        { name = "RAZORPAY_WEBHOOK_SECRET", valueFrom = "${aws_secretsmanager_secret.api_secrets.arn}:RAZORPAY_WEBHOOK_SECRET::" },
+        { name = "CLOUDINARY_CLOUD_NAME", valueFrom = "${aws_secretsmanager_secret.api_secrets.arn}:CLOUDINARY_CLOUD_NAME::" },
+        { name = "CLOUDINARY_API_KEY", valueFrom = "${aws_secretsmanager_secret.api_secrets.arn}:CLOUDINARY_API_KEY::" },
+        { name = "CLOUDINARY_API_SECRET", valueFrom = "${aws_secretsmanager_secret.api_secrets.arn}:CLOUDINARY_API_SECRET::" }
       ]
       logConfiguration = {
         logDriver = "awslogs"
@@ -134,7 +138,7 @@ resource "aws_ecs_task_definition" "worker" {
       essential = true
       environment = [
         { name = "NODE_ENV", value = "production" },
-        { name = "WORKER_CONCURRENCY", value = "5" },
+        { name = "CONCURRENCY", value = "5" },
         { name = "LOG_LEVEL", value = "info" }
       ]
       secrets = [

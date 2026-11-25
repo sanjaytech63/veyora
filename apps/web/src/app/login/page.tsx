@@ -26,7 +26,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 import { ApiClientError } from "@/lib/api/api-client";
 import { ShoppingBag, LoaderCircle, Eye, EyeOff } from "lucide-react";
 import { getSafeRedirectUrl } from "@veyora/utils";
@@ -62,29 +62,22 @@ function LoginForm() {
     try {
       const response = await authApi.login(values);
       setAuth(response.user, response.accessToken);
-      toast.success("Welcome back!", {
-        description: `Signed in as ${response.user.email}`,
-      });
+      notifyApiSuccess(response);
       router.push(redirectPath);
     } catch (err) {
       if (err instanceof ApiClientError) {
         const isEmailNotVerified =
           err.code === "EMAIL_NOT_VERIFIED" ||
-          err.details?.some((d) => d.code === "EMAIL_NOT_VERIFIED") ||
-          err.message.toLowerCase().includes("verify your email");
+          err.details?.some((d) => d.code === "EMAIL_NOT_VERIFIED");
 
         if (isEmailNotVerified) {
-          toast.warning("Email Verification Required", {
-            description: "Please verify your email address to continue.",
-          });
+          notifyApiError(err);
           router.push(`/verify-otp?email=${encodeURIComponent(values.email)}`);
           return;
         }
-        toast.error("Sign In Failed", {
-          description: err.message,
-        });
+        notifyApiError(err);
       } else {
-        toast.error("An unexpected error occurred. Please try again.");
+        notifyApiError(err);
       }
     } finally {
       setIsSubmitting(false);

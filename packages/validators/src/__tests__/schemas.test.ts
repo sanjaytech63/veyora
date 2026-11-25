@@ -458,6 +458,12 @@ describe("Centralized Zod Validation Suite", () => {
         expect(issues).toContain("JWT_REFRESH_SECRET");
         expect(issues).toContain("COOKIE_SECRET");
         expect(issues).toContain("CORS_ORIGIN");
+        expect(issues).toContain("RAZORPAY_KEY_ID");
+        expect(issues).toContain("RAZORPAY_KEY_SECRET");
+        expect(issues).toContain("RAZORPAY_WEBHOOK_SECRET");
+        expect(issues).toContain("CLOUDINARY_CLOUD_NAME");
+        expect(issues).toContain("CLOUDINARY_API_KEY");
+        expect(issues).toContain("CLOUDINARY_API_SECRET");
       }
 
       // Passes when custom production secrets provided
@@ -467,6 +473,12 @@ describe("Centralized Zod Validation Suite", () => {
         JWT_REFRESH_SECRET: "a_very_strong_custom_production_jwt_refresh_secret_123",
         COOKIE_SECRET: "a_very_strong_cookie_secret_123",
         CORS_ORIGIN: "https://veyora.luxury,https://admin.veyora.luxury",
+        RAZORPAY_KEY_ID: "rzp_live_production_key",
+        RAZORPAY_KEY_SECRET: "production_razorpay_secret",
+        RAZORPAY_WEBHOOK_SECRET: "production_razorpay_webhook_secret",
+        CLOUDINARY_CLOUD_NAME: "veyora-production",
+        CLOUDINARY_API_KEY: "production_cloudinary_key",
+        CLOUDINARY_API_SECRET: "production_cloudinary_secret",
       };
       expect(apiEnvSchema.safeParse(prodValid).success).toBe(true);
     });

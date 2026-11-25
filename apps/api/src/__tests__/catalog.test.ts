@@ -34,6 +34,21 @@ interface MockBrandDoc {
   save: () => Promise<MockBrandDoc>;
 }
 
+interface MockCollectionDoc {
+  _id: mongoose.Types.ObjectId;
+  name: string;
+  slug: string;
+  tagline: string;
+  description: string;
+  season: string;
+  image: string;
+  status: "active" | "inactive";
+  productIds: mongoose.Types.ObjectId[];
+  createdAt: Date;
+  updatedAt: Date;
+  save: () => Promise<MockCollectionDoc>;
+}
+
 interface MockProductDoc {
   _id: mongoose.Types.ObjectId;
   title: string;
@@ -61,6 +76,7 @@ interface MockProductDoc {
 
 let mockCategories: MockCategoryDoc[] = [];
 let mockBrands: MockBrandDoc[] = [];
+let mockCollections: MockCollectionDoc[] = [];
 let mockProducts: MockProductDoc[] = [];
 
 function makeCategory(data: Partial<MockCategoryDoc>): MockCategoryDoc {
@@ -91,6 +107,26 @@ function makeBrand(data: Partial<MockBrandDoc>): MockBrandDoc {
     logo: data.logo || "",
     website: data.website || "",
     status: data.status || "active",
+    createdAt: data.createdAt || new Date(),
+    updatedAt: data.updatedAt || new Date(),
+    save: async function () {
+      this.updatedAt = new Date();
+      return this;
+    },
+  };
+}
+
+function makeCollection(data: Partial<MockCollectionDoc>): MockCollectionDoc {
+  return {
+    _id: data._id || new mongoose.Types.ObjectId(),
+    name: data.name || "Default Collection",
+    slug: data.slug || "default-collection",
+    tagline: data.tagline || "",
+    description: data.description || "",
+    season: data.season || "SS26",
+    image: data.image || "",
+    status: data.status || "active",
+    productIds: data.productIds || [],
     createdAt: data.createdAt || new Date(),
     updatedAt: data.updatedAt || new Date(),
     save: async function () {
@@ -243,6 +279,49 @@ vi.mock("../modules/catalog/models/brand.model", () => ({
       return { deletedCount: 1 };
     }),
     countDocuments: vi.fn(async () => mockBrands.length),
+  },
+}));
+
+// Mock Collection Model
+vi.mock("../modules/catalog/models/collection.model", () => ({
+  Collection: {
+    find: vi.fn((query: any) =>
+      mockQuery(() => {
+        let items = [...mockCollections];
+        if (query?.status) {
+          items = items.filter((c) => c.status === query.status);
+        }
+        return items;
+      })
+    ),
+    findOne: vi.fn((query: any) =>
+      mockQuery(() => {
+        return (
+          mockCollections.find((c) => {
+            if (query?.slug && c.slug !== query.slug) return false;
+            if (query?._id?.$ne && c._id.toString() === query._id.$ne.toString()) return false;
+            return true;
+          }) || null
+        );
+      })
+    ),
+    findById: vi.fn((id: any) =>
+      mockQuery(() => {
+        const idStr = id?.toString ? id.toString() : String(id);
+        return mockCollections.find((c) => c._id.toString() === idStr) || null;
+      })
+    ),
+    create: vi.fn(async (data: any) => {
+      const col = makeCollection(data);
+      mockCollections.push(col);
+      return col;
+    }),
+    deleteOne: vi.fn(async (query: any) => {
+      const idStr = query._id?.toString ? query._id.toString() : String(query._id);
+      mockCollections = mockCollections.filter((c) => c._id.toString() !== idStr);
+      return { deletedCount: 1 };
+    }),
+    countDocuments: vi.fn(async () => mockCollections.length),
   },
 }));
 
@@ -405,6 +484,7 @@ describe("Catalog Module Integration Tests", () => {
   beforeEach(() => {
     mockCategories = [];
     mockBrands = [];
+    mockCollections = [];
     mockProducts = [];
 
     adminToken = createTestToken("admin");
@@ -460,14 +540,26 @@ describe("Catalog Module Integration Tests", () => {
     });
 
     mockProducts.push(prod1, prod2);
+
+    const collection = makeCollection({
+      name: "Summer 2026",
+      slug: "summer-2026",
+      tagline: "Latest tech this summer",
+      season: "SS26",
+      status: "active",
+      productIds: [prod1._id],
+    });
+    mockCollections.push(collection);
   });
 
   // 1. Categories
   describe("Category Management", () => {
-    it("should list active categories publicly", async () => {
+    it("should list active categories publicly with canonical envelope", async () => {
       const res = await request(app).get("/api/v1/categories");
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("CATEGORIES_FETCHED");
+      expect(res.body.message).toBe("Categories retrieved successfully.");
       expect(Array.isArray(res.body.data)).toBe(true);
       expect(res.body.data.length).toBe(2);
     });
@@ -476,10 +568,26 @@ describe("Catalog Module Integration Tests", () => {
       const res = await request(app).get("/api/v1/categories/tree");
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("CATEGORY_TREE_FETCHED");
       expect(res.body.data.length).toBe(1);
       expect(res.body.data[0].name).toBe("Electronics");
       expect(res.body.data[0].children.length).toBe(1);
       expect(res.body.data[0].children[0].name).toBe("Smartphones");
+    });
+
+    it("should fetch single category by slug or id", async () => {
+      const res = await request(app).get("/api/v1/categories/electronics");
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("CATEGORY_FETCHED");
+      expect(res.body.data.name).toBe("Electronics");
+    });
+
+    it("should return 404 when category is not found", async () => {
+      const res = await request(app).get("/api/v1/categories/nonexistent-cat");
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("CATEGORY_NOT_FOUND");
     });
 
     it("should block non-admin users from creating categories", async () => {
@@ -504,19 +612,66 @@ describe("Catalog Module Integration Tests", () => {
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("CATEGORY_CREATED");
       expect(res.body.data.name).toBe("Laptops & Computers");
       expect(res.body.data.slug).toBe("laptops-computers");
+    });
+
+    it("should allow admin to update a category", async () => {
+      const res = await request(app)
+        .put(`/api/v1/admin/categories/${testCategoryId}`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({ name: "Consumer Electronics" });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("CATEGORY_UPDATED");
+      expect(res.body.data.name).toBe("Consumer Electronics");
+    });
+
+    it("should allow admin to delete a leaf category", async () => {
+      // Create a leaf category with no children
+      const leafCat = makeCategory({
+        name: "Accessories",
+        slug: "accessories",
+        status: "active",
+      });
+      mockCategories.push(leafCat);
+
+      const res = await request(app)
+        .delete(`/api/v1/admin/categories/${leafCat._id}`)
+        .set("Authorization", `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("CATEGORY_DELETED");
     });
   });
 
   // 2. Brands
   describe("Brand Management", () => {
-    it("should list active brands publicly", async () => {
+    it("should list active brands publicly with canonical envelope", async () => {
       const res = await request(app).get("/api/v1/brands");
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("BRANDS_FETCHED");
       expect(res.body.data.length).toBe(1);
       expect(res.body.data[0].name).toBe("Apple");
+    });
+
+    it("should fetch single brand by slug or id", async () => {
+      const res = await request(app).get("/api/v1/brands/apple");
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("BRAND_FETCHED");
+      expect(res.body.data.name).toBe("Apple");
+    });
+
+    it("should return 404 when brand is not found", async () => {
+      const res = await request(app).get("/api/v1/brands/nonexistent-brand");
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("BRAND_NOT_FOUND");
     });
 
     it("should allow admin to create a brand", async () => {
@@ -531,24 +686,133 @@ describe("Catalog Module Integration Tests", () => {
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("BRAND_CREATED");
       expect(res.body.data.name).toBe("Samsung");
       expect(res.body.data.slug).toBe("samsung");
     });
+
+    it("should allow admin to update a brand", async () => {
+      const res = await request(app)
+        .put(`/api/v1/admin/brands/${testBrandId}`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({ description: "Apple Inc. Cupertino" });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("BRAND_UPDATED");
+      expect(res.body.data.description).toBe("Apple Inc. Cupertino");
+    });
+
+    it("should allow admin to delete a brand with no associated products", async () => {
+      const unusedBrand = makeBrand({
+        name: "Sony",
+        slug: "sony",
+        status: "active",
+      });
+      mockBrands.push(unusedBrand);
+
+      const res = await request(app)
+        .delete(`/api/v1/admin/brands/${unusedBrand._id}`)
+        .set("Authorization", `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("BRAND_DELETED");
+    });
   });
 
-  // 3. Products
+  // 3. Collections
+  describe("Collection Management", () => {
+    it("should list active collections publicly with canonical envelope", async () => {
+      const res = await request(app).get("/api/v1/collections");
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("COLLECTIONS_FETCHED");
+      expect(res.body.data.length).toBe(1);
+      expect(res.body.data[0].name).toBe("Summer 2026");
+    });
+
+    it("should fetch single collection by slug or id", async () => {
+      const res = await request(app).get("/api/v1/collections/summer-2026");
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("COLLECTION_FETCHED");
+      expect(res.body.data.name).toBe("Summer 2026");
+    });
+
+    it("should return 404 when collection is not found", async () => {
+      const res = await request(app).get("/api/v1/collections/nonexistent-collection");
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("COLLECTION_NOT_FOUND");
+    });
+
+    it("should allow admin to create a collection", async () => {
+      const res = await request(app)
+        .post("/api/v1/admin/collections")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({
+          name: "Winter Capsule",
+          tagline: "Cold weather essentials",
+          season: "FW26",
+          status: "active",
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("COLLECTION_CREATED");
+      expect(res.body.data.name).toBe("Winter Capsule");
+    });
+
+    it("should allow admin to update a collection", async () => {
+      const colId = mockCollections[0]!._id.toString();
+      const res = await request(app)
+        .put(`/api/v1/admin/collections/${colId}`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({ tagline: "Updated Summer Tagline" });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("COLLECTION_UPDATED");
+      expect(res.body.data.tagline).toBe("Updated Summer Tagline");
+    });
+
+    it("should allow admin to delete a collection", async () => {
+      const colId = mockCollections[0]!._id.toString();
+      const res = await request(app)
+        .delete(`/api/v1/admin/collections/${colId}`)
+        .set("Authorization", `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("COLLECTION_DELETED");
+    });
+  });
+
+  // 4. Products
   describe("Product Management & Public Storefront", () => {
-    it("should return only active published products to public users", async () => {
+    it("should return only active published products to public users with canonical envelope", async () => {
       const res = await request(app).get("/api/v1/products");
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("PRODUCTS_FETCHED");
       expect(res.body.data.length).toBe(1);
       expect(res.body.data[0].title).toBe("iPhone 15 Pro");
+    });
+
+    it("should fetch single product by slug or id", async () => {
+      const res = await request(app).get("/api/v1/products/iphone-15-pro");
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("PRODUCT_FETCHED");
+      expect(res.body.data.title).toBe("iPhone 15 Pro");
     });
 
     it("should return 404 when public requests a draft product", async () => {
       const res = await request(app).get("/api/v1/products/unpublished-concept");
       expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe("PRODUCT_NOT_FOUND");
     });
 
     it("should allow admin to create product with variants and SKU", async () => {
@@ -584,8 +848,33 @@ describe("Catalog Module Integration Tests", () => {
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("PRODUCT_CREATED");
       expect(res.body.data.title).toBe("MacBook Pro 16");
       expect(res.body.data.variants.length).toBe(2);
+    });
+
+    it("should allow admin to update a product", async () => {
+      const prodId = mockProducts[0]!._id.toString();
+      const res = await request(app)
+        .put(`/api/v1/admin/products/${prodId}`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({ price: 1049 });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("PRODUCT_UPDATED");
+      expect(res.body.data.price).toBe(1049);
+    });
+
+    it("should allow admin to delete a product", async () => {
+      const prodId = mockProducts[0]!._id.toString();
+      const res = await request(app)
+        .delete(`/api/v1/admin/products/${prodId}`)
+        .set("Authorization", `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("PRODUCT_DELETED");
     });
 
     it("should reject product creation when variant SKU duplicates parent SKU", async () => {
@@ -608,6 +897,7 @@ describe("Catalog Module Integration Tests", () => {
         });
 
       expect(res.status).toBe(409);
+      expect(res.body.code).toBe("SKU_CONFLICT");
       expect(res.body.error.message).toContain("cannot match parent product SKU");
     });
 
@@ -624,6 +914,7 @@ describe("Catalog Module Integration Tests", () => {
         });
 
       expect(res.status).toBe(409);
+      expect(res.body.code).toBe("SKU_CONFLICT");
       expect(res.body.error.message).toContain("already exists");
     });
 
@@ -634,6 +925,7 @@ describe("Catalog Module Integration Tests", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe("CATALOG_STATS_FETCHED");
       expect(res.body.data.totalProducts).toBe(2);
       expect(res.body.data.activeProducts).toBe(1);
       expect(res.body.data.draftProducts).toBe(1);

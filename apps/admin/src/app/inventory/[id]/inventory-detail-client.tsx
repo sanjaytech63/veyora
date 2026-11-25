@@ -34,7 +34,7 @@ import { adminInventoryKeys, adminCatalogKeys } from "@/lib/api/query-keys";
 import { adminInventoryApi } from "@/lib/api/admin-inventory-api";
 import { InventoryItem, StockMovement } from "@veyora/types";
 import { AdjustStockInput } from "@veyora/validators";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess, notifyWarning } from "@/lib/notifications";
 import {
   ArrowLeft,
   Boxes,
@@ -88,7 +88,7 @@ export function InventoryDetailClient({ skuOrId }: InventoryDetailClientProps) {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to load inventory details.";
       setFetchError(msg);
-      toast.error(msg);
+      notifyApiError(err);
     } finally {
       setLoading(false);
     }
@@ -107,10 +107,10 @@ export function InventoryDetailClient({ skuOrId }: InventoryDetailClientProps) {
         lowStockThreshold: thresholdInput,
       });
       setItem(updated);
-      toast.success("Low stock threshold updated successfully.");
+      notifyApiSuccess(updated);
       loadData();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to update threshold.");
+      notifyApiError(err);
     } finally {
       setUpdatingThreshold(false);
     }
@@ -120,11 +120,11 @@ export function InventoryDetailClient({ skuOrId }: InventoryDetailClientProps) {
     e.preventDefault();
     if (!item) return;
     if (typeof adjQuantity !== "number" || adjQuantity < 0) {
-      toast.error("Valid adjustment quantity is required.");
+      notifyWarning("Valid adjustment quantity is required.");
       return;
     }
     if (!adjReason.trim()) {
-      toast.error("Adjustment reason is required.");
+      notifyWarning("Adjustment reason is required.");
       return;
     }
 
@@ -139,14 +139,14 @@ export function InventoryDetailClient({ skuOrId }: InventoryDetailClientProps) {
         referenceId: adjReferenceId.trim() || undefined,
       };
 
-      await adminInventoryApi.adjustStock(payload);
+      const updated = await adminInventoryApi.adjustStock(payload);
       queryClient.invalidateQueries({ queryKey: adminInventoryKeys.all });
       queryClient.invalidateQueries({ queryKey: adminCatalogKeys.all });
-      toast.success("Stock adjustment recorded in audit ledger.");
+      notifyApiSuccess(updated);
       setDialogOpen(false);
       loadData();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to adjust stock.");
+      notifyApiError(err);
     } finally {
       setSubmittingAdj(false);
     }

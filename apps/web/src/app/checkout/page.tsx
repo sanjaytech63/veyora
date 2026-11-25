@@ -38,7 +38,7 @@ import {
   Loader2,
   ShoppingBag,
 } from "lucide-react";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess, notifyWarning } from "@/lib/notifications";
 import {
   AddressDto,
   CreateAddressPayload,
@@ -162,9 +162,7 @@ export default function CheckoutPage() {
     e.preventDefault();
 
     if (!email) {
-      toast.error("Contact details required", {
-        description: "Please provide a valid patron email address.",
-      });
+      notifyWarning("Contact details required", "Please provide a valid patron email address.");
       return;
     }
 
@@ -173,9 +171,7 @@ export default function CheckoutPage() {
     if (selectedAddressId !== "new") {
       const saved = addresses.find((a) => a.id === selectedAddressId);
       if (!saved) {
-        toast.error("Selected address not found", {
-          description: "Please pick or enter a delivery address.",
-        });
+        notifyWarning("Selected address not found", "Please pick or enter a delivery address.");
         return;
       }
       resolvedShippingAddress = {
@@ -191,9 +187,10 @@ export default function CheckoutPage() {
       };
     } else {
       if (!firstName || !street || !city || !state || !postalCode) {
-        toast.error("Incomplete delivery destination", {
-          description: "First name, street, city, state and postal code are strictly required.",
-        });
+        notifyWarning(
+          "Incomplete delivery destination",
+          "First name, street, city, state and postal code are strictly required."
+        );
         return;
       }
       resolvedShippingAddress = {
@@ -230,9 +227,10 @@ export default function CheckoutPage() {
         !billingState ||
         !billingPostalCode
       ) {
-        toast.error("Incomplete billing address", {
-          description: "Please complete all required billing address fields.",
-        });
+        notifyWarning(
+          "Incomplete billing address",
+          "Please complete all required billing address fields."
+        );
         return;
       }
       resolvedBillingAddress = {
@@ -262,9 +260,7 @@ export default function CheckoutPage() {
       setPendingPaymentOrder(order);
       await launchPayment(order);
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Unable to place order. Please check stock.";
-      toast.error("Checkout Request Declined", { description: message });
+      notifyApiError(err);
     }
   };
 
@@ -310,36 +306,33 @@ export default function CheckoutPage() {
                 gatewaySignature: response.razorpay_signature,
               });
 
-              toast.success("Payment Verified & Confirmed", {
-                description: `Transaction ${response.razorpay_payment_id} successfully confirmed.`,
-              });
+              notifyApiSuccess(verification);
               setVerifiedPayment(verification);
               setCompletedOrder({ ...order, status: "confirmed" });
               setPendingPaymentOrder(null);
               clearCart();
             } catch (err: unknown) {
-              const msg = err instanceof Error ? err.message : "Cryptographic verification failed.";
-              toast.error("Payment Verification Failed", { description: msg });
+              notifyApiError(err);
             } finally {
               setIsProcessingPayment(false);
             }
           },
           modal: {
             ondismiss: function () {
-              toast.info("Payment Incomplete", {
-                description: "Payment modal was closed. You can complete settlement when ready.",
-              });
+              notifyWarning("Payment has not been completed.");
               setIsProcessingPayment(false);
             },
           },
         });
 
-        rzp.on("payment.failed", function (response: any) {
-          toast.error("Payment Declined by Issuer", {
-            description:
-              response.error?.description ||
-              "Payment failed. Please retry with another payment instrument.",
-          });
+        rzp.on("payment.failed", function (_response: any) {
+          notifyApiError(
+            {
+              code: "PAYMENT_FAILED",
+              statusCode: 400,
+            },
+            "Unable to complete payment. Please try again."
+          );
           setIsProcessingPayment(false);
         });
 
@@ -349,8 +342,7 @@ export default function CheckoutPage() {
         setSimulatedModalOpen(true);
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Could not initiate payment.";
-      toast.error("Payment Initiation Error", { description: msg });
+      notifyApiError(err);
     } finally {
       setIsProcessingPayment(false);
     }
@@ -370,17 +362,14 @@ export default function CheckoutPage() {
         gatewaySignature: simulatedSignature,
       });
 
-      toast.success("Dev Payment Verified & Confirmed", {
-        description: `Simulated transaction ${simulatedPaymentId} verified successfully.`,
-      });
+      notifyApiSuccess(verification);
       setVerifiedPayment(verification);
       setCompletedOrder({ ...pendingPaymentOrder, status: "confirmed" });
       setPendingPaymentOrder(null);
       setSimulatedModalOpen(false);
       clearCart();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Cryptographic verification failed.";
-      toast.error("Verification Declined", { description: msg });
+      notifyApiError(err);
     } finally {
       setIsProcessingPayment(false);
     }
@@ -530,7 +519,7 @@ export default function CheckoutPage() {
 
           <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
             <Lock className="h-3.5 w-3.5 text-primary" />
-            <span>256-Bit SSL Atelier Encrypted Checkout</span>
+            <span>Secure checkout and payment processing</span>
           </div>
         </div>
 
@@ -1184,7 +1173,7 @@ export default function CheckoutPage() {
 
                 <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground pt-2">
                   <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                  <span>Veyora Pure Fabric & Artisan Quality Guaranteed</span>
+                  <span>Product details and care guidance are listed per garment</span>
                 </div>
               </div>
             </div>

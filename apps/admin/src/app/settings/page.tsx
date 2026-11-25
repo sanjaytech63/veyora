@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 import { SERVICES } from "@veyora/config";
 import { adminSystemApi } from "@/lib/api/admin-system-api";
 import { RefreshCw, LoaderCircle } from "lucide-react";
@@ -30,7 +30,7 @@ export default function AdminSettingsPage() {
         setEnableExpress(Boolean(data.enableExpress));
       }
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to load settings from database.");
+      notifyApiError(err);
     } finally {
       setLoading(false);
     }
@@ -44,17 +44,15 @@ export default function AdminSettingsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      await adminSystemApi.updateSettings({
+      const result = await adminSystemApi.updateSettings({
         storeName: storeName.trim(),
         currency: currency.trim(),
         freeShippingThreshold: Number(freeShippingThreshold) || 0,
         enableExpress,
       });
-      toast.success("Settings Saved", {
-        description: "Store operational parameters persisted to MongoDB.",
-      });
+      notifyApiSuccess(result);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to save settings.");
+      notifyApiError(err);
     } finally {
       setSaving(false);
     }

@@ -2,15 +2,7 @@ name: Veyora Continuous Delivery (AWS ECS & ECR)
 
 on:
   workflow_dispatch:
-    inputs:
-      target_env:
-        description: "Deployment Environment Target"
-        required: true
-        default: "staging"
-        type: choice
-        options:
-          - staging
-          - production
+    # Dispatch deployments from main only; staging infrastructure is not defined here.
   push:
     branches:
       - main
@@ -20,9 +12,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  id-token: write # Required for AWS OIDC authentication (least-privilege, no long-lived keys)
   contents: read
-  packages: write
 
 jobs:
   validate-and-gate:
@@ -38,6 +28,9 @@ jobs:
           node-version: 24
           cache: "npm"
 
+      - name: Align npm with packageManager
+        run: npm install --global npm@11.21.0
+
       - name: Install dependencies
         run: npm ci
 
@@ -50,13 +43,24 @@ jobs:
           npm run lint:check
           npm run format:check
           npm run test
+          npm run build
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright end-to-end tests
+        run: npm run test:e2e
 
   deploy-aws-ecs:
     name: Build, Push to ECR & Deploy to ECS
     needs: [validate-and-gate]
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Required only in the deployment job for AWS OIDC.
+      contents: read
     environment:
-      name: ${{ github.event.inputs.target_env || 'production' }}
+      name: production
       url: https://veyora.com
     steps:
       - name: Checkout repository
@@ -81,7 +85,7 @@ jobs:
         id: tags
         run: |
           ECR_REGISTRY="${{ steps.login-ecr.outputs.registry }}"
-          COMMIT_SHA="${{ github.sha }}"
+          COMMIT_SHA="sha-${{ github.sha }}"
           echo "ecr_registry=${ECR_REGISTRY}" >> $GITHUB_OUTPUT
           echo "commit_sha=${COMMIT_SHA}" >> $GITHUB_OUTPUT
 

@@ -6,7 +6,9 @@ node_modules/
 # Build outputs
 dist/
 build/
+.terraform/
 .next/
+.next-e2e/
 out/
 .turbo/
 *.tsbuildinfo

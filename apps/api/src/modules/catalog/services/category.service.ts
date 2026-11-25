@@ -50,7 +50,7 @@ export class CategoryService {
     if (input.parentId) {
       const parent = await Category.findById(input.parentId);
       if (!parent) {
-        throw new NotFoundError("Parent category not found.");
+        throw new NotFoundError("Parent category not found.", undefined, "CATEGORY_NOT_FOUND");
       }
     }
 
@@ -72,7 +72,7 @@ export class CategoryService {
   async updateCategory(id: string, input: UpdateCategoryInput): Promise<CategoryType> {
     const category = await Category.findById(id);
     if (!category) {
-      throw new NotFoundError("Category not found.");
+      throw new NotFoundError("Category not found.", undefined, "CATEGORY_NOT_FOUND");
     }
 
     if (input.slug && input.slug !== category.slug) {
@@ -83,12 +83,16 @@ export class CategoryService {
 
     if (input.parentId !== undefined) {
       if (input.parentId === id) {
-        throw new ConflictError("A category cannot be its own parent.");
+        throw new ConflictError(
+          "A category cannot be its own parent.",
+          undefined,
+          "CATEGORY_CONFLICT"
+        );
       }
       if (input.parentId) {
         const parent = await Category.findById(input.parentId);
         if (!parent) {
-          throw new NotFoundError("Parent category not found.");
+          throw new NotFoundError("Parent category not found.", undefined, "CATEGORY_NOT_FOUND");
         }
       }
       category.parentId = input.parentId ? new mongoose.Types.ObjectId(input.parentId) : null;
@@ -108,20 +112,24 @@ export class CategoryService {
   async deleteCategory(id: string): Promise<void> {
     const category = await Category.findById(id);
     if (!category) {
-      throw new NotFoundError("Category not found.");
+      throw new NotFoundError("Category not found.", undefined, "CATEGORY_NOT_FOUND");
     }
 
     const hasChildren = await Category.exists({ parentId: id });
     if (hasChildren) {
       throw new ConflictError(
-        "Cannot delete category with subcategories. Reassign or delete child categories first."
+        "Cannot delete category with subcategories. Reassign or delete child categories first.",
+        undefined,
+        "CATEGORY_CONFLICT"
       );
     }
 
     const hasProducts = await Product.exists({ categoryId: id });
     if (hasProducts) {
       throw new ConflictError(
-        "Cannot delete category with associated products. Reassign products first."
+        "Cannot delete category with associated products. Reassign products first.",
+        undefined,
+        "CATEGORY_CONFLICT"
       );
     }
 
@@ -136,7 +144,7 @@ export class CategoryService {
     );
 
     if (!category) {
-      throw new NotFoundError("Category not found.");
+      throw new NotFoundError("Category not found.", undefined, "CATEGORY_NOT_FOUND");
     }
 
     return this.toCategoryDto(category);

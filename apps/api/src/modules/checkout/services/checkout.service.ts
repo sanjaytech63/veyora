@@ -21,6 +21,8 @@ import {
   ShippingMethodOption,
   AdminOrderListQuery,
   PaginatedOrdersDto,
+  ApiCheckoutCode,
+  ApiOrderCode,
 } from "@veyora/types";
 import { CreateOrderCheckoutInput } from "@veyora/validators";
 import { BadRequestError, ConflictError, NotFoundError } from "@veyora/utils";
@@ -229,18 +231,26 @@ export class CheckoutService {
     payload: UpdateAddressPayload
   ): Promise<AddressDto> {
     if (!mongoose.Types.ObjectId.isValid(addressId)) {
-      throw new NotFoundError("Address not found.");
+      throw new NotFoundError("Address not found.", undefined, "CUSTOMER_ADDRESS_NOT_FOUND");
     }
 
     const address = await Address.findById(addressId);
     if (!address) {
-      throw new NotFoundError("Address not found.");
+      throw new NotFoundError("Address not found.", undefined, "CUSTOMER_ADDRESS_NOT_FOUND");
     }
 
     if (userId && address.userId && address.userId.toString() !== userId) {
-      throw new BadRequestError("You are not authorized to edit this address.");
+      throw new BadRequestError(
+        "You are not authorized to edit this address.",
+        undefined,
+        "CUSTOMER_ADDRESS_UNAUTHORIZED"
+      );
     } else if (!userId && guestId && address.guestId !== guestId) {
-      throw new BadRequestError("You are not authorized to edit this address.");
+      throw new BadRequestError(
+        "You are not authorized to edit this address.",
+        undefined,
+        "CUSTOMER_ADDRESS_UNAUTHORIZED"
+      );
     }
 
     if (payload.isDefault) {
@@ -264,18 +274,26 @@ export class CheckoutService {
     addressId: string
   ): Promise<void> {
     if (!mongoose.Types.ObjectId.isValid(addressId)) {
-      throw new NotFoundError("Address not found.");
+      throw new NotFoundError("Address not found.", undefined, "CUSTOMER_ADDRESS_NOT_FOUND");
     }
 
     const address = await Address.findById(addressId);
     if (!address) {
-      throw new NotFoundError("Address not found.");
+      throw new NotFoundError("Address not found.", undefined, "CUSTOMER_ADDRESS_NOT_FOUND");
     }
 
     if (userId && address.userId && address.userId.toString() !== userId) {
-      throw new BadRequestError("You are not authorized to delete this address.");
+      throw new BadRequestError(
+        "You are not authorized to delete this address.",
+        undefined,
+        "CUSTOMER_ADDRESS_UNAUTHORIZED"
+      );
     } else if (!userId && guestId && address.guestId !== guestId) {
-      throw new BadRequestError("You are not authorized to delete this address.");
+      throw new BadRequestError(
+        "You are not authorized to delete this address.",
+        undefined,
+        "CUSTOMER_ADDRESS_UNAUTHORIZED"
+      );
     }
 
     await Address.deleteOne({ _id: address._id });
@@ -380,7 +398,11 @@ export class CheckoutService {
     // 2. Cart verification: cannot checkout an empty cart
     const cartDoc = await cartService.getOrCreateCart(userId, guestId);
     if (!cartDoc.items || cartDoc.items.length === 0) {
-      throw new BadRequestError("Cannot place order with an empty shopping bag.");
+      throw new BadRequestError(
+        "Cannot place order with an empty shopping bag.",
+        undefined,
+        ApiCheckoutCode.CHECKOUT_CART_EMPTY
+      );
     }
 
     // 3. Batch fetch products and inventory to strictly validate on backend
@@ -397,7 +419,11 @@ export class CheckoutService {
     for (const item of cartDoc.items) {
       const product = productMap.get(item.productId.toString());
       if (!product || product.status !== "active") {
-        throw new BadRequestError(`Product "${item.sku}" is no longer available.`);
+        throw new BadRequestError(
+          `Product "${item.sku}" is no longer available.`,
+          undefined,
+          ApiCheckoutCode.CHECKOUT_PRODUCT_UNAVAILABLE
+        );
       }
 
       let variant = null;
@@ -406,7 +432,11 @@ export class CheckoutService {
           (v) => (v as any)._id?.toString() === item.variantId?.toString() || v.sku === item.sku
         );
         if (!variant) {
-          throw new BadRequestError(`Garment variant "${item.sku}" is no longer available.`);
+          throw new BadRequestError(
+            `Garment variant "${item.sku}" is no longer available.`,
+            undefined,
+            ApiCheckoutCode.CHECKOUT_PRODUCT_UNAVAILABLE
+          );
         }
       }
 
@@ -435,11 +465,15 @@ export class CheckoutService {
         if (item.quantity > availableStock) {
           if (availableStock <= 0) {
             throw new ConflictError(
-              `Garment "${product.title}" (${item.sku}) is currently out of stock.`
+              `Garment "${product.title}" (${item.sku}) is currently out of stock.`,
+              undefined,
+              ApiCheckoutCode.CHECKOUT_PRODUCT_UNAVAILABLE
             );
           }
           throw new ConflictError(
-            `Insufficient stock for "${product.title}" (${item.sku}). Only ${availableStock} units remaining.`
+            `Insufficient stock for "${product.title}" (${item.sku}). Only ${availableStock} units remaining.`,
+            undefined,
+            ApiCheckoutCode.CHECKOUT_INSUFFICIENT_STOCK
           );
         }
       }
@@ -673,20 +707,24 @@ export class CheckoutService {
 
     const order = await Order.findOne(query);
     if (!order) {
-      throw new NotFoundError("Order not found with specified identifier.");
+      throw new NotFoundError(
+        "Order not found with specified identifier.",
+        undefined,
+        ApiOrderCode.ORDER_NOT_FOUND
+      );
     }
 
     if (!isAdmin) {
       if (order.userId) {
         if (!userId || order.userId.toString() !== userId) {
-          throw new NotFoundError("Order not found.");
+          throw new NotFoundError("Order not found.", undefined, ApiOrderCode.ORDER_NOT_FOUND);
         }
       } else if (order.guestId) {
         if (!guestId || order.guestId !== guestId) {
-          throw new NotFoundError("Order not found.");
+          throw new NotFoundError("Order not found.", undefined, ApiOrderCode.ORDER_NOT_FOUND);
         }
       } else {
-        throw new NotFoundError("Order not found.");
+        throw new NotFoundError("Order not found.", undefined, ApiOrderCode.ORDER_NOT_FOUND);
       }
     }
 
@@ -775,7 +813,11 @@ export class CheckoutService {
 
     const order = await Order.findOne(query);
     if (!order) {
-      throw new NotFoundError("Order not found with specified identifier.");
+      throw new NotFoundError(
+        "Order not found with specified identifier.",
+        undefined,
+        ApiOrderCode.ORDER_NOT_FOUND
+      );
     }
 
     const currentStatus = order.status;
@@ -786,7 +828,9 @@ export class CheckoutService {
     const allowedNext = VALID_STATUS_TRANSITIONS[currentStatus] || [];
     if (!allowedNext.includes(newStatus)) {
       throw new BadRequestError(
-        `Invalid status transition from "${currentStatus}" to "${newStatus}". Allowed transitions: [${allowedNext.join(", ")}].`
+        `Invalid status transition from "${currentStatus}" to "${newStatus}". Allowed transitions: [${allowedNext.join(", ")}].`,
+        undefined,
+        ApiOrderCode.ORDER_STATUS_INVALID
       );
     }
 
@@ -866,34 +910,42 @@ export class CheckoutService {
 
     const order = await Order.findOne(query);
     if (!order) {
-      throw new NotFoundError("Order not found with specified identifier.");
+      throw new NotFoundError(
+        "Order not found with specified identifier.",
+        undefined,
+        ApiOrderCode.ORDER_NOT_FOUND
+      );
     }
 
     // Authorization checks
     if (!isAdmin) {
       if (order.userId) {
         if (!userId || order.userId.toString() !== userId) {
-          throw new NotFoundError("Order not found.");
+          throw new NotFoundError("Order not found.", undefined, ApiOrderCode.ORDER_NOT_FOUND);
         }
       } else if (order.guestId) {
         if (!guestId || order.guestId !== guestId) {
-          throw new NotFoundError("Order not found.");
+          throw new NotFoundError("Order not found.", undefined, ApiOrderCode.ORDER_NOT_FOUND);
         }
       } else {
-        throw new NotFoundError("Order not found.");
+        throw new NotFoundError("Order not found.", undefined, ApiOrderCode.ORDER_NOT_FOUND);
       }
 
       // Customer cancellation business rule: only pending or confirmed can be cancelled
       if (order.status !== "pending" && order.status !== "confirmed") {
         throw new BadRequestError(
-          `Order cannot be cancelled in "${order.status}" status. Please contact atelier customer care.`
+          `Order cannot be cancelled in "${order.status}" status. Please contact atelier customer care.`,
+          undefined,
+          ApiOrderCode.ORDER_CANNOT_BE_CANCELLED
         );
       }
     } else {
       const allowedNext = VALID_STATUS_TRANSITIONS[order.status] || [];
       if (!allowedNext.includes("cancelled")) {
         throw new BadRequestError(
-          `Cannot cancel order in terminal or unmodifiable "${order.status}" state.`
+          `Cannot cancel order in terminal or unmodifiable "${order.status}" state.`,
+          undefined,
+          ApiOrderCode.ORDER_CANNOT_BE_CANCELLED
         );
       }
     }

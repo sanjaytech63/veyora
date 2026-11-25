@@ -33,7 +33,7 @@ import {
 import { adminCatalogApi } from "@/lib/api/admin-catalog-api";
 import { Brand } from "@veyora/types";
 import { CreateBrandInput, UpdateBrandInput } from "@veyora/validators";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess, notifyWarning } from "@/lib/notifications";
 import { Tags, Plus, RefreshCw, Edit, Trash2, Globe, ExternalLink } from "lucide-react";
 
 export default function BrandsPage() {
@@ -57,7 +57,7 @@ export default function BrandsPage() {
       const data = await adminCatalogApi.getBrands();
       setBrands(data);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to load brands.");
+      notifyApiError(err);
     } finally {
       setLoading(false);
     }
@@ -92,7 +92,7 @@ export default function BrandsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      toast.error("Brand name is required.");
+      notifyWarning("Brand name is required.");
       return;
     }
 
@@ -107,8 +107,8 @@ export default function BrandsPage() {
           website: website.trim() || undefined,
           status,
         };
-        await adminCatalogApi.updateBrand(editingBrand.id, payload);
-        toast.success("Brand updated successfully.");
+        const updated = await adminCatalogApi.updateBrand(editingBrand.id, payload);
+        notifyApiSuccess(updated);
       } else {
         const payload: CreateBrandInput = {
           name: name.trim(),
@@ -118,14 +118,14 @@ export default function BrandsPage() {
           website: website.trim() || undefined,
           status,
         };
-        await adminCatalogApi.createBrand(payload);
-        toast.success("Brand created successfully.");
+        const created = await adminCatalogApi.createBrand(payload);
+        notifyApiSuccess(created);
       }
 
       setDialogOpen(false);
       loadBrands();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to save brand.");
+      notifyApiError(err);
     } finally {
       setSubmitting(false);
     }
@@ -134,13 +134,11 @@ export default function BrandsPage() {
   const handleDelete = async (b: Brand) => {
     if (!confirm(`Are you sure you want to delete brand "${b.name}"?`)) return;
     try {
-      await adminCatalogApi.deleteBrand(b.id);
-      toast.success("Brand deleted.");
+      const deleted = await adminCatalogApi.deleteBrand(b.id);
+      notifyApiSuccess(deleted);
       loadBrands();
     } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Cannot delete brand associated with active products."
-      );
+      notifyApiError(err);
     }
   };
 

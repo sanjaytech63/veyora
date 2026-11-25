@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { User, LogOut, Settings, Shield } from "lucide-react";
 import { useAdminAuthStore } from "@/stores/admin-auth-store";
 import { adminAuthApi } from "@/lib/api/admin-auth-api";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 
 export function UserMenu() {
   const router = useRouter();
@@ -24,12 +24,12 @@ export function UserMenu() {
 
   const handleLogout = async () => {
     try {
-      await adminAuthApi.logout();
-    } catch {
-      // Continue client cleanup even if network fails
+      const result = await adminAuthApi.logout();
+      notifyApiSuccess(result);
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       clearAdminAuth();
-      toast.success("Administrator logged out");
       router.push("/login");
     }
   };

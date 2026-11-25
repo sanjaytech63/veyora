@@ -8,8 +8,10 @@ locals {
 }
 
 resource "aws_ecr_repository" "services" {
-  for_each             = toset(locals.services)
-  name                 = "veyora-${each.key}"
+  for_each = toset(local.services)
+  name     = "veyora-${each.key}"
+  # Release tags are commit-specific; latest remains the bootstrap alias used by the
+  # Terraform-managed task definitions.
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {

@@ -2,7 +2,7 @@
 import mongoose from "mongoose";
 import { Role, IRole } from "../models/role.model";
 import { User } from "../../auth/models/user.model";
-import { CreateRoleInput, RoleDto, UpdateRoleInput } from "@veyora/types";
+import { CreateRoleInput, RoleDto, UpdateRoleInput, ApiRbacCode } from "@veyora/types";
 import { BadRequestError, NotFoundError, ForbiddenError } from "@veyora/utils";
 import { auditLogService, LogActor } from "./audit-log.service";
 import { hasPermission } from "../permission-registry";
@@ -148,12 +148,16 @@ export class RoleService {
    */
   public async getRoleById(id: string): Promise<RoleDto> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid role ID format");
+      throw new BadRequestError(
+        "Invalid role ID format",
+        undefined,
+        ApiRbacCode.RBAC_ROLE_NOT_FOUND
+      );
     }
 
     const role: any = await Role.findById(id).lean();
     if (!role) {
-      throw new NotFoundError("Role not found");
+      throw new NotFoundError("Role not found", undefined, ApiRbacCode.RBAC_ROLE_NOT_FOUND);
     }
 
     const staffCount = await User.countDocuments({
@@ -191,7 +195,11 @@ export class RoleService {
     // Check uniqueness
     const existing = await Role.findOne({ name: normalizedName });
     if (existing) {
-      throw new BadRequestError(`Role with identifier '${normalizedName}' already exists`);
+      throw new BadRequestError(
+        `Role with identifier '${normalizedName}' already exists`,
+        undefined,
+        ApiRbacCode.RBAC_ROLE_CONFLICT
+      );
     }
 
     // Least privilege check: actor cannot create a role with permissions they do not possess
@@ -201,7 +209,9 @@ export class RoleService {
       for (const perm of input.permissions) {
         if (!hasPermission(actorPerms, perm)) {
           throw new ForbiddenError(
-            `Privilege escalation prevented. You cannot grant permission '${perm}' which you do not possess.`
+            `Privilege escalation prevented. You cannot grant permission '${perm}' which you do not possess.`,
+            undefined,
+            ApiRbacCode.RBAC_PRIVILEGE_ESCALATION
           );
         }
       }
@@ -239,19 +249,25 @@ export class RoleService {
    */
   public async updateRole(actor: LogActor, id: string, input: UpdateRoleInput): Promise<RoleDto> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid role ID format");
+      throw new BadRequestError(
+        "Invalid role ID format",
+        undefined,
+        ApiRbacCode.RBAC_ROLE_NOT_FOUND
+      );
     }
 
     const role = await Role.findById(id);
     if (!role) {
-      throw new NotFoundError("Role not found");
+      throw new NotFoundError("Role not found", undefined, ApiRbacCode.RBAC_ROLE_NOT_FOUND);
     }
 
     // System roles protection
     if (role.isSystem && role.name === "superadmin" && input.permissions) {
       if (!input.permissions.includes("*")) {
         throw new ForbiddenError(
-          "Cannot revoke root wildcard permission from Superadmin system role"
+          "Cannot revoke root wildcard permission from Superadmin system role",
+          undefined,
+          ApiRbacCode.RBAC_SYSTEM_ROLE_PROTECTED
         );
       }
     }
@@ -263,7 +279,9 @@ export class RoleService {
       for (const perm of input.permissions) {
         if (!hasPermission(actorPerms, perm)) {
           throw new ForbiddenError(
-            `Privilege escalation prevented. You cannot grant permission '${perm}' which you do not possess.`
+            `Privilege escalation prevented. You cannot grant permission '${perm}' which you do not possess.`,
+            undefined,
+            ApiRbacCode.RBAC_PRIVILEGE_ESCALATION
           );
         }
       }
@@ -323,16 +341,24 @@ export class RoleService {
     id: string
   ): Promise<{ success: boolean; message: string }> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid role ID format");
+      throw new BadRequestError(
+        "Invalid role ID format",
+        undefined,
+        ApiRbacCode.RBAC_ROLE_NOT_FOUND
+      );
     }
 
     const role = await Role.findById(id);
     if (!role) {
-      throw new NotFoundError("Role not found");
+      throw new NotFoundError("Role not found", undefined, ApiRbacCode.RBAC_ROLE_NOT_FOUND);
     }
 
     if (role.isSystem) {
-      throw new ForbiddenError("Cannot delete system roles");
+      throw new ForbiddenError(
+        "Cannot delete system roles",
+        undefined,
+        ApiRbacCode.RBAC_SYSTEM_ROLE_PROTECTED
+      );
     }
 
     // Check if any active staff are assigned to this role
@@ -343,7 +369,9 @@ export class RoleService {
 
     if (assignedCount > 0) {
       throw new ForbiddenError(
-        `Cannot delete role '${role.displayName}'. It is currently assigned to ${assignedCount} staff user(s). Reassign them first.`
+        `Cannot delete role '${role.displayName}'. It is currently assigned to ${assignedCount} staff user(s). Reassign them first.`,
+        undefined,
+        ApiRbacCode.RBAC_ROLE_CONFLICT
       );
     }
 

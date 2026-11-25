@@ -11,7 +11,11 @@ export class WishlistService {
    */
   public async getOrCreateWishlist(userId?: string, guestId?: string): Promise<IWishlist> {
     if (!userId && !guestId) {
-      throw new BadRequestError("Wishlist identifier (userId or guestId) is required.");
+      throw new BadRequestError(
+        "Wishlist identifier (userId or guestId) is required.",
+        undefined,
+        "WISHLIST_NOT_FOUND"
+      );
     }
 
     let wishlist: IWishlist | null = null;
@@ -128,12 +132,16 @@ export class WishlistService {
     productId: string
   ): Promise<WishlistDto> {
     if (!mongoose.Types.ObjectId.isValid(productId)) {
-      throw new NotFoundError("Product not found with specified identifier.");
+      throw new NotFoundError(
+        "Product not found with specified identifier.",
+        undefined,
+        "PRODUCT_NOT_FOUND"
+      );
     }
 
     const product = await Product.findById(productId);
-    if (!product) {
-      throw new NotFoundError("Product not found.");
+    if (!product || product.status !== "active") {
+      throw new NotFoundError("Product not found.", undefined, "PRODUCT_NOT_AVAILABLE");
     }
 
     const wishlist = await this.getOrCreateWishlist(userId, guestId);
