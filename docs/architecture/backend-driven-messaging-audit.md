@@ -958,6 +958,40 @@ The entire Express product, catalog, and search domain (`apps/api/src/modules/ca
 
 ---
 
-## 18. Architecture Signoff & Next Steps
+## 18. Task 06 Express Cart Controller Migration
 
-This architectural contract and implementation provide the complete foundation for Veyora's transition to a backend-driven messaging system. All shared contracts, API response infrastructure, authentication controllers, and product/catalog endpoints are verified with 106 unit/integration tests and ready for subsequent domain controller migrations (cart, wishlist, checkout, orders) and frontend toast notification integration.
+The entire Express Cart domain (`apps/api/src/modules/cart`) was migrated to the canonical `sendSuccess` helper and standardized domain error codes in Task 06:
+
+### 18.1 Controller Standardization
+
+- Migrated all cart routes to `sendSuccess(res, { statusCode, code, message, data })`:
+  - `GET /api/v1/cart`: `getCart` (`CART_FETCHED`, 200 OK)
+  - `POST /api/v1/cart/items`: `addItem` (`CART_ITEM_ADDED`, 201 Created)
+  - `PATCH /api/v1/cart/items/:itemId`: `updateQuantity` (`CART_ITEM_UPDATED`, 200 OK)
+  - `DELETE /api/v1/cart/items/:itemId`: `removeItem` (`CART_ITEM_REMOVED`, 200 OK)
+  - `DELETE /api/v1/cart`: `clearCart` (`CART_CLEARED`, 200 OK)
+  - `POST /api/v1/cart/coupon`: `applyCoupon` (`COUPON_APPLIED`, 200 OK)
+  - `DELETE /api/v1/cart/coupon`: `removeCoupon` (`COUPON_REMOVED`, 200 OK)
+  - `POST /api/v1/cart/sync`: `syncCart` (`CART_SYNCED`, 200 OK)
+
+### 18.2 Service Domain Errors & Stable Codes
+
+- Services throw `ConflictError`, `NotFoundError`, and `BadRequestError` with domain-specific stable machine-readable codes:
+  - `INSUFFICIENT_STOCK` (409 Conflict) for requested quantity > on-hand inventory.
+  - `PRODUCT_OUT_OF_STOCK` (409 Conflict) for products with 0 stock.
+  - `PRODUCT_NOT_AVAILABLE` (404 Not Found) for inactive or draft garments.
+  - `INVALID_PRODUCT_VARIANT` (400 Bad Request) for invalid variant ID/SKU.
+  - `CART_ITEM_NOT_FOUND` (404 Not Found) when updating or removing non-existent cart items.
+  - `COUPON_INVALID` (400 Bad Request) for invalid or expired promotional codes.
+
+### 18.3 Cart Business Rules Preserved
+
+- **Server-Authoritative Pricing & Totals:** Unit prices are retrieved strictly from server database records; spoofed client prices are ignored. Subtotal, discounts, shipping fees, estimated tax, and free-shipping thresholds are recalculated on the server.
+- **Guest & Patron Isolation:** Guest sessions use `x-guest-id` headers or cookies. Authenticated users are isolated by their verified JWT claims and session records. User A cannot read or modify User B's cart.
+- **Bulk Bag Synchronization:** `/cart/sync` bulk-synchronizes client items, clamps quantities to available inventory, and resolves server pricing.
+
+---
+
+## 19. Architecture Signoff & Next Steps
+
+This architectural contract and implementation provide the complete foundation for Veyora's transition to a backend-driven messaging system. All shared contracts, API response infrastructure, authentication controllers, product/catalog endpoints, and cart endpoints are verified with automated tests and ready for subsequent domain controller migrations (wishlist, checkout, orders, payments) and frontend toast notification integration.

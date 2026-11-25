@@ -27,7 +27,11 @@ export class CartService {
    */
   public async getOrCreateCart(userId?: string, guestId?: string): Promise<ICart> {
     if (!userId && !guestId) {
-      throw new BadRequestError("Cart identifier (userId or guestId) is required.");
+      throw new BadRequestError(
+        "Cart identifier (userId or guestId) is required.",
+        undefined,
+        "CART_NOT_FOUND"
+      );
     }
 
     let cart: ICart | null = null;
@@ -230,12 +234,20 @@ export class CartService {
     const { productId, quantity = 1, variantId } = input;
 
     if (!mongoose.Types.ObjectId.isValid(productId)) {
-      throw new NotFoundError("Product not found with specified identifier.");
+      throw new NotFoundError(
+        "Product not found with specified identifier.",
+        undefined,
+        "PRODUCT_NOT_FOUND"
+      );
     }
 
     const product = await Product.findById(productId);
     if (!product || product.status !== "active") {
-      throw new NotFoundError("Product not found or currently unavailable.");
+      throw new NotFoundError(
+        "Product not found or currently unavailable.",
+        undefined,
+        "PRODUCT_NOT_AVAILABLE"
+      );
     }
 
     let targetVariant = null;
@@ -244,7 +256,11 @@ export class CartService {
         (v) => (v as any)._id?.toString() === variantId.trim() || v.sku === variantId.trim()
       );
       if (!targetVariant) {
-        throw new BadRequestError("Selected garment variant does not exist.");
+        throw new BadRequestError(
+          "Selected garment variant does not exist.",
+          undefined,
+          "INVALID_PRODUCT_VARIANT"
+        );
       }
     }
 
@@ -287,10 +303,16 @@ export class CartService {
 
     if (product.trackQuantity && requestedTotalQty > availableStock) {
       if (availableStock <= 0) {
-        throw new ConflictError("Selected garment is currently out of stock.");
+        throw new ConflictError(
+          "Selected garment is currently out of stock.",
+          undefined,
+          "PRODUCT_OUT_OF_STOCK"
+        );
       }
       throw new ConflictError(
-        `Requested quantity exceeds available stock. Only ${availableStock} unit(s) available (${currentQtyInCart} already in your bag).`
+        `Requested quantity exceeds available stock. Only ${availableStock} unit(s) available (${currentQtyInCart} already in your bag).`,
+        undefined,
+        "INSUFFICIENT_STOCK"
       );
     }
 
@@ -326,7 +348,7 @@ export class CartService {
 
     const itemIndex = cart.items.findIndex((i) => i.id === itemId);
     if (itemIndex === -1) {
-      throw new NotFoundError("Cart item not found.");
+      throw new NotFoundError("Cart item not found.", undefined, "CART_ITEM_NOT_FOUND");
     }
 
     if (quantity <= 0) {
@@ -338,7 +360,11 @@ export class CartService {
     const item = cart.items[itemIndex]!;
     const product = await Product.findById(item.productId);
     if (!product || product.status !== "active") {
-      throw new NotFoundError("Product is no longer available.");
+      throw new NotFoundError(
+        "Product is no longer available.",
+        undefined,
+        "PRODUCT_NOT_AVAILABLE"
+      );
     }
 
     let availableStock = 0;
@@ -365,7 +391,9 @@ export class CartService {
 
       if (quantity > availableStock) {
         throw new ConflictError(
-          `Requested quantity (${quantity}) exceeds available stock (${availableStock} units available).`
+          `Requested quantity (${quantity}) exceeds available stock (${availableStock} units available).`,
+          undefined,
+          "INSUFFICIENT_STOCK"
         );
       }
     }
@@ -437,7 +465,9 @@ export class CartService {
 
           if (!validation.isValid) {
             throw new BadRequestError(
-              validation.message || "Invalid or ineligible promotional code."
+              validation.message || "Invalid or ineligible promotional code.",
+              undefined,
+              "COUPON_INVALID"
             );
           }
 
@@ -452,7 +482,11 @@ export class CartService {
           await cart.save();
           return this.toCartDto(cart);
         } catch (err: any) {
-          throw new BadRequestError(err.message || "Invalid or ineligible promotional code.");
+          throw new BadRequestError(
+            err.message || "Invalid or ineligible promotional code.",
+            undefined,
+            "COUPON_INVALID"
+          );
         }
       }
     }
@@ -461,7 +495,7 @@ export class CartService {
     const discountPercent = ACTIVE_COUPONS[cleanCode];
 
     if (!discountPercent) {
-      throw new BadRequestError("Invalid or expired coupon code.");
+      throw new BadRequestError("Invalid or expired coupon code.", undefined, "COUPON_INVALID");
     }
 
     const cart = await this.getOrCreateCart(userId, guestId);
