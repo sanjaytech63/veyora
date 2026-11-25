@@ -40,16 +40,13 @@ const apiSuccessMetadata = new WeakMap<
   object,
   { code?: string; message?: string; meta?: Record<string, unknown> }
 >();
-let lastApiSuccessMetadata:
-  { code?: string; message?: string; meta?: Record<string, unknown> } | undefined;
-
 export function getApiSuccessMetadata(
   value: unknown
 ): { code?: string; message?: string; meta?: Record<string, unknown> } | undefined {
   if (typeof value === "object" && value !== null) {
-    return apiSuccessMetadata.get(value) ?? lastApiSuccessMetadata;
+    return apiSuccessMetadata.get(value);
   }
-  return lastApiSuccessMetadata;
+  return undefined;
 }
 
 export type AuthTokenProvider = () => string | null | Promise<string | null>;
@@ -275,11 +272,6 @@ export class ApiClient {
       // If wrapped in ApiResponseSuccess format, unwrap data
       if (data && typeof data === "object" && "success" in data && data.success === true) {
         const envelope = data as ApiResponseSuccess<T>;
-        lastApiSuccessMetadata = {
-          code: envelope.code,
-          message: envelope.message,
-          meta: envelope.meta,
-        };
         const unwrapped = envelope.data;
         if (typeof unwrapped === "object" && unwrapped !== null) {
           apiSuccessMetadata.set(unwrapped, {
@@ -298,6 +290,9 @@ export class ApiClient {
         throw error;
       }
       if (error instanceof Error && error.name === "AbortError") {
+        if (fetchOptions.signal?.aborted) {
+          throw new ApiClientError("Request aborted by client", 499, "CLIENT_ABORTED");
+        }
         throw new ApiClientError("Request timeout exceeded", 408, "TIMEOUT");
       }
       throw new ApiClientError(

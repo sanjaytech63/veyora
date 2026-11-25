@@ -10,6 +10,7 @@ const toastMocks = vi.hoisted(() => ({
 vi.mock("@/components/ui/sonner", () => ({ toast: toastMocks }));
 
 import { notifyApiError, notifyApiSuccess } from "../lib/notifications";
+import { ApiClient } from "../lib/api/api-client";
 
 describe("Web notification adapter", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -124,5 +125,27 @@ describe("Web notification adapter", () => {
     });
 
     expect(normalized.code).toBe("EMAIL_NOT_VERIFIED");
+  });
+
+  it("classifies externally aborted Web requests separately from timeouts", async () => {
+    const client = new ApiClient("http://localhost:4000/api/v1");
+    const controller = new AbortController();
+    controller.abort();
+
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockRejectedValue(
+          Object.assign(new Error("The operation was aborted"), { name: "AbortError" })
+        )
+    );
+
+    await expect(client.get("/orders/test", { signal: controller.signal })).rejects.toMatchObject({
+      code: "CLIENT_ABORTED",
+      statusCode: 499,
+    });
+
+    vi.unstubAllGlobals();
   });
 });

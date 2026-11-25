@@ -44,14 +44,6 @@ const apiSuccessMetadata = new WeakMap<
     meta?: Record<string, unknown>;
   }
 >();
-let lastApiSuccessMetadata:
-  | {
-      code?: string;
-      message?: string;
-      meta?: Record<string, unknown>;
-    }
-  | undefined;
-
 export function getApiSuccessMetadata(value: unknown):
   | {
       code?: string;
@@ -60,9 +52,9 @@ export function getApiSuccessMetadata(value: unknown):
     }
   | undefined {
   if (typeof value === "object" && value !== null) {
-    return apiSuccessMetadata.get(value) ?? lastApiSuccessMetadata;
+    return apiSuccessMetadata.get(value);
   }
-  return lastApiSuccessMetadata;
+  return undefined;
 }
 
 export type AuthTokenProvider = () => string | null | Promise<string | null>;
@@ -308,11 +300,6 @@ export class ApiClient {
       if (data && typeof data === "object" && "success" in data && data.success === true) {
         const envelope = data as ApiResponseSuccess<T>;
         const unwrapped = envelope.data;
-        lastApiSuccessMetadata = {
-          code: envelope.code,
-          message: envelope.message,
-          meta: envelope.meta,
-        };
         if (typeof unwrapped === "object" && unwrapped !== null) {
           apiSuccessMetadata.set(unwrapped, {
             code: envelope.code,

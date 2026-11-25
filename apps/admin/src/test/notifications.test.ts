@@ -10,6 +10,7 @@ const toastMocks = vi.hoisted(() => ({
 vi.mock("@/components/ui/sonner", () => ({ toast: toastMocks }));
 
 import { notifyApiError, notifyApiSuccess } from "../lib/notifications";
+import { ApiClient } from "../lib/api/api-client";
 
 describe("Admin notification adapter", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -62,5 +63,27 @@ describe("Admin notification adapter", () => {
     notifyApiError(error);
     notifyApiError(error);
     expect(toastMocks.error).toHaveBeenCalledTimes(1);
+  });
+
+  it("classifies externally aborted Admin requests separately from timeouts", async () => {
+    const client = new ApiClient("http://localhost:4000/api/v1");
+    const controller = new AbortController();
+    controller.abort();
+
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockRejectedValue(
+          Object.assign(new Error("The operation was aborted"), { name: "AbortError" })
+        )
+    );
+
+    await expect(client.get("/admin/test", { signal: controller.signal })).rejects.toMatchObject({
+      code: "CLIENT_ABORTED",
+      statusCode: 499,
+    });
+
+    vi.unstubAllGlobals();
   });
 });

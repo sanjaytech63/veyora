@@ -1280,3 +1280,32 @@ Task 14B completed the remaining Web audit. Cart, wishlist, profile/avatar, addr
 Task 15 migrated applicable Admin mutations to backend-authored success messages and shared normalized errors. Catalog, inventory, customers, orders, refunds, coupons, reviews, shipments, profile/avatar, settings, staff, and RBAC call sites use the Admin notification adapter. Direct Sonner imports remain only in the shared Admin adapter and toast renderer.
 
 Mutation failures use stable backend codes and safe messages; unknown codes use sanitized generic fallback behavior. Aborted/cancelled operations are silent. Background query failures remain silent because TanStack Query notification behavior stays opt-in. Field-level validation remains frontend-owned and separate from global business notifications.
+
+## 30. Consolidated Verification and Targeted Remediation (Task 16)
+
+The branch contains the expected backend, Web, and Admin migration commits. Shared canonical success/error envelopes, `normalizeApiError`, API response metadata, and the Web/Admin adapters are present. Backend and frontend domain coverage remains intact.
+
+### Route and protocol resolutions
+
+- Analytics uses the registered `/admin/analytics/dashboard`, `/revenue`, `/orders`, `/customers`, `/products`, and `/inventory` routes. The original `/overview`, `/sales-by-category`, `/top-products`, `/conversion`, and `/orders-funnel` names are not registered. These are retained/replaced by the current dashboard, revenue, orders, customers, products, and inventory routes; no unregistered original route remains callable.
+- The RBAC router registers `/admin/audit-logs` as JSON, not a separate CSV export route. Repository evidence does not contain a registered RBAC CSV export endpoint. The CSV requirement is therefore recorded as unimplemented/removed and is not assumed to exist. Prometheus `/metrics` remains a native text protocol exception.
+
+### Targeted remediation
+
+- Web order-detail 404/403 behavior now uses `RESOURCE_NOT_FOUND`, `FORBIDDEN`, and `UNAUTHORIZED` codes/statuses rather than parsing error message text.
+- Web and Admin success metadata no longer retain a process-wide fallback from a previous response. Success notifications are emitted only from canonical envelope text or metadata attached to the actual returned object.
+- Admin browser requests now distinguish externally aborted requests (`CLIENT_ABORTED`, 499) from timeouts (`TIMEOUT`, 408).
+
+### Verification status
+
+Newsletter signup remains a client-only simulation and is documented as an exception. Payment success remains dependent on backend verification. Background query failures remain silent, duplicate notifications are deduplicated, and direct Sonner imports are isolated to the shared adapters/toast renderer.
+
+Verification commands completed: shared utils tests (57), API response infrastructure tests (25), Web notification/API refresh tests (29), Admin notification tests (6), API cart/checkout/payment/RBAC/inventory suites (98), Web storefront/session suites (23), and Admin verification/session suites (20).
+
+Final gate completed:
+
+- `npm run typecheck` — passed for all packages/workspaces.
+- `npm run lint:check` — passed with 0 errors and 8 existing `no-explicit-any` warnings.
+- `npm run format:check` — passed.
+- `npm run test` — passed with exit code 0 across the monorepo workspace test suite.
+- `npm run build` — passed for shared packages, API, worker, Web, and Admin.
