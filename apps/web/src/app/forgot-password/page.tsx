@@ -25,7 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 import { ApiClientError } from "@/lib/api/api-client";
 import { Mail, LoaderCircle, ArrowLeft } from "lucide-react";
 
@@ -43,18 +43,14 @@ export default function ForgotPasswordPage() {
   async function onSubmit(values: ForgotPasswordInput) {
     setIsSubmitting(true);
     try {
-      await authApi.forgotPassword(values);
-      toast.success("Reset Code Sent", {
-        description: "If an account exists, a 6-digit code has been dispatched to your email.",
-      });
+      const response = await authApi.forgotPassword(values);
+      notifyApiSuccess(response);
       router.push(`/reset-password?email=${encodeURIComponent(values.email)}`);
     } catch (err) {
       if (err instanceof ApiClientError) {
-        toast.error("Request Failed", {
-          description: err.message,
-        });
+        notifyApiError(err);
       } else {
-        toast.error("An unexpected error occurred. Please try again.");
+        notifyApiError(err);
       }
     } finally {
       setIsSubmitting(false);

@@ -2,6 +2,7 @@
 
 import { normalizeApiError, NormalizedApiError } from "@veyora/utils";
 import { toast } from "@/components/ui/sonner";
+import { getApiSuccessMetadata } from "@/lib/api/api-client";
 
 const recentNotifications = new Map<string, number>();
 
@@ -27,6 +28,21 @@ export function notifyApiError(error: unknown, fallbackMessage?: string): Normal
 export function notifySuccess(message: string, description?: string): void {
   const id = `success:${message}:${description ?? ""}`;
   toast.success(message, { id, description });
+}
+
+export function notifyApiSuccess(result: unknown): boolean {
+  const metadata = getApiSuccessMetadata(result);
+  const envelope =
+    typeof result === "object" && result !== null ? (result as Record<string, unknown>) : undefined;
+  const message =
+    metadata?.message || (typeof envelope?.message === "string" ? envelope.message : undefined);
+
+  if (!message) return false;
+
+  toast.success(message, {
+    id: `success:${message}`,
+  });
+  return true;
 }
 
 export function notifyWarning(message: string, description?: string): void {

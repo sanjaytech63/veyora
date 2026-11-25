@@ -1264,3 +1264,9 @@ Task 13 establishes the framework-independent and application-specific notificat
 - Authentication refresh, permission handling, retry policies, and existing cache behavior remain unchanged.
 
 The infrastructure is complete for subsequent page-by-page frontend migration, but business-page notification copy has not been migrated in this task.
+
+## 28. Web Business Notification Migration (Task 14)
+
+Task 14 migrated the Web application's customer-facing business mutations to the Task 13 notification foundation. Cart, wishlist, addresses, profile/avatar, authentication, checkout, orders, payments, notifications, and reviews use backend success messages or the shared error normalizer.
+
+Frontend code no longer branches on backend message text. Email verification behavior uses the `EMAIL_NOT_VERIFIED` code. Payment success is displayed only after backend verification. Background socket state updates invalidate queries without inventing frontend-authored success copy.

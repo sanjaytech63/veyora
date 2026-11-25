@@ -9,7 +9,7 @@ const toastMocks = vi.hoisted(() => ({
 
 vi.mock("@/components/ui/sonner", () => ({ toast: toastMocks }));
 
-import { notifyApiError, notifySuccess } from "../lib/notifications";
+import { notifyApiError, notifyApiSuccess, notifySuccess } from "../lib/notifications";
 
 describe("Web notification adapter", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -35,5 +35,23 @@ describe("Web notification adapter", () => {
       "Profile updated successfully.",
       expect.objectContaining({ id: expect.stringContaining("success:") })
     );
+  });
+
+  it("notifies from a canonical success envelope", () => {
+    const shown = notifyApiSuccess({
+      success: true,
+      code: "CART_ITEM_ADDED",
+      message: "Item added to your bag.",
+      data: { id: "cart-1" },
+    });
+    expect(shown).toBe(true);
+    expect(toastMocks.success).toHaveBeenCalledWith(
+      "Item added to your bag.",
+      expect.objectContaining({ id: "success:Item added to your bag." })
+    );
+  });
+
+  it("does not fabricate success for a missing backend message", () => {
+    expect(notifyApiSuccess({ success: true, data: { id: "cart-1" } })).toBe(false);
   });
 });

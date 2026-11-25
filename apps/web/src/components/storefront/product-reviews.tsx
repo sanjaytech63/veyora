@@ -27,7 +27,7 @@ import { toast } from "sonner";
 import { reviewApi } from "@/lib/api/review-api";
 import { useAuthStore } from "@/stores/auth-store";
 import { ReviewDto, ProductRatingSummary } from "@veyora/types";
-import { ApiClientError } from "@/lib/api/api-client";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 
 interface ProductReviewsProps {
   productId: string;
@@ -128,24 +128,20 @@ export function ProductReviews({ productId, productTitle }: ProductReviewsProps)
 
     setIsSubmitting(true);
     try {
-      await reviewApi.submitReview(productId, {
+      const response = await reviewApi.submitReview(productId, {
         rating: ratingInput,
         title: titleInput.trim(),
         comment: commentInput.trim(),
       });
 
-      toast.success("Review Submitted for Curation", {
-        description:
-          "Thank you for sharing your experience! Your review will be published upon curation.",
-      });
+      notifyApiSuccess(response);
 
       setReviewModalOpen(false);
       setTitleInput("");
       setCommentInput("");
       fetchReviews();
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : "Unable to submit review";
-      toast.error("Submission Failed", { description: message });
+      notifyApiError(err);
     } finally {
       setIsSubmitting(false);
     }
@@ -164,9 +160,9 @@ export function ProductReviews({ productId, productTitle }: ProductReviewsProps)
       setReviews((prev) =>
         prev.map((r) => (r.id === reviewId ? { ...r, helpfulCount: res.helpfulCount } : r))
       );
-      toast.success("Thank you for your feedback!");
-    } catch {
-      toast.error("Could not record vote.");
+      notifyApiSuccess(res);
+    } catch (err) {
+      notifyApiError(err);
     }
   };
 

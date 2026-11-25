@@ -38,6 +38,7 @@ import {
   Loader2,
   ShoppingBag,
 } from "lucide-react";
+import { notifyApiError, notifyApiSuccess, notifyWarning } from "@/lib/notifications";
 import { toast } from "sonner";
 import {
   AddressDto,
@@ -262,9 +263,7 @@ export default function CheckoutPage() {
       setPendingPaymentOrder(order);
       await launchPayment(order);
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Unable to place order. Please check stock.";
-      toast.error("Checkout Request Declined", { description: message });
+      notifyApiError(err);
     }
   };
 
@@ -310,35 +309,33 @@ export default function CheckoutPage() {
                 gatewaySignature: response.razorpay_signature,
               });
 
-              toast.success("Payment Verified & Confirmed", {
-                description: `Transaction ${response.razorpay_payment_id} successfully confirmed.`,
-              });
+              notifyApiSuccess(verification);
               setVerifiedPayment(verification);
               setCompletedOrder({ ...order, status: "confirmed" });
               setPendingPaymentOrder(null);
               clearCart();
             } catch (err: unknown) {
-              const msg = err instanceof Error ? err.message : "Cryptographic verification failed.";
-              toast.error("Payment Verification Failed", { description: msg });
+              notifyApiError(err);
             } finally {
               setIsProcessingPayment(false);
             }
           },
           modal: {
             ondismiss: function () {
-              toast.info("Payment Incomplete", {
-                description: "Payment modal was closed. You can complete settlement when ready.",
-              });
+              notifyWarning("Payment has not been completed.");
               setIsProcessingPayment(false);
             },
           },
         });
 
         rzp.on("payment.failed", function (response: any) {
-          toast.error("Payment Declined by Issuer", {
-            description:
-              response.error?.description ||
-              "Payment failed. Please retry with another payment instrument.",
+          notifyApiError({
+            code: "PAYMENT_FAILED",
+            statusCode: 400,
+            message:
+              response.error?.description && typeof response.error.description === "string"
+                ? response.error.description
+                : "Payment could not be completed.",
           });
           setIsProcessingPayment(false);
         });
@@ -349,8 +346,7 @@ export default function CheckoutPage() {
         setSimulatedModalOpen(true);
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Could not initiate payment.";
-      toast.error("Payment Initiation Error", { description: msg });
+      notifyApiError(err);
     } finally {
       setIsProcessingPayment(false);
     }
@@ -370,17 +366,14 @@ export default function CheckoutPage() {
         gatewaySignature: simulatedSignature,
       });
 
-      toast.success("Dev Payment Verified & Confirmed", {
-        description: `Simulated transaction ${simulatedPaymentId} verified successfully.`,
-      });
+      notifyApiSuccess(verification);
       setVerifiedPayment(verification);
       setCompletedOrder({ ...pendingPaymentOrder, status: "confirmed" });
       setPendingPaymentOrder(null);
       setSimulatedModalOpen(false);
       clearCart();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Cryptographic verification failed.";
-      toast.error("Verification Declined", { description: msg });
+      notifyApiError(err);
     } finally {
       setIsProcessingPayment(false);
     }

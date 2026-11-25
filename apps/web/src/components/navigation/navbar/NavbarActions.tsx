@@ -20,7 +20,7 @@ import { useWishlist } from "@/lib/hooks/use-wishlist";
 import { useCart } from "@/lib/hooks/use-cart";
 import { useUIStore } from "@/stores/ui-store";
 import { authApi } from "@/lib/api/auth-api";
-import { toast } from "sonner";
+import { notifyApiSuccess } from "@/lib/notifications";
 import { cn } from "@/lib/utils";
 
 interface NavbarActionsProps {
@@ -42,12 +42,12 @@ export function NavbarActions({ onOpenSearch, className }: NavbarActionsProps) {
 
   const handleLogout = async () => {
     try {
-      await authApi.logout();
+      const response = await authApi.logout();
+      notifyApiSuccess(response);
     } catch {
       // Continue cleanup even if network fails
     } finally {
       clearAuth();
-      toast.success("Signed out successfully");
     }
   };
 

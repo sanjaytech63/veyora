@@ -26,7 +26,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess, notifyWarning } from "@/lib/notifications";
 import { ApiClientError } from "@/lib/api/api-client";
 import { KeyRound, LoaderCircle, RefreshCw } from "lucide-react";
 
@@ -71,17 +71,13 @@ function VerifyOtpForm() {
     try {
       const response = await authApi.verifyEmail(values);
       setAuth(response.user, response.accessToken);
-      toast.success("Email verified successfully!", {
-        description: `Welcome to Veyora, ${response.user.firstName}!`,
-      });
+      notifyApiSuccess(response);
       router.push("/");
     } catch (err) {
       if (err instanceof ApiClientError) {
-        toast.error("Verification Failed", {
-          description: err.message,
-        });
+        notifyApiError(err);
       } else {
-        toast.error("An unexpected error occurred. Please try again.");
+        notifyApiError(err);
       }
     } finally {
       setIsSubmitting(false);
@@ -91,24 +87,20 @@ function VerifyOtpForm() {
   async function handleResendOtp() {
     const email = form.getValues("email");
     if (!email) {
-      toast.error("Please enter your email address to resend the code.");
+      notifyWarning("Please enter your email address to resend the code.");
       return;
     }
 
     setIsResending(true);
     try {
-      await authApi.resendOtp({ email, type: "EMAIL_VERIFICATION" });
-      toast.success("Verification code resent!", {
-        description: "Please check your inbox for the new 6-digit code.",
-      });
+      const response = await authApi.resendOtp({ email, type: "EMAIL_VERIFICATION" });
+      notifyApiSuccess(response);
       setResendCooldown(60);
     } catch (err) {
       if (err instanceof ApiClientError) {
-        toast.error("Could not resend code", {
-          description: err.message,
-        });
+        notifyApiError(err);
       } else {
-        toast.error("Failed to resend code.");
+        notifyApiError(err);
       }
     } finally {
       setIsResending(false);

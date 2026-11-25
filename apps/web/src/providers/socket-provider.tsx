@@ -78,10 +78,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     // 3. Listen for order status transitions
     newSocket.on(
       SOCKET_EVENTS.SERVER_TO_CLIENT.ORDER_UPDATED,
-      (orderData: { orderNumber: string; status: string }) => {
-        toast.success(`Order #${orderData.orderNumber} Status Updated`, {
-          description: `Current atelier status: ${orderData.status.toUpperCase()}`,
-        });
+      (_orderData: { orderNumber: string; status: string }) => {
         queryClient.invalidateQueries({ queryKey: ["orders"] });
         queryClient.invalidateQueries({ queryKey: ["order"] });
       }
@@ -90,10 +87,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     // 4. Listen for shipment dispatch updates
     newSocket.on(
       SOCKET_EVENTS.SERVER_TO_CLIENT.SHIPMENT_UPDATED,
-      (shipmentData: { trackingNumber: string; status: string }) => {
-        toast.info("Shipment Transit Update", {
-          description: `AWB #${shipmentData.trackingNumber}: ${shipmentData.status}`,
-        });
+      (_shipmentData: { trackingNumber: string; status: string }) => {
         queryClient.invalidateQueries({ queryKey: ["orders"] });
         queryClient.invalidateQueries({ queryKey: ["order"] });
       }

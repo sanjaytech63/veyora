@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, LoaderCircle, CheckCircle2 } from "lucide-react";
 import { z } from "zod";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 const newsletterSchema = z.object({
@@ -33,10 +32,6 @@ export function FooterNewsletter({ className }: { className?: string }) {
     try {
       await new Promise((resolve) => setTimeout(resolve, 600));
       setStatus("success");
-      toast.success("Subscribed to Veyora Atelier Gazette", {
-        description:
-          "You will receive exclusive invitations to upcoming festive drops and seasonal edits.",
-      });
       setEmail("");
     } catch {
       setStatus("error");

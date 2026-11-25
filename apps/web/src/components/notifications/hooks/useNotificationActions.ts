@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { notificationApi } from "@/lib/api/notification-api";
 import { notificationKeys } from "@/lib/api/query-keys";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 
 export function useNotificationActions() {
   const queryClient = useQueryClient();
@@ -14,8 +14,8 @@ export function useNotificationActions() {
       queryClient.invalidateQueries({ queryKey: notificationKeys.all });
       queryClient.setQueryData(notificationKeys.detail(updated.id), updated);
     },
-    onError: () => {
-      toast.error("Failed to update notification state");
+    onError: (error) => {
+      notifyApiError(error);
     },
   });
 
@@ -24,32 +24,32 @@ export function useNotificationActions() {
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: notificationKeys.all });
       queryClient.setQueryData(notificationKeys.detail(updated.id), updated);
-      toast.success("Marked as unread");
+      notifyApiSuccess(updated);
     },
-    onError: () => {
-      toast.error("Failed to update notification state");
+    onError: (error) => {
+      notifyApiError(error);
     },
   });
 
   const markAllReadMutation = useMutation({
     mutationFn: () => notificationApi.markAllAsRead(),
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: notificationKeys.all });
-      toast.success("All notices marked as read");
+      notifyApiSuccess(result);
     },
-    onError: () => {
-      toast.error("Failed to mark notices as read");
+    onError: (error) => {
+      notifyApiError(error);
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => notificationApi.deleteNotification(id),
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: notificationKeys.all });
-      toast.success("Notice dismissed");
+      notifyApiSuccess(result);
     },
-    onError: () => {
-      toast.error("Failed to delete notification");
+    onError: (error) => {
+      notifyApiError(error);
     },
   });
 

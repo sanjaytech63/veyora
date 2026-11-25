@@ -11,7 +11,7 @@ import { useUIStore } from "@/stores/ui-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCart } from "@/lib/hooks/use-cart";
 import { authApi } from "@/lib/api/auth-api";
-import { toast } from "sonner";
+import { notifyApiSuccess } from "@/lib/notifications";
 import {
   Menu,
   Search,
@@ -54,13 +54,13 @@ export function NavbarMobile({ onOpenSearch, className }: NavbarMobileProps) {
 
   const handleLogout = async () => {
     try {
-      await authApi.logout();
+      const response = await authApi.logout();
+      notifyApiSuccess(response);
     } catch {
       // Continue cleanup
     } finally {
       clearAuth();
       setMobileNavOpen(false);
-      toast.success("Signed out successfully");
     }
   };
 

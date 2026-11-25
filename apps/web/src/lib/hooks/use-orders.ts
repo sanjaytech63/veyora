@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { checkoutApi } from "../api/checkout-api";
 import { orderKeys } from "../api/query-keys";
 import { OrderDto, CancelOrderPayload } from "@veyora/types";
-import { toast } from "sonner";
+import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 
 export function useOrders() {
   const queryClient = useQueryClient();
@@ -22,15 +22,10 @@ export function useOrders() {
       queryClient.invalidateQueries({ queryKey: orderKeys.list() });
       queryClient.invalidateQueries({ queryKey: orderKeys.detail(updatedOrder.id) });
       queryClient.invalidateQueries({ queryKey: orderKeys.detail(updatedOrder.orderNumber) });
-      toast.success("Order Cancelled", {
-        description: `Order #${updatedOrder.orderNumber} has been successfully cancelled.`,
-      });
+      notifyApiSuccess(updatedOrder);
     },
     onError: (err: Error) => {
-      toast.error("Could not cancel order", {
-        description:
-          err.message || "Please contact atelier support if the order has begun tailoring.",
-      });
+      notifyApiError(err);
     },
   });
 
@@ -63,14 +58,10 @@ export function useOrderDetail(orderId: string) {
     onSuccess: (updatedOrder) => {
       queryClient.invalidateQueries({ queryKey: orderKeys.list() });
       queryClient.setQueryData(orderKeys.detail(orderId), updatedOrder);
-      toast.success("Order Cancelled", {
-        description: `Order #${updatedOrder.orderNumber} has been successfully cancelled.`,
-      });
+      notifyApiSuccess(updatedOrder);
     },
     onError: (err: Error) => {
-      toast.error("Could not cancel order", {
-        description: err.message || "Please contact atelier support.",
-      });
+      notifyApiError(err);
     },
   });
 
