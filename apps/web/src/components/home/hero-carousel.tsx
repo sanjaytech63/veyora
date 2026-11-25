@@ -94,7 +94,6 @@ export function HeroCarousel({ products }: { products: Product[] }) {
               <OptimizedImage
                 src="/veyora-kurti-primary.jpg"
                 fallbackSrc="/veyora-kurti-primary.jpg"
-                showLoader={false}
                 alt={activeProduct.title}
                 fill
                 priority

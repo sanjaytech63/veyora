@@ -56,7 +56,6 @@ export default async function StorefrontHomePage() {
                     <OptimizedImage
                       src="/veyora-kurti-primary.jpg"
                       fallbackSrc="/veyora-kurti-primary.jpg"
-                      showLoader={false}
                       alt={activeCategory.name}
                       width={160}
                       height={160}
@@ -129,7 +128,6 @@ export default async function StorefrontHomePage() {
                   <OptimizedImage
                     src="/veyora-kurti-festive.jpg"
                     fallbackSrc="/veyora-kurti-primary.jpg"
-                    showLoader={false}
                     alt="Festive fashion selection"
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
@@ -157,7 +155,6 @@ export default async function StorefrontHomePage() {
                   <OptimizedImage
                     src="/veyora-kurti-detail.jpg"
                     fallbackSrc="/veyora-kurti-primary.jpg"
-                    showLoader={false}
                     alt={activeCategory.name}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"

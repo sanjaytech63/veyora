@@ -417,7 +417,6 @@ export function ProductDetailsClient({ initialProduct }: ProductDetailsClientPro
                             fill
                             className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                             sizes="140px"
-                            showLoader={false}
                           />
                         ) : null}
                         <WishlistButton

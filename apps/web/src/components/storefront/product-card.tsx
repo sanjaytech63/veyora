@@ -123,7 +123,6 @@ export function ProductCard({
             <OptimizedImage
               src={activeImage || "/veyora-kurti-primary.jpg"}
               fallbackSrc="/veyora-kurti-primary.jpg"
-              showLoader={false}
               alt={product.title}
               fill
               priority={priority}

@@ -73,7 +73,6 @@ export function ProductGallery({
                   fill
                   className="object-cover"
                   sizes="74px"
-                  showLoader={false}
                 />
               ) : null}
             </Button>
@@ -108,7 +107,6 @@ export function ProductGallery({
             priority
             className="object-cover object-center"
             sizes="(max-width: 1024px) 100vw, 44vw"
-            showLoader={false}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center p-8 text-center text-muted-foreground">
@@ -174,7 +172,6 @@ export function ProductGallery({
                 fill
                 className="object-contain"
                 sizes="100vw"
-                showLoader={false}
               />
               {allImages.length > 1 ? (
                 <>
