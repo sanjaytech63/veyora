@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import { createApp } from "../app";
 import { env } from "../config/env";
+import { ApiInventoryCode } from "@veyora/types";
 
 interface MockInventoryDoc {
   _id: mongoose.Types.ObjectId;
@@ -326,7 +327,10 @@ describe("Inventory Module Integration Tests", () => {
         .set("Authorization", `Bearer ${adminToken}`);
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe(ApiInventoryCode.INVENTORY_ITEMS_FETCHED);
       expect(res.body.data.length).toBe(3);
+      expect(res.body.meta.total).toBe(3);
+      expect(res.body.meta.requestId).toBeDefined();
     });
   });
 
@@ -346,6 +350,7 @@ describe("Inventory Module Integration Tests", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe(ApiInventoryCode.INVENTORY_ADJUSTED);
       expect(res.body.data.onHand).toBe(35);
       expect(res.body.data.available).toBe(33); // 35 onHand - 2 reserved
 
@@ -387,7 +392,7 @@ describe("Inventory Module Integration Tests", () => {
         });
 
       expect(res.status).toBe(409);
-      expect(res.body.error.code).toBe("CONFLICT");
+      expect(res.body.code).toBe(ApiInventoryCode.INVENTORY_INSUFFICIENT_STOCK);
       expect(res.body.error.message).toContain("Cannot decrease stock");
     });
 
@@ -403,6 +408,7 @@ describe("Inventory Module Integration Tests", () => {
         });
 
       expect(res.status).toBe(200);
+      expect(res.body.code).toBe(ApiInventoryCode.INVENTORY_ADJUSTED);
       expect(res.body.data.onHand).toBe(25);
       expect(mockMovements[0].type).toBe("correction");
       expect(mockMovements[0].quantity).toBe(5); // 25 - 20
@@ -420,6 +426,7 @@ describe("Inventory Module Integration Tests", () => {
         });
 
       expect(res.status).toBe(409);
+      expect(res.body.code).toBe(ApiInventoryCode.INVENTORY_ADJUSTMENT_INVALID);
       expect(res.body.error.message).toContain("cannot be lower than currently reserved");
     });
   });
@@ -437,6 +444,7 @@ describe("Inventory Module Integration Tests", () => {
         });
 
       expect(res.status).toBe(200);
+      expect(res.body.code).toBe(ApiInventoryCode.INVENTORY_RESERVED);
       expect(res.body.data.reserved).toBe(7); // 2 + 5
       expect(res.body.data.available).toBe(13); // 20 - 7
       expect(mockMovements[0].type).toBe("reservation");
@@ -453,6 +461,7 @@ describe("Inventory Module Integration Tests", () => {
         });
 
       expect(res.status).toBe(409);
+      expect(res.body.code).toBe(ApiInventoryCode.INVENTORY_INSUFFICIENT_STOCK);
       expect(res.body.error.message).toContain("Insufficient available stock");
     });
 
@@ -467,6 +476,7 @@ describe("Inventory Module Integration Tests", () => {
         });
 
       expect(res.status).toBe(200);
+      expect(res.body.code).toBe(ApiInventoryCode.INVENTORY_RELEASED);
       expect(res.body.data.reserved).toBe(0); // 2 - 2
       expect(res.body.data.available).toBe(20);
       expect(mockMovements[0].type).toBe("reservation_release");
@@ -483,6 +493,7 @@ describe("Inventory Module Integration Tests", () => {
         });
 
       expect(res.status).toBe(200);
+      expect(res.body.code).toBe(ApiInventoryCode.INVENTORY_COMMITTED);
       expect(res.body.data.onHand).toBe(18); // 20 - 2
       expect(res.body.data.reserved).toBe(0); // 2 - 2
       expect(res.body.data.available).toBe(18);
@@ -499,6 +510,7 @@ describe("Inventory Module Integration Tests", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe(ApiInventoryCode.INVENTORY_STATS_FETCHED);
       expect(res.body.data.totalTrackedItems).toBe(3);
       expect(res.body.data.totalUnitsOnHand).toBe(24); // 20 + 4 + 0
       expect(res.body.data.totalUnitsReserved).toBe(3); // 2 + 1 + 0
@@ -511,6 +523,7 @@ describe("Inventory Module Integration Tests", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe(ApiInventoryCode.INVENTORY_LOW_STOCK_FETCHED);
       expect(res.body.data.length).toBe(2); // MOUSE-WIRELESS-01 (available 3 <= 5) and MOUSEPAD-XL-01 (available 0)
     });
 
@@ -521,6 +534,7 @@ describe("Inventory Module Integration Tests", () => {
         .send({ lowStockThreshold: 25 }); // onHand is 20, so now low_stock!
 
       expect(res.status).toBe(200);
+      expect(res.body.code).toBe(ApiInventoryCode.INVENTORY_THRESHOLD_UPDATED);
       expect(res.body.data.lowStockThreshold).toBe(25);
       expect(res.body.data.status).toBe("low_stock");
     });
@@ -542,9 +556,20 @@ describe("Inventory Module Integration Tests", () => {
         .set("Authorization", `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
+      expect(res.body.code).toBe(ApiInventoryCode.INVENTORY_MOVEMENTS_FETCHED);
       expect(res.body.data.length).toBe(1);
       expect(res.body.data[0].reason).toBe("Shipment A");
       expect(res.body.data[0].sku).toBe("KEYBOARD-RGB-01");
+    });
+
+    it("should return 404 with INVENTORY_ITEM_NOT_FOUND when querying non-existent SKU", async () => {
+      const res = await request(app)
+        .get("/api/v1/admin/inventory/NON-EXISTENT-SKU")
+        .set("Authorization", `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(404);
+      expect(res.body.code).toBe(ApiInventoryCode.INVENTORY_ITEM_NOT_FOUND);
+      expect(res.body.success).toBe(false);
     });
   });
 });

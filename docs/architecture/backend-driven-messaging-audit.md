@@ -1159,29 +1159,19 @@ All routes in the following domains return the canonical `ApiSuccessResponse<T>`
 | **Admin Analytics (`analytics`)**           | `/api/v1/admin/analytics/*`                                                                 | **Migrated (Task 11)**       |
 | **Customer Administration (`customer`)**    | `/api/v1/admin/customers/*`                                                                 | **Migrated (Task 11)**       |
 | **RBAC & Staff Governance (`rbac`)**        | `/api/v1/admin/permissions`, `/api/v1/admin/roles/*`, `/admin/staff/*`, `/admin/audit-logs` | **Migrated (Task 11)**       |
+| **Warehouse Inventory (`inventory`)**       | `/api/v1/admin/inventory/*`                                                                 | **Migrated (Task 12)**       |
 
 ### 23.2 Remaining Unmigrated API Routes (Out-of-Scope Domains)
 
-The following routes currently remain outside the migrated scope:
+With the completion of Task 12, **100% of all business-facing API endpoints across Veyora are fully migrated** to the canonical backend-driven response architecture.
 
-#### 1. Inventory Operations (`apps/api/src/modules/inventory`) — Sole Remaining Business Module
+The only remaining endpoints returning non-canonical formats are low-level technical protocol exceptions:
 
-- `GET /api/v1/inventory/levels`
-- `GET /api/v1/inventory/locations`
-- `POST /api/v1/inventory/locations`
-- `GET /api/v1/inventory/locations/:locationId`
-- `PUT /api/v1/inventory/locations/:locationId`
-- `GET /api/v1/inventory/audit-logs`
-- `POST /api/v1/inventory/adjust`
-- `POST /api/v1/inventory/transfer`
-- `POST /api/v1/inventory/reserve`
-- `POST /api/v1/inventory/release`
-
-#### 2. System Probes & Diagnostics (`apps/api/src/modules/health`, `apps/api/src/modules/system`) — Technical Protocol Exceptions
+#### System Probes & Diagnostics (`apps/api/src/modules/health`, `apps/api/src/modules/system`) — Technical Protocol Exceptions
 
 - `GET /health`, `GET /health/live`, `GET /health/ready` (Kubernetes/load-balancer probe payload `{ status: "ok"|"degraded", service, uptime, ... }`)
 - `GET /metrics` (Prometheus text exposition format via prom-client `res.send()`)
-- `GET /api/v1/system/info`, `GET /api/v1/system/ping`, `GET /api/v1/system/env` (administrative diagnostics payload)
+- `GET /api/v1/system/info`, `GET /api/v1/system/ping`, `GET /api/v1/system/env` (internal server diagnostics payload)
 
 ---
 
@@ -1232,6 +1222,33 @@ Task 11 migrated all administrative analytics, customer governance, and RBAC end
 
 ---
 
-## 25. Architecture Signoff & Next Steps
+## 25. Warehouse Inventory Migration (Task 12)
 
-This architectural contract and implementation provide the complete foundation for Veyora's transition to a backend-driven messaging system. All shared contracts, API response infrastructure, authentication controllers, catalog endpoints, cart endpoints, wishlist endpoints, customer address endpoints, checkout/orders endpoints, payment endpoints, all five secondary commerce domains (Coupons, Profile, Reviews, Shipping, Notifications), and all administrative management modules (Analytics, Customer Admin, RBAC) are fully migrated, strictly typed, and verified with **352 / 352 passing tests**. The codebase is now prepared for frontend toast notification and client integration (Task 12).
+### 25.1 Architecture & Endpoints Migrated
+
+Task 12 migrated all Warehouse Inventory management endpoints to the canonical response architecture:
+
+- `GET /api/v1/admin/inventory/stats` -> `INVENTORY_STATS_FETCHED`
+- `GET /api/v1/admin/inventory/low-stock` -> `INVENTORY_LOW_STOCK_FETCHED`
+- `GET /api/v1/admin/inventory` -> `INVENTORY_ITEMS_FETCHED`
+- `GET /api/v1/admin/inventory/:skuOrId` -> `INVENTORY_ITEM_FETCHED`
+- `GET /api/v1/admin/inventory/:skuOrId/movements` -> `INVENTORY_MOVEMENTS_FETCHED`
+- `POST /api/v1/admin/inventory/adjust` -> `INVENTORY_ADJUSTED`
+- `POST /api/v1/admin/inventory/reserve` -> `INVENTORY_RESERVED`
+- `POST /api/v1/admin/inventory/release` -> `INVENTORY_RELEASED`
+- `POST /api/v1/admin/inventory/commit` -> `INVENTORY_COMMITTED`
+- `PATCH /api/v1/admin/inventory/:skuOrId/threshold` -> `INVENTORY_THRESHOLD_UPDATED`
+
+### 25.2 Stock Invariants & Concurrency Safeguards
+
+- **Available Stock Calculation**: `available = Math.max(0, onHand - reserved)`. Stock decreases below available quantity are rejected with `INVENTORY_INSUFFICIENT_STOCK` (409).
+- **Recount Validation**: Recount corrections below reserved levels are rejected with `INVENTORY_ADJUSTMENT_INVALID` (409).
+- **Reservation Bound Checking**: Reserving stock exceeding available stock is rejected with `INVENTORY_INSUFFICIENT_STOCK` (409).
+- **Movement Ledger**: Every stock change creates an immutable `StockMovement` entry capturing delta quantities, reference IDs, and user attribution.
+- **Product Catalog Synchronization**: All changes to `onHand` quantities synchronize parent product and variant stocks in the catalog.
+
+---
+
+## 26. Architecture Signoff & Final State of All Business Modules
+
+This architectural contract and implementation provide the complete foundation for Veyora's transition to a backend-driven messaging system. **100% of all business domains** (Auth, Catalog, Cart, Wishlist, Addresses, Checkout, Orders, Payments, Coupons, Profile, Reviews, Shipping, Notifications, Analytics, Customer Admin, RBAC, and Warehouse Inventory) are now fully migrated, strictly typed, and verified with **353 / 353 passing tests**. The codebase is now prepared for frontend toast notification and client integration (Task 13 / Frontend Phase).

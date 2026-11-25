@@ -347,6 +347,29 @@ export const ApiRbacCode = {
   RBAC_PRIVILEGE_ESCALATION: "RBAC_PRIVILEGE_ESCALATION",
 } as const;
 
+export const ApiInventoryCode = {
+  INVENTORY_ITEMS_FETCHED: "INVENTORY_ITEMS_FETCHED",
+  INVENTORY_STATS_FETCHED: "INVENTORY_STATS_FETCHED",
+  INVENTORY_LOW_STOCK_FETCHED: "INVENTORY_LOW_STOCK_FETCHED",
+  INVENTORY_ITEM_FETCHED: "INVENTORY_ITEM_FETCHED",
+  INVENTORY_MOVEMENTS_FETCHED: "INVENTORY_MOVEMENTS_FETCHED",
+  INVENTORY_ADJUSTED: "INVENTORY_ADJUSTED",
+  INVENTORY_RESERVED: "INVENTORY_RESERVED",
+  INVENTORY_RELEASED: "INVENTORY_RELEASED",
+  INVENTORY_COMMITTED: "INVENTORY_COMMITTED",
+  INVENTORY_THRESHOLD_UPDATED: "INVENTORY_THRESHOLD_UPDATED",
+  INVENTORY_ITEM_NOT_FOUND: "INVENTORY_ITEM_NOT_FOUND",
+  INVENTORY_PRODUCT_NOT_FOUND: "INVENTORY_PRODUCT_NOT_FOUND",
+  INVENTORY_INSUFFICIENT_STOCK: "INVENTORY_INSUFFICIENT_STOCK",
+  INVENTORY_ADJUSTMENT_INVALID: "INVENTORY_ADJUSTMENT_INVALID",
+  INVENTORY_RESERVATION_NOT_FOUND: "INVENTORY_RESERVATION_NOT_FOUND",
+  INVENTORY_RESERVATION_CONFLICT: "INVENTORY_RESERVATION_CONFLICT",
+  INVENTORY_LOCATION_NOT_FOUND: "INVENTORY_LOCATION_NOT_FOUND",
+  INVENTORY_TRANSFER_INVALID: "INVENTORY_TRANSFER_INVALID",
+  INVENTORY_NEGATIVE_STOCK_NOT_ALLOWED: "INVENTORY_NEGATIVE_STOCK_NOT_ALLOWED",
+  INVENTORY_OPERATION_CONFLICT: "INVENTORY_OPERATION_CONFLICT",
+} as const;
+
 export const ApiResponseCode = {
   ...ApiAuthCode,
   ...ApiCoreCode,
@@ -365,6 +388,7 @@ export const ApiResponseCode = {
   ...ApiAnalyticsCode,
   ...ApiCustomerAdminCode,
   ...ApiRbacCode,
+  ...ApiInventoryCode,
 } as const;
 
 export type ApiAuthCode = (typeof ApiAuthCode)[keyof typeof ApiAuthCode];
@@ -384,4 +408,5 @@ export type ApiNotificationCode = (typeof ApiNotificationCode)[keyof typeof ApiN
 export type ApiAnalyticsCode = (typeof ApiAnalyticsCode)[keyof typeof ApiAnalyticsCode];
 export type ApiCustomerAdminCode = (typeof ApiCustomerAdminCode)[keyof typeof ApiCustomerAdminCode];
 export type ApiRbacCode = (typeof ApiRbacCode)[keyof typeof ApiRbacCode];
+export type ApiInventoryCode = (typeof ApiInventoryCode)[keyof typeof ApiInventoryCode];
 export type ApiResponseCode = (typeof ApiResponseCode)[keyof typeof ApiResponseCode];
