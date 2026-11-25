@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { Poppins, Playfair_Display } from "next/font/google";
 import { AppProviders } from "@/providers/app-providers";
 import { StoreLayout } from "@/components/layout/store-layout";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/storefront/json-ld";
@@ -20,6 +20,15 @@ const poppins = Poppins({
     "sans-serif",
   ],
   adjustFontFallback: true,
+  preload: true,
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-playfair",
+  display: "swap",
+  fallback: ["Georgia", "Times New Roman", "serif"],
   preload: true,
 });
 
@@ -77,7 +86,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={poppins.variable}
+      className={`${poppins.variable} ${playfair.variable}`}
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >

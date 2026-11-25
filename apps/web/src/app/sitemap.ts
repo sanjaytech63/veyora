@@ -13,25 +13,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: `${baseUrl}`,
-      lastModified: new Date(),
+      lastModified: undefined,
       changeFrequency: "daily",
       priority: 1.0,
     },
     {
       url: `${baseUrl}/shop`,
-      lastModified: new Date(),
+      lastModified: undefined,
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
       url: `${baseUrl}/collections`,
-      lastModified: new Date(),
+      lastModified: undefined,
       changeFrequency: "weekly",
       priority: 0.8,
     },
     {
       url: `${baseUrl}/new-arrivals`,
-      lastModified: new Date(),
+      lastModified: undefined,
       changeFrequency: "daily",
       priority: 0.8,
     },
@@ -46,21 +46,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     const collectionRoutes: MetadataRoute.Sitemap = collections.map((col) => ({
       url: `${baseUrl}/collections/${col.slug}`,
-      lastModified: col.updatedAt ? new Date(col.updatedAt) : new Date(),
+      lastModified: col.updatedAt ? new Date(col.updatedAt) : undefined,
       changeFrequency: "weekly",
       priority: 0.8,
     }));
 
     const categoryRoutes: MetadataRoute.Sitemap = categories.map((cat) => ({
       url: `${baseUrl}/category/${cat.slug}`,
-      lastModified: cat.updatedAt ? new Date(cat.updatedAt) : new Date(),
+      lastModified: cat.updatedAt ? new Date(cat.updatedAt) : undefined,
       changeFrequency: "weekly",
       priority: 0.7,
     }));
 
     const productRoutes: MetadataRoute.Sitemap = products.map((product) => ({
       url: `${baseUrl}/products/${product.slug}`,
-      lastModified: product.updatedAt ? new Date(product.updatedAt) : new Date(),
+      lastModified: product.updatedAt ? new Date(product.updatedAt) : undefined,
       changeFrequency: "daily",
       priority: 0.8,
     }));
