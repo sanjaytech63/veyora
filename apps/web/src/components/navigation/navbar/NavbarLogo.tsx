@@ -18,11 +18,11 @@ export function NavbarLogo({ className, onClick }: NavbarLogoProps) {
       onClick={onClick}
       aria-label={`${SERVICES.NAME} Atelier Home`}
       className={cn(
-        "group flex items-center gap-2.5 font-bold text-lg tracking-tight transition-transform active:scale-98",
+        "group flex items-center gap-2.5 rounded-md font-bold text-lg tracking-tight outline-none transition-opacity duration-150 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4 focus-visible:ring-offset-background",
         className
       )}
     >
-      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs group-hover:bg-primary/90 transition-colors">
+      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform duration-150 group-hover:scale-[0.96]">
         <ShoppingBag className="h-4 w-4" />
       </div>
       <div className="flex flex-col leading-none">

@@ -76,7 +76,7 @@ describe("Storefront Navigation & Navbar", () => {
   it("renders desktop navigation links", () => {
     render(<NavbarLinks />);
     expect(screen.getByText("Home")).toBeInTheDocument();
-    expect(screen.getByText("Shop All")).toBeInTheDocument();
+    expect(screen.getByText("Shop")).toBeInTheDocument();
     expect(screen.getByText("New Arrivals")).toBeInTheDocument();
     expect(screen.getByText("Collections")).toBeInTheDocument();
   });

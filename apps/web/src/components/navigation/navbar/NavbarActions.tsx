@@ -36,11 +36,14 @@ export function NavbarActions({ onOpenSearch, className }: NavbarActionsProps) {
   const cartCount = totals.itemCount;
 
   const [mounted, setMounted] = React.useState(false);
+  const logoutInFlight = React.useRef(false);
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
   const handleLogout = async () => {
+    if (logoutInFlight.current) return;
+    logoutInFlight.current = true;
     try {
       const response = await authApi.logout();
       notifyApiSuccess(response);
@@ -48,6 +51,7 @@ export function NavbarActions({ onOpenSearch, className }: NavbarActionsProps) {
       notifyApiError(error);
     } finally {
       clearAuth();
+      logoutInFlight.current = false;
     }
   };
 

@@ -10,6 +10,8 @@ import { useCategories } from "@/hooks/use-catalog";
 import { useUIStore } from "@/stores/ui-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCart } from "@/lib/hooks/use-cart";
+import { useWishlist } from "@/lib/hooks/use-wishlist";
+import { usePathname } from "next/navigation";
 import { authApi } from "@/lib/api/auth-api";
 import { notifyApiError, notifyApiSuccess } from "@/lib/notifications";
 import {
@@ -24,6 +26,8 @@ import {
   Package,
   LogOut,
   ChevronRight,
+  Heart,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +45,10 @@ export function NavbarMobile({ onOpenSearch, className }: NavbarMobileProps) {
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const { totals } = useCart();
   const cartCount = totals.itemCount;
+  const { itemCount: wishlistCount } = useWishlist();
+  const pathname = usePathname();
+  const logoutInFlight = React.useRef(false);
+  const [categoriesOpen, setCategoriesOpen] = React.useState(false);
 
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => {
@@ -53,6 +61,8 @@ export function NavbarMobile({ onOpenSearch, className }: NavbarMobileProps) {
   }, [categories]);
 
   const handleLogout = async () => {
+    if (logoutInFlight.current) return;
+    logoutInFlight.current = true;
     try {
       const response = await authApi.logout();
       notifyApiSuccess(response);
@@ -61,6 +71,7 @@ export function NavbarMobile({ onOpenSearch, className }: NavbarMobileProps) {
     } finally {
       clearAuth();
       setMobileNavOpen(false);
+      logoutInFlight.current = false;
     }
   };
 
@@ -167,12 +178,22 @@ export function NavbarMobile({ onOpenSearch, className }: NavbarMobileProps) {
               <div className="space-y-0.5 pt-1">
                 {primaryLinks.map((link) => {
                   const Icon = link.icon;
+                  const isActive =
+                    link.href === "/"
+                      ? pathname === "/"
+                      : pathname === link.href || pathname.startsWith(`${link.href}/`);
                   return (
                     <Link
                       key={link.href}
                       href={link.href}
                       onClick={() => setMobileNavOpen(false)}
-                      className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-accent transition-colors min-h-[44px]"
+                      className={cn(
+                        "flex items-center justify-between rounded-md px-3 py-2.5 text-sm font-medium transition-colors duration-150 min-h-[44px]",
+                        isActive
+                          ? "bg-primary/10 text-foreground"
+                          : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                      )}
+                      aria-current={isActive ? "page" : undefined}
                     >
                       <span className="flex items-center gap-3">
                         <Icon className="h-4 w-4 text-primary" />
@@ -191,17 +212,40 @@ export function NavbarMobile({ onOpenSearch, className }: NavbarMobileProps) {
 
             {/* Dynamic Categories */}
             {activeCategories.length > 0 && (
-              <div className="space-y-1 pt-2 border-t border-border/40">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-3">
-                  Departments
-                </span>
-                <div className="space-y-0.5 pt-1">
+              <div className="border-t border-border/60 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setCategoriesOpen((open) => !open)}
+                  aria-expanded={categoriesOpen}
+                  className="flex min-h-[44px] w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase tracking-[0.12em] text-foreground hover:bg-accent transition-colors"
+                >
+                  <span>Shop Categories</span>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 transition-transform duration-200",
+                      categoriesOpen && "rotate-180"
+                    )}
+                  />
+                </button>
+                <div className={cn("space-y-0.5 pt-1", !categoriesOpen && "hidden")}>
                   {activeCategories.map((cat) => (
                     <Link
                       key={cat.id}
                       href={`/category/${cat.slug}`}
                       onClick={() => setMobileNavOpen(false)}
-                      className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-accent transition-colors min-h-[44px]"
+                      className={cn(
+                        "flex items-center justify-between rounded-md px-3 py-2.5 text-sm font-medium transition-colors min-h-[44px]",
+                        pathname === `/category/${cat.slug}` ||
+                          pathname.startsWith(`/category/${cat.slug}/`)
+                          ? "bg-primary/10 text-foreground"
+                          : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                      )}
+                      aria-current={
+                        pathname === `/category/${cat.slug}` ||
+                        pathname.startsWith(`/category/${cat.slug}/`)
+                          ? "page"
+                          : undefined
+                      }
                     >
                       <span className="flex items-center gap-3">
                         <Tag className="h-3.5 w-3.5 text-muted-foreground" />
@@ -245,6 +289,18 @@ export function NavbarMobile({ onOpenSearch, className }: NavbarMobileProps) {
                     </Link>
                   </Button>
                 </div>
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="mt-1.5 w-full rounded-xl text-xs h-9"
+                >
+                  <Link href="/wishlist" onClick={() => setMobileNavOpen(false)}>
+                    <Heart className="h-3.5 w-3.5 mr-1" />
+                    Wishlist
+                    {mounted && wishlistCount > 0 ? ` (${wishlistCount})` : ""}
+                  </Link>
+                </Button>
 
                 <Button
                   type="button"
@@ -284,6 +340,18 @@ export function NavbarMobile({ onOpenSearch, className }: NavbarMobileProps) {
                     </Link>
                   </Button>
                 </div>
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className="mt-1 w-full rounded-xl text-xs h-9"
+                >
+                  <Link href="/wishlist" onClick={() => setMobileNavOpen(false)}>
+                    <Heart className="h-3.5 w-3.5 mr-1" />
+                    Wishlist
+                    {mounted && wishlistCount > 0 ? ` (${wishlistCount})` : ""}
+                  </Link>
+                </Button>
               </div>
             )}
           </div>
