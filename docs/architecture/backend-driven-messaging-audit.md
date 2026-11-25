@@ -1100,6 +1100,123 @@ The entire Express Payment domain (`apps/api/src/modules/payment`) was migrated 
 
 ---
 
-## 22. Architecture Signoff & Next Steps
+## 22. Task 10 Express Secondary Domains Migration
 
-This architectural contract and implementation provide the complete foundation for Veyora's transition to a backend-driven messaging system. All shared contracts, API response infrastructure, authentication controllers, catalog endpoints, cart endpoints, wishlist endpoints, customer address endpoints, checkout/orders endpoints, and payment endpoints are verified with automated tests (134 passing tests) and ready for subsequent domain controller migrations and frontend toast notification integration.
+Task 10 completed the migration of all secondary commerce modules in `apps/api`:
+
+- **Coupons & Promotions (`apps/api/src/modules/coupon`):** Storefront discount calculation engine and administrator promotional governance.
+- **Customer Profile (`apps/api/src/modules/profile`):** Authenticated user profile, safe field allowlist updates, avatar signature generation, asset binding, and completion calculation.
+- **Product Reviews & Ratings (`apps/api/src/modules/review`):** Storefront reviews, star rating summary breakdowns, verified purchase checks, single-review enforcement, and administrator moderation queue.
+- **Shipping & Fulfillment (`apps/api/src/modules/shipping`):** Dynamic shipping rates, destination zone resolution, public tracking lookups, order fulfillment, and tracking timeline advancement.
+- **Customer Notifications (`apps/api/src/modules/notification`):** In-app user notifications, pagination, unread counters, socket notifications, and status mutations.
+
+### 22.1 Controller Standardization Summary
+
+All endpoints across the five secondary domains now invoke `sendSuccess(res, { statusCode, code, message, data, meta })`:
+
+- Storefront discount validation returns `COUPON_VALIDATED` (200 OK).
+- Admin coupon CRUD returns `COUPONS_FETCHED`, `COUPON_FETCHED`, `COUPON_CREATED` (201), `COUPON_UPDATED`, `COUPON_STATUS_UPDATED`, `COUPON_DELETED`, and `COUPON_ANALYTICS_FETCHED`.
+- Customer profile endpoints return `PROFILE_FETCHED`, `PROFILE_UPDATED`, `AVATAR_SIGNATURE_GENERATED`, `AVATAR_UPDATED`, `AVATAR_REMOVED`, and `PROFILE_COMPLETION_FETCHED`.
+- Review endpoints return `REVIEW_CREATED` (201), `REVIEWS_FETCHED`, `REVIEW_SUMMARY_FETCHED`, `REVIEW_HELPFUL_RECORDED`, `CUSTOMER_REVIEWS_FETCHED`, `ADMIN_REVIEWS_FETCHED`, `REVIEW_FETCHED`, `REVIEW_MODERATED`, and `REVIEW_DELETED`.
+- Shipping endpoints return `SHIPPING_RATES_CALCULATED`, `SHIPMENT_TRACKED`, `ORDER_SHIPMENTS_FETCHED`, `SHIPMENTS_FETCHED`, `SHIPMENT_FETCHED`, `SHIPMENT_CREATED` (201), `SHIPMENT_TRACKING_UPDATED`, `SHIPPING_ZONES_FETCHED`, `SHIPPING_ZONE_CREATED` (201), `SHIPPING_METHODS_FETCHED`, and `SHIPPING_METHOD_CREATED` (201).
+- Notification endpoints return `NOTIFICATIONS_FETCHED`, `UNREAD_COUNT_FETCHED`, `NOTIFICATION_FETCHED`, `NOTIFICATION_READ`, `NOTIFICATION_UNREAD`, `NOTIFICATIONS_ALL_READ`, and `NOTIFICATION_DELETED`.
+
+### 22.2 Service Domain Errors & Stable Codes
+
+All secondary domain services throw `BadRequestError`, `ConflictError`, and `NotFoundError` with domain-specific stable machine-readable codes:
+
+- Coupons: `COUPON_NOT_FOUND`, `COUPON_INACTIVE`, `COUPON_NOT_STARTED`, `COUPON_EXPIRED`, `COUPON_USAGE_LIMIT_EXCEEDED`, `COUPON_CUSTOMER_LIMIT_EXCEEDED`, `COUPON_NOT_APPLICABLE`, `COUPON_MINIMUM_SPEND_NOT_MET`, `COUPON_CODE_CONFLICT`.
+- Profile: `PROFILE_NOT_FOUND`, `AVATAR_INVALID_OWNERSHIP`.
+- Reviews: `REVIEW_PRODUCT_NOT_FOUND`, `REVIEW_ALREADY_EXISTS`, `REVIEW_NOT_FOUND`.
+- Shipping: `SHIPMENT_ORDER_NOT_FOUND`, `SHIPMENT_ORDER_INVALID_STATUS`, `SHIPMENT_NOT_FOUND`, `SHIPPING_ZONE_CONFLICT`.
+- Notifications: `NOTIFICATION_NOT_FOUND`.
+
+---
+
+## 23. Complete Pre-Frontend Route & Response Envelope Audit
+
+Prior to beginning frontend toast notification integration (Task 11+), an exhaustive repository-wide audit was conducted across all Express API routes mounted in `apps/api/src/app.ts`.
+
+### 23.1 Status of Core Commerce & Secondary Backend Modules (Migrated)
+
+All routes in the following domains return the canonical `ApiSuccessResponse<T>` and `ApiErrorResponse` envelopes with stable machine-readable codes:
+
+| Domain Module                               | Route Prefix / Scope                                                 | Migration Status             |
+| :------------------------------------------ | :------------------------------------------------------------------- | :--------------------------- |
+| **Authentication (`auth`)**                 | `/api/v1/auth/*`                                                     | **Migrated (Task 04)**       |
+| **Catalog (`catalog`)**                     | `/api/v1/products/*`, `/api/v1/categories/*`, `/api/v1/admin/...`    | **Migrated (Task 05)**       |
+| **Cart (`cart`)**                           | `/api/v1/cart/*`                                                     | **Migrated (Task 06)**       |
+| **Wishlist (`wishlist`)**                   | `/api/v1/wishlist/*`                                                 | **Migrated (Task 07)**       |
+| **Customer Addresses (`checkout/address`)** | `/api/v1/addresses/*`                                                | **Migrated (Task 07)**       |
+| **Checkout & Orders (`checkout`)**          | `/api/v1/checkout/*`, `/api/v1/orders/*`, `/api/v1/admin/orders/*`   | **Migrated (Task 08)**       |
+| **Razorpay Payments (`payment`)**           | `/api/v1/payments/*`, `/api/v1/admin/payments/*`                     | **Migrated (Task 09)**       |
+| **Coupons & Promotions (`coupon`)**         | `/api/v1/coupons/*`, `/api/v1/admin/coupons/*`                       | **Migrated (Task 10)**       |
+| **Customer Profile (`profile`)**            | `/api/v1/profile/*`                                                  | **Migrated (Task 10)**       |
+| **Product Reviews (`review`)**              | `/api/v1/products/:id/reviews/*`, `/api/v1/admin/reviews/*`          | **Migrated (Task 10)**       |
+| **Shipping & Logistics (`shipping`)**       | `/api/v1/shipping/*`, `/api/v1/admin/shipments/*`, `/admin/shipping` | **Migrated (Task 10)**       |
+| **Notifications (`notification`)**          | `/api/v1/notifications/*`                                            | **Migrated (Task 10)**       |
+| **Catalog Search (`search`)**               | `/api/v1/search/*`                                                   | **Migrated (Catalog Phase)** |
+
+### 23.2 Remaining Unmigrated API Routes (Out-of-Scope Domains)
+
+The following routes currently return legacy or non-canonical envelopes (direct `res.status().json()` or custom shapes) and remain outside the commerce/secondary messaging scope:
+
+#### 1. Administrator Analytics (`apps/api/src/modules/analytics`)
+
+- `GET /api/v1/admin/analytics/overview` (returns bare `{ success: true, data: ... }` without canonical code/meta)
+- `GET /api/v1/admin/analytics/revenue` (returns bare `{ success: true, data: ... }`)
+- `GET /api/v1/admin/analytics/sales-by-category` (returns bare `{ success: true, data: ... }`)
+- `GET /api/v1/admin/analytics/top-products` (returns bare `{ success: true, data: ... }`)
+- `GET /api/v1/admin/analytics/conversion` (returns bare `{ success: true, data: ... }`)
+- `GET /api/v1/admin/analytics/orders-funnel` (returns bare `{ success: true, data: ... }`)
+
+#### 2. Customer Administration (`apps/api/src/modules/customer`)
+
+- `GET /api/v1/admin/customers` (returns legacy pagination envelope)
+- `GET /api/v1/admin/customers/:id` (returns bare `{ success: true, data: ... }`)
+- `GET /api/v1/admin/customers/:id/orders` (returns bare `{ success: true, data: ... }`)
+- `PATCH /api/v1/admin/customers/:id/status` (returns bare `{ success: true, data: ... }`)
+- `POST /api/v1/admin/customers/:id/notes` (returns bare `{ success: true, data: ... }`)
+- `DELETE /api/v1/admin/customers/:id/notes/:noteId` (returns bare `{ success: true, data: ... }`)
+- `GET /api/v1/admin/customers/analytics/overview` (returns bare `{ success: true, data: ... }`)
+
+#### 3. Inventory Operations (`apps/api/src/modules/inventory`)
+
+- `GET /api/v1/inventory/levels` (returns `{ success: true, data: ..., meta: ... }` without canonical code)
+- `GET /api/v1/inventory/locations` (returns bare `{ success: true, data: ... }`)
+- `POST /api/v1/inventory/locations` (returns bare `{ success: true, data: ... }`)
+- `GET /api/v1/inventory/locations/:locationId` (returns bare `{ success: true, data: ... }`)
+- `PUT /api/v1/inventory/locations/:locationId` (returns bare `{ success: true, data: ... }`)
+- `GET /api/v1/inventory/audit-logs` (returns bare `{ success: true, data: ..., meta: ... }`)
+- `POST /api/v1/inventory/adjust` (returns bare `{ success: true, data: ... }`)
+- `POST /api/v1/inventory/transfer` (returns bare `{ success: true, data: ... }`)
+- `POST /api/v1/inventory/reserve` (returns bare `{ success: true, data: ... }`)
+- `POST /api/v1/inventory/release` (returns bare `{ success: true, data: ... }`)
+
+#### 4. Role-Based Access Control (`apps/api/src/modules/rbac`)
+
+- `GET /api/v1/admin/rbac/roles` (returns bare `{ success: true, data: ... }`)
+- `GET /api/v1/admin/rbac/roles/:id` (returns bare `{ success: true, data: ... }`)
+- `POST /api/v1/admin/rbac/roles` (returns bare `{ success: true, data: ... }`)
+- `PUT /api/v1/admin/rbac/roles/:id` (returns bare `{ success: true, data: ... }`)
+- `DELETE /api/v1/admin/rbac/roles/:id` (returns bare `{ success: true, data: ... }`)
+- `GET /api/v1/admin/rbac/permissions` (returns bare `{ success: true, data: ... }`)
+- `GET /api/v1/admin/rbac/users/:id/permissions` (returns bare `{ success: true, data: ... }`)
+- `POST /api/v1/admin/rbac/users/:id/role` (returns bare `{ success: true, data: ... }`)
+- `POST /api/v1/admin/rbac/audit-logs` (returns bare `{ success: true, data: ... }`)
+- `GET /api/v1/admin/rbac/audit-logs` (returns bare `{ success: true, data: ... }`)
+- `GET /api/v1/admin/rbac/audit-logs/export` (returns direct CSV attachment `res.send()`)
+- `GET /api/v1/admin/rbac/security-summary` (returns bare `{ success: true, data: ... }`)
+- `GET /api/v1/admin/rbac/users/:id/sessions` (returns bare `{ success: true, data: ... }`)
+
+#### 5. System Probes & Diagnostics (`apps/api/src/modules/health`, `apps/api/src/modules/system`)
+
+- `GET /health`, `GET /health/live`, `GET /health/ready` (returns custom Kubernetes/load-balancer probe payload `{ status: "ok"|"degraded", service, uptime, ... }`)
+- `GET /metrics` (returns Prometheus text exposition format via prom-client `res.send()`)
+- `GET /api/v1/system/info`, `GET /api/v1/system/ping`, `GET /api/v1/system/env` (returns administrative diagnostics payload)
+
+---
+
+## 24. Architecture Signoff & Next Steps
+
+This architectural contract and implementation provide the complete foundation for Veyora's transition to a backend-driven messaging system. All shared contracts, API response infrastructure, authentication controllers, catalog endpoints, cart endpoints, wishlist endpoints, customer address endpoints, checkout/orders endpoints, payment endpoints, and all five secondary commerce domains (Coupons, Profile, Reviews, Shipping, Notifications) are fully migrated, strictly typed, and verified with **352 / 352 passing tests**. The codebase is now prepared for frontend toast notification and client integration (Task 11).

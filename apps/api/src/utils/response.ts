@@ -54,8 +54,9 @@ export function sendSuccess<T = unknown>(
       opts.meta?.requestId ||
       req?.id ||
       req?.requestId ||
-      res.getHeader("X-Request-Id") ||
-      res.getHeader("x-request-id");
+      (typeof res.getHeader === "function"
+        ? res.getHeader("X-Request-Id") || res.getHeader("x-request-id")
+        : undefined);
     const reqId: string = rawReqId ? String(rawReqId) : "unknown";
     const timestamp = opts.meta?.timestamp || new Date().toISOString();
 
@@ -86,8 +87,9 @@ export function sendSuccess<T = unknown>(
     meta?.requestId ||
     req?.id ||
     req?.requestId ||
-    res.getHeader("X-Request-Id") ||
-    res.getHeader("x-request-id");
+    (typeof res.getHeader === "function"
+      ? res.getHeader("X-Request-Id") || res.getHeader("x-request-id")
+      : undefined);
   const reqId: string = rawReqId ? String(rawReqId) : "unknown";
   const timestamp = meta?.timestamp || new Date().toISOString();
 

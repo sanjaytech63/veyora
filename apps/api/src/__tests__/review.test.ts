@@ -533,7 +533,7 @@ describe("Phase N — Veyora Product Reviews Integration Tests", () => {
         });
 
       expect(res.status).toBe(409);
-      expect(res.body.code).toBe("CONFLICT");
+      expect(res.body.code).toBe("REVIEW_ALREADY_EXISTS");
       expect(res.body.message).toMatch(/already submitted a review/i);
     });
 
@@ -549,7 +549,7 @@ describe("Phase N — Veyora Product Reviews Integration Tests", () => {
         });
 
       expect(res.status).toBe(404);
-      expect(res.body.code).toBe("NOT_FOUND");
+      expect(res.body.code).toBe("REVIEW_PRODUCT_NOT_FOUND");
     });
 
     it("should reject review submission with invalid rating (< 1 or > 5) with 422 Unprocessable Entity", async () => {

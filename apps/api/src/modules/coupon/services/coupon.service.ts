@@ -12,6 +12,7 @@ import {
   ValidateCouponItem,
   AdminCouponListQuery,
   PaginatedCouponsDto,
+  ApiCouponCode,
 } from "@veyora/types";
 import { BadRequestError, ConflictError, NotFoundError, logger } from "@veyora/utils";
 
@@ -80,29 +81,49 @@ export class CouponService {
     const coupon = await Coupon.findOne({ code: cleanCode });
 
     if (!coupon) {
-      throw new NotFoundError(`Coupon code "${cleanCode}" is invalid.`);
+      throw new NotFoundError(
+        `Coupon code "${cleanCode}" is invalid.`,
+        undefined,
+        ApiCouponCode.COUPON_NOT_FOUND
+      );
     }
 
     const now = new Date();
 
     // 1. Activation check
     if (!coupon.isActive) {
-      throw new BadRequestError(`Coupon "${cleanCode}" is currently inactive.`);
+      throw new BadRequestError(
+        `Coupon "${cleanCode}" is currently inactive.`,
+        undefined,
+        ApiCouponCode.COUPON_INACTIVE
+      );
     }
 
     // 2. Schedule window: startsAt
     if (coupon.startsAt && new Date(coupon.startsAt) > now) {
-      throw new BadRequestError(`Coupon "${cleanCode}" is not yet active.`);
+      throw new BadRequestError(
+        `Coupon "${cleanCode}" is not yet active.`,
+        undefined,
+        ApiCouponCode.COUPON_NOT_STARTED
+      );
     }
 
     // 3. Schedule window: expiresAt
     if (coupon.expiresAt && new Date(coupon.expiresAt) < now) {
-      throw new BadRequestError(`Coupon "${cleanCode}" has expired.`);
+      throw new BadRequestError(
+        `Coupon "${cleanCode}" has expired.`,
+        undefined,
+        ApiCouponCode.COUPON_EXPIRED
+      );
     }
 
     // 4. Global Usage Limit
     if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) {
-      throw new BadRequestError(`Coupon "${cleanCode}" has reached its maximum redemption limit.`);
+      throw new BadRequestError(
+        `Coupon "${cleanCode}" has reached its maximum redemption limit.`,
+        undefined,
+        ApiCouponCode.COUPON_USAGE_LIMIT_EXCEEDED
+      );
     }
 
     // 5. Per-Customer Limit
@@ -113,7 +134,9 @@ export class CouponService {
       );
       if (customerRecord && customerRecord.usageCount >= coupon.perCustomerLimit) {
         throw new BadRequestError(
-          `You have reached the maximum redemption limit (${coupon.perCustomerLimit}) for coupon "${cleanCode}".`
+          `You have reached the maximum redemption limit (${coupon.perCustomerLimit}) for coupon "${cleanCode}".`,
+          undefined,
+          ApiCouponCode.COUPON_CUSTOMER_LIMIT_EXCEEDED
         );
       }
     }
@@ -151,7 +174,9 @@ export class CouponService {
 
       if ((hasProductRules || hasCategoryRules) && eligibleSubtotal <= 0) {
         throw new BadRequestError(
-          `Coupon "${cleanCode}" is not applicable to any items currently in your bag.`
+          `Coupon "${cleanCode}" is not applicable to any items currently in your bag.`,
+          undefined,
+          ApiCouponCode.COUPON_NOT_APPLICABLE
         );
       }
     } else {
@@ -163,7 +188,9 @@ export class CouponService {
       throw new BadRequestError(
         `Coupon "${cleanCode}" requires a minimum spend of $${coupon.minimumOrderAmount.toFixed(
           2
-        )} on eligible items (current: $${eligibleSubtotal.toFixed(2)}).`
+        )} on eligible items (current: $${eligibleSubtotal.toFixed(2)}).`,
+        undefined,
+        ApiCouponCode.COUPON_MINIMUM_SPEND_NOT_MET
       );
     }
 
@@ -323,7 +350,11 @@ export class CouponService {
     const cleanCode = payload.code.trim().toUpperCase();
     const existing = await Coupon.findOne({ code: cleanCode });
     if (existing) {
-      throw new ConflictError(`Coupon with code "${cleanCode}" already exists.`);
+      throw new ConflictError(
+        `Coupon with code "${cleanCode}" already exists.`,
+        undefined,
+        ApiCouponCode.COUPON_CODE_CONFLICT
+      );
     }
 
     const normType = payload.discountType;
@@ -364,14 +395,18 @@ export class CouponService {
   public async updateCoupon(id: string, payload: UpdateCouponPayload): Promise<CouponDto> {
     const coupon = await Coupon.findById(id);
     if (!coupon) {
-      throw new NotFoundError("Coupon not found.");
+      throw new NotFoundError("Coupon not found.", undefined, ApiCouponCode.COUPON_NOT_FOUND);
     }
 
     if (payload.code && payload.code.trim().toUpperCase() !== coupon.code) {
       const cleanCode = payload.code.trim().toUpperCase();
       const existing = await Coupon.findOne({ code: cleanCode, _id: { $ne: coupon._id } });
       if (existing) {
-        throw new ConflictError(`Another coupon with code "${cleanCode}" already exists.`);
+        throw new ConflictError(
+          `Another coupon with code "${cleanCode}" already exists.`,
+          undefined,
+          ApiCouponCode.COUPON_CODE_CONFLICT
+        );
       }
       coupon.code = cleanCode;
     }
@@ -411,7 +446,7 @@ export class CouponService {
   public async toggleCouponStatus(id: string): Promise<CouponDto> {
     const coupon = await Coupon.findById(id);
     if (!coupon) {
-      throw new NotFoundError("Coupon not found.");
+      throw new NotFoundError("Coupon not found.", undefined, ApiCouponCode.COUPON_NOT_FOUND);
     }
 
     coupon.isActive = !coupon.isActive;
@@ -425,7 +460,7 @@ export class CouponService {
   public async deleteCoupon(id: string): Promise<void> {
     const coupon = await Coupon.findById(id);
     if (!coupon) {
-      throw new NotFoundError("Coupon not found.");
+      throw new NotFoundError("Coupon not found.", undefined, ApiCouponCode.COUPON_NOT_FOUND);
     }
     await Coupon.findByIdAndDelete(id);
   }
@@ -436,7 +471,7 @@ export class CouponService {
   public async getCouponById(id: string): Promise<CouponDto> {
     const coupon = await Coupon.findById(id);
     if (!coupon) {
-      throw new NotFoundError("Coupon not found.");
+      throw new NotFoundError("Coupon not found.", undefined, ApiCouponCode.COUPON_NOT_FOUND);
     }
     return this.toCouponDto(coupon);
   }
@@ -506,7 +541,7 @@ export class CouponService {
   public async getCouponAnalytics(id: string): Promise<CouponAnalyticsDto> {
     const coupon = await Coupon.findById(id);
     if (!coupon) {
-      throw new NotFoundError("Coupon not found.");
+      throw new NotFoundError("Coupon not found.", undefined, ApiCouponCode.COUPON_NOT_FOUND);
     }
 
     const redemptions = await CouponUsage.find({ couponId: coupon._id, status: "applied" })

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { notificationService } from "../services/notification.service";
-import { NotificationListQuery } from "@veyora/types";
+import { NotificationListQuery, ApiNotificationCode } from "@veyora/types";
+import { sendSuccess } from "../../../utils/response";
 
 export class NotificationController {
   /**
@@ -12,22 +13,34 @@ export class NotificationController {
       const query = req.query as unknown as NotificationListQuery;
       const result = await notificationService.listNotifications(userId, query);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiNotificationCode.NOTIFICATIONS_FETCHED,
+        message: "Notifications retrieved successfully.",
         data: result.items,
-        pagination: {
+        meta: {
+          pagination: {
+            page: result.page,
+            limit: result.limit,
+            total: result.total,
+            totalPages: result.totalPages,
+            hasNextPage: result.page < result.totalPages,
+            hasPrevPage: result.page > 1,
+          },
           total: result.total,
           unreadCount: result.unreadCount,
           page: result.page,
           limit: result.limit,
           totalPages: result.totalPages,
         },
-        meta: {
-          total: result.total,
-          unreadCount: result.unreadCount,
-          page: result.page,
-          limit: result.limit,
-          totalPages: result.totalPages,
+        extra: {
+          pagination: {
+            total: result.total,
+            unreadCount: result.unreadCount,
+            page: result.page,
+            limit: result.limit,
+            totalPages: result.totalPages,
+          },
         },
       });
     } catch (error) {
@@ -43,8 +56,10 @@ export class NotificationController {
       const userId = req.user!.id;
       const result = await notificationService.getUnreadCount(userId);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiNotificationCode.UNREAD_COUNT_FETCHED,
+        message: "Unread count retrieved successfully.",
         data: result,
       });
     } catch (error) {
@@ -61,8 +76,10 @@ export class NotificationController {
       const { id } = req.params;
       const result = await notificationService.getNotificationById(userId, id as string);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiNotificationCode.NOTIFICATION_FETCHED,
+        message: "Notification retrieved successfully.",
         data: result,
       });
     } catch (error) {
@@ -79,10 +96,11 @@ export class NotificationController {
       const { id } = req.params;
       const result = await notificationService.markAsRead(userId, id as string);
 
-      res.status(200).json({
-        success: true,
-        data: result,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiNotificationCode.NOTIFICATION_READ,
         message: "Notification marked as read",
+        data: result,
       });
     } catch (error) {
       next(error);
@@ -98,10 +116,11 @@ export class NotificationController {
       const { id } = req.params;
       const result = await notificationService.markAsUnread(userId, id as string);
 
-      res.status(200).json({
-        success: true,
-        data: result,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiNotificationCode.NOTIFICATION_UNREAD,
         message: "Notification marked as unread",
+        data: result,
       });
     } catch (error) {
       next(error);
@@ -116,10 +135,11 @@ export class NotificationController {
       const userId = req.user!.id;
       const result = await notificationService.markAllAsRead(userId);
 
-      res.status(200).json({
-        success: true,
-        data: result,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiNotificationCode.NOTIFICATIONS_ALL_READ,
         message: "All notifications marked as read",
+        data: result,
       });
     } catch (error) {
       next(error);
@@ -135,9 +155,11 @@ export class NotificationController {
       const { id } = req.params;
       await notificationService.deleteNotification(userId, id as string);
 
-      res.status(200).json({
-        success: true,
+      sendSuccess(res, {
+        statusCode: 200,
+        code: ApiNotificationCode.NOTIFICATION_DELETED,
         message: "Notification deleted successfully",
+        data: null,
       });
     } catch (error) {
       next(error);

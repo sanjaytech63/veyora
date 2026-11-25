@@ -7,6 +7,7 @@ import {
   PaginatedNotificationsDto,
   CreateNotificationPayload,
   UnreadCountDto,
+  ApiNotificationCode,
 } from "@veyora/types";
 import { NotFoundError, BadRequestError } from "@veyora/utils";
 import { eventPublisher } from "../../../infrastructure/events/event-publisher";
@@ -153,7 +154,11 @@ export class NotificationService {
     });
 
     if (!notification) {
-      throw new NotFoundError(`Notification not found with ID: ${notificationId}`);
+      throw new NotFoundError(
+        `Notification not found with ID: ${notificationId}`,
+        undefined,
+        ApiNotificationCode.NOTIFICATION_NOT_FOUND
+      );
     }
 
     return this.toNotificationDto(notification);
@@ -173,7 +178,11 @@ export class NotificationService {
     });
 
     if (!notification) {
-      throw new NotFoundError(`Notification not found with ID: ${notificationId}`);
+      throw new NotFoundError(
+        `Notification not found with ID: ${notificationId}`,
+        undefined,
+        ApiNotificationCode.NOTIFICATION_NOT_FOUND
+      );
     }
 
     if (!notification.isRead) {
@@ -206,7 +215,11 @@ export class NotificationService {
     });
 
     if (!notification) {
-      throw new NotFoundError(`Notification not found with ID: ${notificationId}`);
+      throw new NotFoundError(
+        `Notification not found with ID: ${notificationId}`,
+        undefined,
+        ApiNotificationCode.NOTIFICATION_NOT_FOUND
+      );
     }
 
     if (notification.isRead) {
@@ -260,7 +273,11 @@ export class NotificationService {
     });
 
     if (result.deletedCount === 0) {
-      throw new NotFoundError(`Notification not found with ID: ${notificationId}`);
+      throw new NotFoundError(
+        `Notification not found with ID: ${notificationId}`,
+        undefined,
+        ApiNotificationCode.NOTIFICATION_NOT_FOUND
+      );
     }
   }
 

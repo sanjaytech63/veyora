@@ -1,5 +1,10 @@
 import { User } from "../auth/models/user.model";
-import { UserProfileDto, ProfileCompletionDto, AvatarUploadSignatureResponse } from "@veyora/types";
+import {
+  UserProfileDto,
+  ProfileCompletionDto,
+  AvatarUploadSignatureResponse,
+  ApiProfileCode,
+} from "@veyora/types";
 import { UpdateProfileInput, UpdateAvatarInput } from "@veyora/validators";
 import { NotFoundError } from "@veyora/utils";
 import { ProfileMapper } from "./profile.mapper";
@@ -14,7 +19,11 @@ export class ProfileService {
   public async getProfile(userId: string): Promise<UserProfileDto> {
     const user = await User.findById(userId);
     if (!user || !user.isActive) {
-      throw new NotFoundError("Profile not found or account is deactivated.");
+      throw new NotFoundError(
+        "Profile not found or account is deactivated.",
+        undefined,
+        ApiProfileCode.PROFILE_NOT_FOUND
+      );
     }
     return ProfileMapper.toDto(user);
   }
@@ -26,7 +35,11 @@ export class ProfileService {
   public async updateProfile(userId: string, input: UpdateProfileInput): Promise<UserProfileDto> {
     const user = await User.findById(userId);
     if (!user || !user.isActive) {
-      throw new NotFoundError("Profile not found or account is deactivated.");
+      throw new NotFoundError(
+        "Profile not found or account is deactivated.",
+        undefined,
+        ApiProfileCode.PROFILE_NOT_FOUND
+      );
     }
 
     if (input.firstName !== undefined) {
@@ -94,7 +107,11 @@ export class ProfileService {
 
     const user = await User.findById(userId);
     if (!user || !user.isActive) {
-      throw new NotFoundError("Profile not found or account is deactivated.");
+      throw new NotFoundError(
+        "Profile not found or account is deactivated.",
+        undefined,
+        ApiProfileCode.PROFILE_NOT_FOUND
+      );
     }
 
     // 2. Schedule deletion of previous avatar if replacing
@@ -134,7 +151,11 @@ export class ProfileService {
   public async removeAvatar(userId: string): Promise<UserProfileDto> {
     const user = await User.findById(userId);
     if (!user || !user.isActive) {
-      throw new NotFoundError("Profile not found or account is deactivated.");
+      throw new NotFoundError(
+        "Profile not found or account is deactivated.",
+        undefined,
+        ApiProfileCode.PROFILE_NOT_FOUND
+      );
     }
 
     const oldPublicId = user.avatar?.publicId;
@@ -167,7 +188,11 @@ export class ProfileService {
   public async getProfileCompletion(userId: string): Promise<ProfileCompletionDto> {
     const user = await User.findById(userId);
     if (!user || !user.isActive) {
-      throw new NotFoundError("Profile not found or account is deactivated.");
+      throw new NotFoundError(
+        "Profile not found or account is deactivated.",
+        undefined,
+        ApiProfileCode.PROFILE_NOT_FOUND
+      );
     }
 
     return calculateProfileCompletion({

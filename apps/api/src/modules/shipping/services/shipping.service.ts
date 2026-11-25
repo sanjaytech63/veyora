@@ -19,6 +19,7 @@ import {
   ShippingMethodDto,
   CreateShippingZonePayload,
   CreateShippingMethodPayload,
+  ApiShippingCode,
 } from "@veyora/types";
 import { BadRequestError, NotFoundError, ConflictError } from "@veyora/utils";
 import { notificationService } from "../../notification/services/notification.service";
@@ -207,17 +208,27 @@ export class ShippingService {
     actor?: { id?: string; email?: string; role?: string }
   ): Promise<ShipmentDto> {
     if (!Types.ObjectId.isValid(payload.orderId)) {
-      throw new BadRequestError(`Invalid order ID: ${payload.orderId}`);
+      throw new BadRequestError(
+        `Invalid order ID: ${payload.orderId}`,
+        undefined,
+        ApiShippingCode.SHIPMENT_ORDER_NOT_FOUND
+      );
     }
 
     const order = await Order.findById(payload.orderId);
     if (!order) {
-      throw new NotFoundError(`Order not found with ID: ${payload.orderId}`);
+      throw new NotFoundError(
+        `Order not found with ID: ${payload.orderId}`,
+        undefined,
+        ApiShippingCode.SHIPMENT_ORDER_NOT_FOUND
+      );
     }
 
     if (order.status === "cancelled" || order.status === "refunded") {
       throw new ConflictError(
-        `Cannot fulfill order #${order.orderNumber} because its status is '${order.status}'`
+        `Cannot fulfill order #${order.orderNumber} because its status is '${order.status}'`,
+        undefined,
+        ApiShippingCode.SHIPMENT_ORDER_INVALID_STATUS
       );
     }
 
@@ -412,7 +423,11 @@ export class ShippingService {
   ): Promise<ShipmentDto> {
     const shipment = await this.findShipmentByIdOrTracking(shipmentId);
     if (!shipment) {
-      throw new NotFoundError(`Shipment not found with ID/AWB: ${shipmentId}`);
+      throw new NotFoundError(
+        `Shipment not found with ID/AWB: ${shipmentId}`,
+        undefined,
+        ApiShippingCode.SHIPMENT_NOT_FOUND
+      );
     }
 
     const eventTimestamp = new Date();
@@ -530,7 +545,11 @@ export class ShippingService {
   public async getShipment(identifier: string): Promise<ShipmentDto> {
     const shipment = await this.findShipmentByIdOrTracking(identifier);
     if (!shipment) {
-      throw new NotFoundError(`Shipment not found with identifier: ${identifier}`);
+      throw new NotFoundError(
+        `Shipment not found with identifier: ${identifier}`,
+        undefined,
+        ApiShippingCode.SHIPMENT_NOT_FOUND
+      );
     }
     return this.toShipmentDto(shipment);
   }
@@ -624,7 +643,11 @@ export class ShippingService {
   public async createZone(payload: CreateShippingZonePayload): Promise<ShippingZoneDto> {
     const existing = await ShippingZoneModel.findOne({ code: payload.code.toUpperCase() });
     if (existing) {
-      throw new ConflictError(`Shipping zone with code '${payload.code}' already exists`);
+      throw new ConflictError(
+        `Shipping zone with code '${payload.code}' already exists`,
+        undefined,
+        ApiShippingCode.SHIPPING_ZONE_CONFLICT
+      );
     }
 
     const zone = await ShippingZoneModel.create({

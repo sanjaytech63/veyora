@@ -13,6 +13,7 @@ import {
   AdminReviewStats,
   PaginatedAdminReviewsDto,
   RatingBreakdown,
+  ApiReviewCode,
 } from "@veyora/types";
 import { NotFoundError, BadRequestError, ConflictError } from "@veyora/utils";
 import { logger } from "../../../config/logger";
@@ -84,7 +85,11 @@ export class ReviewService {
     payload: CreateReviewPayload
   ): Promise<ReviewDto> {
     if (!Types.ObjectId.isValid(productId)) {
-      throw new BadRequestError("Invalid product identifier.");
+      throw new BadRequestError(
+        "Invalid product identifier.",
+        undefined,
+        ApiReviewCode.REVIEW_PRODUCT_NOT_FOUND
+      );
     }
 
     const productObjectId = new Types.ObjectId(productId);
@@ -96,7 +101,11 @@ export class ReviewService {
       status: { $ne: "archived" },
     });
     if (!product) {
-      throw new NotFoundError("Product not found or is unavailable for review.");
+      throw new NotFoundError(
+        "Product not found or is unavailable for review.",
+        undefined,
+        ApiReviewCode.REVIEW_PRODUCT_NOT_FOUND
+      );
     }
 
     // 2. Prevent duplicate reviews per user per product
@@ -105,7 +114,11 @@ export class ReviewService {
       userId: userObjectId,
     });
     if (existingReview) {
-      throw new ConflictError("You have already submitted a review for this product.");
+      throw new ConflictError(
+        "You have already submitted a review for this product.",
+        undefined,
+        ApiReviewCode.REVIEW_ALREADY_EXISTS
+      );
     }
 
     // 3. Verified Purchase Foundation
@@ -246,7 +259,11 @@ export class ReviewService {
     }
   ): Promise<PaginatedReviewsDto> {
     if (!Types.ObjectId.isValid(productId)) {
-      throw new BadRequestError("Invalid product identifier.");
+      throw new BadRequestError(
+        "Invalid product identifier.",
+        undefined,
+        ApiReviewCode.REVIEW_PRODUCT_NOT_FOUND
+      );
     }
 
     const productObjectId = new Types.ObjectId(productId);
@@ -429,7 +446,11 @@ export class ReviewService {
    */
   async getReviewById(id: string): Promise<ReviewDto> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid review identifier.");
+      throw new BadRequestError(
+        "Invalid review identifier.",
+        undefined,
+        ApiReviewCode.REVIEW_NOT_FOUND
+      );
     }
 
     const review = await Review.findById(id)
@@ -438,7 +459,7 @@ export class ReviewService {
       .lean();
 
     if (!review) {
-      throw new NotFoundError("Review not found.");
+      throw new NotFoundError("Review not found.", undefined, ApiReviewCode.REVIEW_NOT_FOUND);
     }
 
     return this.toReviewDto(review as unknown as IReview);
@@ -453,12 +474,16 @@ export class ReviewService {
     payload: ModerateReviewPayload
   ): Promise<ReviewDto> {
     if (!Types.ObjectId.isValid(reviewId)) {
-      throw new BadRequestError("Invalid review identifier.");
+      throw new BadRequestError(
+        "Invalid review identifier.",
+        undefined,
+        ApiReviewCode.REVIEW_NOT_FOUND
+      );
     }
 
     const review = await Review.findById(reviewId);
     if (!review) {
-      throw new NotFoundError("Review not found.");
+      throw new NotFoundError("Review not found.", undefined, ApiReviewCode.REVIEW_NOT_FOUND);
     }
 
     review.status = payload.status;
@@ -495,12 +520,16 @@ export class ReviewService {
    */
   async deleteReview(reviewId: string): Promise<{ success: boolean; message: string }> {
     if (!Types.ObjectId.isValid(reviewId)) {
-      throw new BadRequestError("Invalid review identifier.");
+      throw new BadRequestError(
+        "Invalid review identifier.",
+        undefined,
+        ApiReviewCode.REVIEW_NOT_FOUND
+      );
     }
 
     const review = await Review.findById(reviewId);
     if (!review) {
-      throw new NotFoundError("Review not found.");
+      throw new NotFoundError("Review not found.", undefined, ApiReviewCode.REVIEW_NOT_FOUND);
     }
 
     const productId = review.productId;
@@ -556,7 +585,11 @@ export class ReviewService {
    */
   async markHelpful(reviewId: string): Promise<{ helpfulCount: number }> {
     if (!Types.ObjectId.isValid(reviewId)) {
-      throw new BadRequestError("Invalid review identifier.");
+      throw new BadRequestError(
+        "Invalid review identifier.",
+        undefined,
+        ApiReviewCode.REVIEW_NOT_FOUND
+      );
     }
 
     const review = await Review.findByIdAndUpdate(
@@ -566,7 +599,7 @@ export class ReviewService {
     );
 
     if (!review) {
-      throw new NotFoundError("Review not found.");
+      throw new NotFoundError("Review not found.", undefined, ApiReviewCode.REVIEW_NOT_FOUND);
     }
 
     return { helpfulCount: review.helpfulCount };
