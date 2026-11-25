@@ -1,6 +1,7 @@
 import * as React from "react";
-import { Instagram, Youtube, Twitter } from "lucide-react";
+import { Instagram, Twitter } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { siteConfig } from "@/config/site";
 
 interface FooterSocialLinksProps {
   className?: string;
@@ -10,19 +11,13 @@ export function FooterSocialLinks({ className }: FooterSocialLinksProps) {
   const socials = [
     {
       name: "Instagram",
-      href: "https://instagram.com",
+      href: siteConfig.links.instagram,
       icon: Instagram,
       label: "Follow Veyora on Instagram",
     },
     {
-      name: "YouTube",
-      href: "https://youtube.com",
-      icon: Youtube,
-      label: "Watch Veyora fashion drops on YouTube",
-    },
-    {
       name: "X (Twitter)",
-      href: "https://twitter.com",
+      href: siteConfig.links.twitter,
       icon: Twitter,
       label: "Follow Veyora on X",
     },

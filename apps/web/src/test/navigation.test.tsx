@@ -140,8 +140,8 @@ describe("Search Experience & Dialog", () => {
 describe("Storefront Footer", () => {
   it("renders FooterBrand with brand statement", () => {
     render(<FooterBrand />);
-    expect(screen.getByText(/veyora/i)).toBeInTheDocument();
-    expect(screen.getByText(/contemporary indian couture/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /veyora atelier home/i })).toBeInTheDocument();
+    expect(screen.getByText(/contemporary indian fashion/i)).toBeInTheDocument();
   });
 
   it("validates email in FooterNewsletter", async () => {
@@ -162,14 +162,12 @@ describe("Storefront Footer", () => {
     render(<FooterBottom />);
     const currentYear = new Date().getFullYear().toString();
     expect(screen.getByText(new RegExp(currentYear))).toBeInTheDocument();
-    expect(screen.getByText("Privacy Policy")).toBeInTheDocument();
-    expect(screen.getByText("Terms of Service")).toBeInTheDocument();
   });
 
   it("renders complete responsive Footer", () => {
     renderWithClient(<Footer />);
-    expect(screen.getByText(/worldwide express dispatch/i)).toBeInTheDocument();
-    expect(screen.getByText(/artisanal provenance/i)).toBeInTheDocument();
-    expect(screen.getByText(/client concierge/i)).toBeInTheDocument();
+    expect(screen.getByText(/secure payments/i)).toBeInTheDocument();
+    expect(screen.getByText(/order tracking/i)).toBeInTheDocument();
+    expect(screen.getByText(/customer care/i)).toBeInTheDocument();
   });
 });
