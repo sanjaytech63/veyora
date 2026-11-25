@@ -1252,3 +1252,15 @@ Task 12 migrated all Warehouse Inventory management endpoints to the canonical r
 ## 26. Architecture Signoff & Final State of All Business Modules
 
 This architectural contract and implementation provide the complete foundation for Veyora's transition to a backend-driven messaging system. **100% of all business domains** (Auth, Catalog, Cart, Wishlist, Addresses, Checkout, Orders, Payments, Coupons, Profile, Reviews, Shipping, Notifications, Analytics, Customer Admin, RBAC, and Warehouse Inventory) are now fully migrated, strictly typed, and verified with **353 / 353 passing tests**. The codebase is now prepared for frontend toast notification and client integration (Task 13 / Frontend Phase).
+
+## 27. Frontend Notification Infrastructure (Task 13)
+
+Task 13 establishes the framework-independent and application-specific notification foundation without migrating individual business pages:
+
+- `@veyora/utils` provides canonical and legacy API success/error normalization, Axios and Fetch compatibility, safe validation details, request IDs, network/timeout flags, and sensitive-data redaction.
+- Web and Admin API clients preserve canonical/legacy error metadata, support envelope-preserving reads, and keep text/CSV and binary responses compatible.
+- Reusable Sonner-backed Web and Admin notification adapters render backend-authored messages and suppress duplicate notifications.
+- TanStack Query caches remain silent for background query failures. Mutation notifications are opt-in via `meta: { notifyError: true }`.
+- Authentication refresh, permission handling, retry policies, and existing cache behavior remain unchanged.
+
+The infrastructure is complete for subsequent page-by-page frontend migration, but business-page notification copy has not been migrated in this task.

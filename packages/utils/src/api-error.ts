@@ -18,6 +18,39 @@ export interface NormalizedApiError {
   statusCode?: number;
 }
 
+export interface NormalizedApiSuccess<T = unknown> {
+  success: true;
+  code?: string;
+  message?: string;
+  data: T;
+  meta?: Record<string, unknown>;
+}
+
+export function normalizeApiSuccess<T = unknown>(
+  value: unknown,
+  fallbackData?: T
+): NormalizedApiSuccess<T> {
+  if (typeof value === "object" && value !== null) {
+    const candidate = value as Record<string, unknown>;
+    if (candidate.success === true && "data" in candidate) {
+      return {
+        success: true,
+        code: typeof candidate.code === "string" ? candidate.code : undefined,
+        message:
+          typeof candidate.message === "string" && isSafeUserFacingMessage(candidate.message)
+            ? candidate.message
+            : undefined,
+        data: candidate.data as T,
+        meta:
+          typeof candidate.meta === "object" && candidate.meta !== null
+            ? (candidate.meta as Record<string, unknown>)
+            : undefined,
+      };
+    }
+  }
+  return { success: true, data: (fallbackData ?? value) as T };
+}
+
 /**
  * Patterns representing raw server, database, infrastructure, or internal exceptions
  * and leaked credentials that MUST NEVER be exposed to end users.
@@ -116,6 +149,20 @@ export function extractRequestId(error: unknown): string | undefined {
   }
   const candidate = error as Record<string, unknown>;
 
+  if (candidate.response && typeof candidate.response === "object") {
+    const response = candidate.response as Record<string, unknown>;
+    const headers = response.headers;
+    if (typeof headers === "object" && headers !== null) {
+      const headerMap = headers as Record<string, unknown>;
+      const headerRequestId =
+        headerMap["x-request-id"] ??
+        (typeof headerMap.get === "function"
+          ? (headerMap.get as (name: string) => unknown)("x-request-id")
+          : undefined);
+      if (typeof headerRequestId === "string") return headerRequestId;
+    }
+  }
+
   // Canonical meta.requestId
   if (
     candidate.meta &&
@@ -155,6 +202,14 @@ export function extractErrorDetails(error: unknown): ApiErrorDetail[] {
     return [];
   }
   const candidate = error as Record<string, unknown>;
+
+  if (candidate.response && typeof candidate.response === "object") {
+    const responseData = (candidate.response as Record<string, unknown>).data;
+    if (typeof responseData === "object" && responseData !== null) {
+      const dataDetails = extractErrorDetails(responseData);
+      if (dataDetails.length > 0) return dataDetails;
+    }
+  }
 
   // 1. Canonical details array: { details: ApiErrorDetail[] }
   if (Array.isArray(candidate.details)) {
@@ -239,6 +294,25 @@ export function extractErrorCode(
   }
   const candidate = error as Record<string, unknown>;
 
+  if (candidate.response && typeof candidate.response === "object") {
+    const response = candidate.response as Record<string, unknown>;
+    if (typeof response.status === "number") {
+      const mapped = extractErrorCode({ statusCode: response.status });
+      if (typeof response.data === "object" && response.data !== null) {
+        const data = response.data as Record<string, unknown>;
+        if (typeof data.code === "string") return data.code;
+        if (
+          typeof data.error === "object" &&
+          data.error !== null &&
+          typeof (data.error as Record<string, unknown>).code === "string"
+        ) {
+          return (data.error as Record<string, unknown>).code as string;
+        }
+      }
+      return mapped;
+    }
+  }
+
   // Top-level code
   if (typeof candidate.code === "string" && candidate.code.length > 0) {
     return candidate.code;
@@ -311,6 +385,14 @@ export function extractErrorMessage(
 
   const candidate = error as Record<string, unknown>;
 
+  if (candidate.response && typeof candidate.response === "object") {
+    const response = candidate.response as Record<string, unknown>;
+    if (typeof response.data === "object" && response.data !== null) {
+      const responseMessage = extractErrorMessage(response.data, fallbackMessage);
+      if (responseMessage !== fallbackMessage) return responseMessage;
+    }
+  }
+
   // 1. Canonical top-level message
   const topMessage = candidate.message;
   if (typeof topMessage === "string" && isSafeUserFacingMessage(topMessage)) {
@@ -362,6 +444,18 @@ export function normalizeApiError(
     const codeNum = (error as Record<string, unknown>).statusCode;
     if (typeof codeNum === "number") {
       statusCode = codeNum;
+    }
+  }
+  if (
+    statusCode === undefined &&
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error
+  ) {
+    const response = (error as Record<string, unknown>).response;
+    if (typeof response === "object" && response !== null) {
+      const responseStatus = (response as Record<string, unknown>).status;
+      if (typeof responseStatus === "number") statusCode = responseStatus;
     }
   }
 

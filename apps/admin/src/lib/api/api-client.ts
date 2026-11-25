@@ -5,6 +5,7 @@ export interface RequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
   timeout?: number;
   raw?: boolean;
+  preserveEnvelope?: boolean;
   _retry?: boolean;
   skipAuthRefresh?: boolean;
 }
@@ -13,13 +14,25 @@ export class ApiClientError extends Error {
   public readonly statusCode: number;
   public readonly code: string;
   public readonly details?: ApiErrorDetail[];
+  public readonly requestId?: string;
+  public readonly isNetworkError: boolean;
+  public readonly isTimeout: boolean;
 
-  constructor(message: string, statusCode: number, code = "API_ERROR", details?: ApiErrorDetail[]) {
+  constructor(
+    message: string,
+    statusCode: number,
+    code = "API_ERROR",
+    details?: ApiErrorDetail[],
+    requestId?: string
+  ) {
     super(message);
     this.name = "ApiClientError";
     this.statusCode = statusCode;
     this.code = code;
     this.details = details;
+    this.requestId = requestId;
+    this.isNetworkError = statusCode === 0 && code === "NETWORK_ERROR";
+    this.isTimeout = code === "TIMEOUT";
   }
 }
 
@@ -192,7 +205,19 @@ export class ApiClient {
       }
 
       const isJson = response.headers.get("content-type")?.includes("application/json");
-      const data = isJson ? await response.json() : null;
+      const data = isJson
+        ? await response.json()
+        : await (async () => {
+            const contentType = response.headers.get("content-type") || "";
+            if (
+              contentType.includes("text/") ||
+              contentType.includes("csv") ||
+              contentType.includes("xml")
+            ) {
+              return await response.text();
+            }
+            return await response.blob();
+          })();
 
       if (!response.ok) {
         // Automatic 401 token refresh and single retry
@@ -206,15 +231,28 @@ export class ApiClient {
         }
 
         const errorData = data as ApiResponseError | null;
+        const canonical = data as {
+          code?: string;
+          message?: string;
+          meta?: { requestId?: string };
+          details?: ApiErrorDetail[];
+        } | null;
+        const requestId =
+          canonical?.meta?.requestId || response.headers.get("x-request-id") || undefined;
         throw new ApiClientError(
-          errorData?.error?.message || response.statusText || "Request failed",
+          canonical?.message ||
+            errorData?.error?.message ||
+            errorData?.message ||
+            response.statusText ||
+            "Request failed",
           response.status,
-          errorData?.error?.code || "HTTP_ERROR",
-          errorData?.error?.details
+          canonical?.code || errorData?.error?.code || errorData?.code || "HTTP_ERROR",
+          canonical?.details || errorData?.error?.details || errorData?.details,
+          requestId
         );
       }
 
-      if (options.raw) {
+      if (options.raw || options.preserveEnvelope) {
         return data as T;
       }
 
@@ -242,6 +280,13 @@ export class ApiClient {
 
   public get<T>(endpoint: string, options?: Omit<RequestOptions, "method" | "body">): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: "GET" });
+  }
+
+  public getWithMeta<T>(
+    endpoint: string,
+    options?: Omit<RequestOptions, "method" | "body" | "raw">
+  ): Promise<ApiResponseSuccess<T>> {
+    return this.request<ApiResponseSuccess<T>>(endpoint, { ...options, method: "GET", raw: true });
   }
 
   public post<T>(
