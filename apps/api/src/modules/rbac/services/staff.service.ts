@@ -9,6 +9,7 @@ import {
   StaffUserDto,
   UpdateStaffUserInput,
   RoleDto,
+  ApiRbacCode,
 } from "@veyora/types";
 import { BadRequestError, NotFoundError, ForbiddenError } from "@veyora/utils";
 import { auditLogService, LogActor } from "./audit-log.service";
@@ -141,7 +142,11 @@ export class StaffService {
    */
   public async getStaffById(id: string): Promise<StaffUserDto> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid staff ID format");
+      throw new BadRequestError(
+        "Invalid staff ID format",
+        undefined,
+        ApiRbacCode.RBAC_STAFF_NOT_FOUND
+      );
     }
 
     const user: any = await User.findOne({
@@ -150,7 +155,11 @@ export class StaffService {
     }).populate("assignedRoles");
 
     if (!user) {
-      throw new NotFoundError("Staff member not found");
+      throw new NotFoundError(
+        "Staff member not found",
+        undefined,
+        ApiRbacCode.RBAC_STAFF_NOT_FOUND
+      );
     }
 
     return this.formatStaffDto(user, user.assignedRoles);
@@ -164,14 +173,22 @@ export class StaffService {
 
     const existing = await User.findOne({ email });
     if (existing) {
-      throw new BadRequestError(`User with email '${email}' already exists`);
+      throw new BadRequestError(
+        `User with email '${email}' already exists`,
+        undefined,
+        ApiRbacCode.RBAC_STAFF_CONFLICT
+      );
     }
 
     const requestedRole = input.role || "admin";
 
     // Security check: only superadmin can create another superadmin
     if (requestedRole === "superadmin" && actor.role !== "superadmin") {
-      throw new ForbiddenError("Only Superadmin can assign or create Superadmin staff members");
+      throw new ForbiddenError(
+        "Only Superadmin can assign or create Superadmin staff members",
+        undefined,
+        ApiRbacCode.RBAC_PRIVILEGE_ESCALATION
+      );
     }
 
     // Resolve assigned roles
@@ -180,14 +197,22 @@ export class StaffService {
     if (input.assignedRoleIds && input.assignedRoleIds.length > 0) {
       for (const rId of input.assignedRoleIds) {
         if (!mongoose.Types.ObjectId.isValid(rId)) {
-          throw new BadRequestError(`Invalid role ID format: ${rId}`);
+          throw new BadRequestError(
+            `Invalid role ID format: ${rId}`,
+            undefined,
+            ApiRbacCode.RBAC_ROLE_NOT_FOUND
+          );
         }
       }
       validRoleIds = input.assignedRoleIds.map((id) => new mongoose.Types.ObjectId(id));
       populatedRoles = await Role.find({ _id: { $in: validRoleIds } });
 
       if (populatedRoles.length !== validRoleIds.length) {
-        throw new BadRequestError("One or more assigned role IDs could not be resolved");
+        throw new BadRequestError(
+          "One or more assigned role IDs could not be resolved",
+          undefined,
+          ApiRbacCode.RBAC_ROLE_NOT_FOUND
+        );
       }
     }
 
@@ -201,7 +226,9 @@ export class StaffService {
         for (const perm of role.permissions || []) {
           if (!hasPermission(actorPerms, perm)) {
             throw new ForbiddenError(
-              `Privilege escalation prevented. Role '${role.displayName}' contains permission '${perm}' which you do not possess.`
+              `Privilege escalation prevented. Role '${role.displayName}' contains permission '${perm}' which you do not possess.`,
+              undefined,
+              ApiRbacCode.RBAC_PRIVILEGE_ESCALATION
             );
           }
         }
@@ -211,7 +238,9 @@ export class StaffService {
       for (const perm of input.customPermissions || []) {
         if (!hasPermission(actorPerms, perm)) {
           throw new ForbiddenError(
-            `Privilege escalation prevented. You cannot grant permission '${perm}' which you do not possess.`
+            `Privilege escalation prevented. You cannot grant permission '${perm}' which you do not possess.`,
+            undefined,
+            ApiRbacCode.RBAC_PRIVILEGE_ESCALATION
           );
         }
       }
@@ -260,7 +289,11 @@ export class StaffService {
     input: UpdateStaffUserInput
   ): Promise<StaffUserDto> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid staff ID format");
+      throw new BadRequestError(
+        "Invalid staff ID format",
+        undefined,
+        ApiRbacCode.RBAC_STAFF_NOT_FOUND
+      );
     }
 
     const user = await User.findOne({
@@ -269,7 +302,11 @@ export class StaffService {
     });
 
     if (!user) {
-      throw new NotFoundError("Staff member not found");
+      throw new NotFoundError(
+        "Staff member not found",
+        undefined,
+        ApiRbacCode.RBAC_STAFF_NOT_FOUND
+      );
     }
 
     const changes: Record<string, unknown> = {};
@@ -277,7 +314,11 @@ export class StaffService {
     // Superadmin protection & self-demotion prevention
     if (input.role !== undefined && input.role !== user.role) {
       if (actor.role !== "superadmin") {
-        throw new ForbiddenError("Only Superadmin can alter administrative tiers");
+        throw new ForbiddenError(
+          "Only Superadmin can alter administrative tiers",
+          undefined,
+          ApiRbacCode.RBAC_PRIVILEGE_ESCALATION
+        );
       }
 
       // Self-demotion prevention
@@ -287,7 +328,11 @@ export class StaffService {
           isActive: true,
         });
         if (superadminCount <= 1) {
-          throw new ForbiddenError("Cannot demote the only remaining active Superadmin account");
+          throw new ForbiddenError(
+            "Cannot demote the only remaining active Superadmin account",
+            undefined,
+            ApiRbacCode.RBAC_SELF_ACTION_FORBIDDEN
+          );
         }
       }
 
@@ -311,14 +356,22 @@ export class StaffService {
     if (input.assignedRoleIds !== undefined) {
       for (const rId of input.assignedRoleIds) {
         if (!mongoose.Types.ObjectId.isValid(rId)) {
-          throw new BadRequestError(`Invalid role ID format: ${rId}`);
+          throw new BadRequestError(
+            `Invalid role ID format: ${rId}`,
+            undefined,
+            ApiRbacCode.RBAC_ROLE_NOT_FOUND
+          );
         }
       }
       const roleObjIds = input.assignedRoleIds.map((rId) => new mongoose.Types.ObjectId(rId));
       populatedRoles = await Role.find({ _id: { $in: roleObjIds } });
 
       if (populatedRoles.length !== roleObjIds.length) {
-        throw new BadRequestError("One or more assigned role IDs could not be resolved");
+        throw new BadRequestError(
+          "One or more assigned role IDs could not be resolved",
+          undefined,
+          ApiRbacCode.RBAC_ROLE_NOT_FOUND
+        );
       }
 
       // Least privilege check
@@ -329,7 +382,9 @@ export class StaffService {
           for (const perm of role.permissions || []) {
             if (!hasPermission(actorPerms, perm)) {
               throw new ForbiddenError(
-                `Privilege escalation prevented. Role '${role.displayName}' contains permission '${perm}' which you do not possess.`
+                `Privilege escalation prevented. Role '${role.displayName}' contains permission '${perm}' which you do not possess.`,
+                undefined,
+                ApiRbacCode.RBAC_PRIVILEGE_ESCALATION
               );
             }
           }
@@ -350,7 +405,9 @@ export class StaffService {
         for (const perm of input.customPermissions) {
           if (!hasPermission(actorPerms, perm)) {
             throw new ForbiddenError(
-              `Privilege escalation prevented. You cannot grant permission '${perm}' which you do not possess.`
+              `Privilege escalation prevented. You cannot grant permission '${perm}' which you do not possess.`,
+              undefined,
+              ApiRbacCode.RBAC_PRIVILEGE_ESCALATION
             );
           }
         }
@@ -361,7 +418,11 @@ export class StaffService {
 
     if (input.isActive !== undefined) {
       if (!input.isActive && user._id.toString() === actor.id) {
-        throw new ForbiddenError("Cannot deactivate your own staff account");
+        throw new ForbiddenError(
+          "Cannot deactivate your own staff account",
+          undefined,
+          ApiRbacCode.RBAC_SELF_ACTION_FORBIDDEN
+        );
       }
       user.isActive = input.isActive;
       changes.isActive = input.isActive;
@@ -390,11 +451,19 @@ export class StaffService {
     statusReason?: string | null
   ): Promise<StaffUserDto> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid staff ID format");
+      throw new BadRequestError(
+        "Invalid staff ID format",
+        undefined,
+        ApiRbacCode.RBAC_STAFF_NOT_FOUND
+      );
     }
 
     if (!isActive && id === actor.id) {
-      throw new ForbiddenError("Cannot deactivate your own administrative account");
+      throw new ForbiddenError(
+        "Cannot deactivate your own administrative account",
+        undefined,
+        ApiRbacCode.RBAC_SELF_ACTION_FORBIDDEN
+      );
     }
 
     const user = await User.findOne({
@@ -403,7 +472,11 @@ export class StaffService {
     }).populate("assignedRoles");
 
     if (!user) {
-      throw new NotFoundError("Staff member not found");
+      throw new NotFoundError(
+        "Staff member not found",
+        undefined,
+        ApiRbacCode.RBAC_STAFF_NOT_FOUND
+      );
     }
 
     if (!isActive && user.role === "superadmin") {
@@ -412,7 +485,11 @@ export class StaffService {
         isActive: true,
       });
       if (activeSuperadmins <= 1) {
-        throw new ForbiddenError("Cannot deactivate the only remaining active Superadmin account");
+        throw new ForbiddenError(
+          "Cannot deactivate the only remaining active Superadmin account",
+          undefined,
+          ApiRbacCode.RBAC_SELF_ACTION_FORBIDDEN
+        );
       }
     }
 
@@ -442,11 +519,19 @@ export class StaffService {
     id: string
   ): Promise<{ success: boolean; message: string }> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid staff ID format");
+      throw new BadRequestError(
+        "Invalid staff ID format",
+        undefined,
+        ApiRbacCode.RBAC_STAFF_NOT_FOUND
+      );
     }
 
     if (id === actor.id) {
-      throw new ForbiddenError("Cannot delete your own administrative account");
+      throw new ForbiddenError(
+        "Cannot delete your own administrative account",
+        undefined,
+        ApiRbacCode.RBAC_SELF_ACTION_FORBIDDEN
+      );
     }
 
     const user = await User.findOne({
@@ -455,13 +540,21 @@ export class StaffService {
     });
 
     if (!user) {
-      throw new NotFoundError("Staff member not found");
+      throw new NotFoundError(
+        "Staff member not found",
+        undefined,
+        ApiRbacCode.RBAC_STAFF_NOT_FOUND
+      );
     }
 
     if (user.role === "superadmin") {
       const superadminCount = await User.countDocuments({ role: "superadmin" });
       if (superadminCount <= 1) {
-        throw new ForbiddenError("Cannot delete the only remaining Superadmin account");
+        throw new ForbiddenError(
+          "Cannot delete the only remaining Superadmin account",
+          undefined,
+          ApiRbacCode.RBAC_SELF_ACTION_FORBIDDEN
+        );
       }
     }
 

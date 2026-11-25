@@ -9,6 +9,7 @@ import { hasPermission } from "../modules/rbac/permission-registry";
 import { RoleService } from "../modules/rbac/services/role.service";
 import { StaffService } from "../modules/rbac/services/staff.service";
 import { AuditLogService } from "../modules/rbac/services/audit-log.service";
+import { ApiRbacCode } from "@veyora/types";
 
 let mockUsers: any[] = [];
 let mockRoles: any[] = [];
@@ -636,6 +637,7 @@ describe("Phase R — Veyora Administrative Authorization, Roles & Permissions",
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe(ApiRbacCode.RBAC_ROLES_FETCHED);
       expect(Array.isArray(res.body.data)).toBe(true);
     });
 
@@ -662,6 +664,7 @@ describe("Phase R — Veyora Administrative Authorization, Roles & Permissions",
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe(ApiRbacCode.RBAC_STAFF_FETCHED);
       expect(res.body.data).toHaveProperty("staff");
     });
   });

@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import { createApp } from "../app";
 import { env } from "../config/env";
+import { ApiCustomerAdminCode } from "@veyora/types";
 
 let mockUsers: any[] = [];
 let mockOrders: any[] = [];
@@ -384,6 +385,7 @@ describe("Phase M — Veyora Customer Management Tests", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.code).toBe(ApiCustomerAdminCode.ADMIN_CUSTOMERS_FETCHED);
       expect(res.body.data.items).toHaveLength(2);
       expect(res.body.data.total).toBe(2);
 
@@ -459,7 +461,7 @@ describe("Phase M — Veyora Customer Management Tests", () => {
         .set("Authorization", `Bearer ${adminToken}`);
 
       expect(res.status).toBe(404);
-      expect(res.body.code).toBe("NOT_FOUND");
+      expect(res.body.code).toBe(ApiCustomerAdminCode.CUSTOMER_NOT_FOUND);
     });
 
     it("returns 404 when customer ID is not a valid ObjectId", async () => {
