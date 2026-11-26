@@ -18,22 +18,38 @@ export class RedisService {
 
   public static getClient(): Redis {
     if (!RedisService.client) {
-      const options: RedisOptions = {
-        host: env.REDIS_HOST,
-        port: env.REDIS_PORT,
-        password: env.REDIS_PASSWORD || undefined,
-        lazyConnect: true,
-        maxRetriesPerRequest: 1,
-        enableReadyCheck: true,
-        connectTimeout: 5000,
-        retryStrategy(times) {
-          if (env.NODE_ENV === "test") return null;
-          const delay = Math.min(times * 200, 3000);
-          return delay;
-        },
-      };
+      let redis: Redis;
 
-      const redis = new Redis(options);
+      if (env.REDIS_URL) {
+        redis = new Redis(env.REDIS_URL, {
+          lazyConnect: true,
+          maxRetriesPerRequest: 1,
+          enableReadyCheck: true,
+          connectTimeout: 10000,
+          tls: env.REDIS_URL.startsWith("rediss://") || env.REDIS_TLS ? {} : undefined,
+          retryStrategy(times) {
+            if (env.NODE_ENV === "test") return null;
+            return Math.min(times * 200, 3000);
+          },
+        });
+      } else {
+        const options: RedisOptions = {
+          host: env.REDIS_HOST,
+          port: env.REDIS_PORT,
+          password: env.REDIS_PASSWORD || undefined,
+          lazyConnect: true,
+          maxRetriesPerRequest: 1,
+          enableReadyCheck: true,
+          connectTimeout: 5000,
+          tls: env.REDIS_TLS ? {} : undefined,
+          retryStrategy(times) {
+            if (env.NODE_ENV === "test") return null;
+            const delay = Math.min(times * 200, 3000);
+            return delay;
+          },
+        };
+        redis = new Redis(options);
+      }
 
       redis.on("connect", () => {
         logger.info("Connecting to Redis...");

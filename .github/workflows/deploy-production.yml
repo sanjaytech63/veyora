@@ -1,0 +1,90 @@
+name: Veyora Production Deployment (Render & Vercel)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-production-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate-and-gate:
+    name: Pre-Deployment Quality Gates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: Align npm with packageManager
+        run: npm install --global npm@11.21.0
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared packages
+        run: npm run build:packages
+
+      - name: Verify compilation and tests
+        run: |
+          npm run typecheck
+          npm run lint:check
+          npm run format:check
+          npm run test
+          npm run build
+
+  deploy-render:
+    name: Trigger Render Deployments (API & Worker)
+    needs: [validate-and-gate]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render API Web Service Deploy Hook
+        if: env.RENDER_API_DEPLOY_HOOK_URL != ''
+        env:
+          RENDER_API_DEPLOY_HOOK_URL: ${{ secrets.RENDER_API_DEPLOY_HOOK_URL }}
+        run: |
+          echo "Triggering Render API deployment..."
+          curl -s -f -X POST "${RENDER_API_DEPLOY_HOOK_URL}"
+          echo "Render API deployment hook dispatched."
+
+      - name: Trigger Render Background Worker Deploy Hook
+        if: env.RENDER_WORKER_DEPLOY_HOOK_URL != ''
+        env:
+          RENDER_WORKER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_WORKER_DEPLOY_HOOK_URL }}
+        run: |
+          echo "Triggering Render Background Worker deployment..."
+          curl -s -f -X POST "${RENDER_WORKER_DEPLOY_HOOK_URL}"
+          echo "Render Background Worker deployment hook dispatched."
+
+  deploy-vercel:
+    name: Trigger Vercel Deployments (Web & Admin)
+    needs: [validate-and-gate]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel Web Deploy Hook
+        if: env.VERCEL_WEB_DEPLOY_HOOK_URL != ''
+        env:
+          VERCEL_WEB_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_WEB_DEPLOY_HOOK_URL }}
+        run: |
+          echo "Triggering Vercel Web Storefront deployment..."
+          curl -s -f -X POST "${VERCEL_WEB_DEPLOY_HOOK_URL}"
+          echo "Vercel Web deployment hook dispatched."
+
+      - name: Trigger Vercel Admin Deploy Hook
+        if: env.VERCEL_ADMIN_DEPLOY_HOOK_URL != ''
+        env:
+          VERCEL_ADMIN_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_ADMIN_DEPLOY_HOOK_URL }}
+        run: |
+          echo "Triggering Vercel Admin Portal deployment..."
+          curl -s -f -X POST "${VERCEL_ADMIN_DEPLOY_HOOK_URL}"
+          echo "Vercel Admin deployment hook dispatched."

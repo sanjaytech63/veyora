@@ -25,15 +25,16 @@ async function startServer(): Promise<void> {
   // Initialize Socket.IO server
   socketServer.init(server);
 
-  server.listen(env.PORT, () => {
+  server.listen(env.PORT, "0.0.0.0", () => {
     logger.info(
       {
         port: env.PORT,
+        host: "0.0.0.0",
         env: env.NODE_ENV,
         prefix: env.API_PREFIX,
         docs: `http://localhost:${env.PORT}/docs`,
       },
-      `Veyora API server listening on port ${env.PORT}`
+      `Veyora API server listening on 0.0.0.0:${env.PORT}`
     );
   });
 
