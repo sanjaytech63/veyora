@@ -1,8 +1,8 @@
-# Production Deployment Guide: Render + Vercel + Upstash Redis
+# Production Deployment Architecture: Google Cloud Run + Vercel + Upstash Redis
 
 ## 1. Overview & Architecture
 
-Veyora is architected as a high-performance ecommerce monorepo. In production, services are decoupled into specialized cloud platforms:
+Veyora is architected as a high-performance modern ecommerce monorepo. In production, backend services run containerized on **Google Cloud Run**, data & queues are hosted on **MongoDB Atlas** and **Upstash Redis**, and frontends run on **Vercel** with Next.js 16.
 
 ```
                            +----------------------------------------+
@@ -14,7 +14,7 @@ Veyora is architected as a high-performance ecommerce monorepo. In production, s
                 |                               |                              |
                 v                               v                              v
      +--------------------+          +--------------------+         +--------------------+
-     |    Vercel Project  |          |    Vercel Project  |         |   Render Service   |
+     |    Vercel Project  |          |    Vercel Project  |         |  Google Cloud Run  |
      |    (@veyora/web)   |          |   (@veyora/admin)  |         |    (@veyora/api)   |
      |   www.veyora.com   |          |  admin.veyora.com  |         |   api.veyora.com   |
      +---------+----------+          +---------+----------+         +---------+----------+
@@ -25,7 +25,8 @@ Veyora is architected as a high-performance ecommerce monorepo. In production, s
                                                |
                                                v
                                     +--------------------+
-                                    |    Render API      |
+                                    |  Cloud Run Service |
+                                    |     veyora-api     |
                                     |   0.0.0.0:$PORT    |
                                     +----+----------+----+
                                          |          |
@@ -40,289 +41,224 @@ Veyora is architected as a high-performance ecommerce monorepo. In production, s
                       +------------------+          +------------------+
                                          |          |
                                     +----+----------+----+
-                                    |   Render Worker    |
-                                    |  (@veyora/worker)  |
+                                    |  Cloud Run Service |
+                                    |    veyora-worker   |
+                                    | (Continuous Worker)|
                                     +--------------------+
 ```
 
-| Service            | Runtime / Platform                 | Role                                                                                            | Production Domain     |
-| ------------------ | ---------------------------------- | ----------------------------------------------------------------------------------------------- | --------------------- |
-| **API**            | Render Web Service (Node.js)       | Express REST API, Socket.IO server, BullMQ producers                                            | `api.veyora.com`      |
-| **Worker**         | Render Background Worker (Node.js) | BullMQ consumers, Email/Notification dispatch, Socket.IO Emitter, Storefront cache revalidation | Internal process      |
-| **Storefront**     | Vercel (Next.js 16)                | Customer-facing ecommerce storefront with Cache Components and ISR                              | `www.veyora.com`      |
-| **Admin Portal**   | Vercel (Next.js 16)                | Back-office management portal with TanStack Query and RBAC                                      | `admin.veyora.com`    |
-| **Cache & Queues** | Upstash Redis                      | BullMQ job queue broker, Socket.IO Redis adapter & emitter                                      | Private TCP endpoint  |
-| **Database**       | MongoDB Atlas                      | Primary transactional datastore with replica set                                                | TLS connection string |
+| Service                | Runtime / Platform                          | Role                                                                                            | Production Domain                                       |
+| ---------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| **API**                | Google Cloud Run (Containerized Node.js 24) | Express REST API, Socket.IO server, BullMQ producers                                            | `api.veyora.com`                                        |
+| **Worker**             | Google Cloud Run (Containerized Node.js 24) | BullMQ consumers, Email/Notification dispatch, Socket.IO Emitter, Storefront cache revalidation | Internal process (`--no-allow-unauthenticated`)         |
+| **Storefront**         | Vercel (Next.js 16)                         | Customer-facing ecommerce storefront with Cache Components, SSG, PPR                            | `www.veyora.com`                                        |
+| **Admin Portal**       | Vercel (Next.js 16)                         | Back-office management portal with TanStack Query and RBAC                                      | `admin.veyora.com`                                      |
+| **Cache & Queues**     | Upstash Redis                               | BullMQ job queue broker, Socket.IO Redis adapter & emitter                                      | Private TCP endpoint (`rediss://...`)                   |
+| **Database**           | MongoDB Atlas                               | Primary transactional datastore with replica set                                                | TLS connection string                                   |
+| **Container Registry** | Google Artifact Registry                    | Docker container repository with immutable SHA tags                                             | `LOCATION-docker.pkg.dev/PROJECT_ID/veyora-docker-repo` |
 
 ---
 
-## 2. Upstash Redis Configuration
+## 2. Google Cloud Platform Setup
 
-Upstash Redis is used for high-availability distributed caching, BullMQ job queues, and cross-process Socket.IO pub/sub.
+### 2.1 Project & API Enablement
 
-### Protocol Compatibility Requirements
+1. In the [Google Cloud Console](https://console.cloud.google.com/), select or create your project (e.g. `veyora-production`).
+2. Enable the required APIs:
+   - **Cloud Run Admin API** (`run.googleapis.com`)
+   - **Artifact Registry API** (`artifactregistry.googleapis.com`)
+   - **Cloud Build API** (`cloudbuild.googleapis.com`)
+   - **Secret Manager API** (`secretmanager.googleapis.com`)
+   - **IAM Service Account Credentials API** (`iamcredentials.googleapis.com`)
 
-- **BullMQ and `@socket.io/redis-adapter` require a standard Redis TCP connection with TLS support** (`rediss://...`), NOT the Upstash REST/HTTP API.
-- BullMQ requires `maxRetriesPerRequest: null` and long-lived bidirectional streaming sockets.
-- The codebase handles `REDIS_URL` automatically:
-  - If `REDIS_URL` begins with `rediss://` or `REDIS_TLS=true`, TLS options `{}` are passed to `ioredis`.
-  - If discrete configuration is provided (`REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_TLS`), it connects accordingly.
+### 2.2 Artifact Registry Setup
 
-### Connection Settings in Upstash Console
+Create a Docker repository in Artifact Registry:
 
-1. Create a Redis database in Upstash (select the region matching Render, e.g., `us-west-1` / `oregon` / `us-east-1`).
-2. Navigate to **Database Details** > **Connect with Redis CLI / ioredis**.
-3. Copy the **TCP Connection String** starting with `rediss://default:PASSWORD@ENDPOINT:PORT`.
-4. Configure this connection string in Render as `REDIS_URL`.
+- **Repository Name**: `veyora-docker-repo`
+- **Format**: `Docker`
+- **Mode**: `Standard`
+- **Location Type**: `Region` (e.g., `us-central1` or region closest to your MongoDB Atlas cluster).
 
----
+### 2.3 IAM & Workload Identity Federation (Zero Static Keys)
 
-## 3. Render Web Service Deployment: `@veyora/api`
+Rather than downloading service account JSON keys (which poses security risks), GitHub Actions authenticates using **Workload Identity Federation**:
 
-### Render Dashboard Configuration
-
-- **Type**: Web Service
-- **Name**: `veyora-api`
-- **Region**: Oregon (or your chosen region close to MongoDB & Upstash)
-- **Branch**: `main`
-- **Root Directory**: `.` (Monorepo root)
-- **Runtime**: `Node`
-- **Build Command**:
-  ```bash
-  npm run build:packages && npm run build --workspace=@veyora/api
-  ```
-- **Start Command**:
-  ```bash
-  npm run start --workspace=@veyora/api
-  ```
-- **Auto-Deploy**: Yes (or triggered via Deploy Hook from GitHub Actions)
-- **Health Check Path**: `/health/live`
-
-### Environment Variables Checklist (`@veyora/api`)
-
-| Variable                   | Required | Example / Default                                                                     | Description                                  |
-| -------------------------- | -------- | ------------------------------------------------------------------------------------- | -------------------------------------------- |
-| `NODE_ENV`                 | Yes      | `production`                                                                          | Enforces production security checks          |
-| `PORT`                     | Yes      | `10000`                                                                               | Port assigned by Render                      |
-| `API_PREFIX`               | Yes      | `/api/v1`                                                                             | Base prefix for REST endpoints               |
-| `MONGODB_URI`              | Yes      | `mongodb+srv://user:pass@cluster.mongodb.net/veyora_prod?retryWrites=true&w=majority` | MongoDB Atlas connection string              |
-| `REDIS_URL`                | Yes      | `rediss://default:xxxx@usw1-xxxx.upstash.io:6379`                                     | Upstash Redis TCP connection URI             |
-| `JWT_ACCESS_SECRET`        | Yes      | _32+ char random string_                                                              | Secret for signing short-lived access tokens |
-| `JWT_REFRESH_SECRET`       | Yes      | _32+ char random string_                                                              | Secret for signing session refresh tokens    |
-| `COOKIE_SECRET`            | Yes      | _32+ char random string_                                                              | Secret for signing HTTP-only cookies         |
-| `CORS_ORIGIN`              | Yes      | `https://www.veyora.com,https://admin.veyora.com`                                     | Exact allowed frontend origins               |
-| `CLIENT_URL`               | Yes      | `https://www.veyora.com`                                                              | Storefront origin                            |
-| `ADMIN_URL`                | Yes      | `https://admin.veyora.com`                                                            | Admin portal origin                          |
-| `RAZORPAY_KEY_ID`          | Yes      | `rzp_live_xxxxxxxxxxxx`                                                               | Live Razorpay Key ID                         |
-| `RAZORPAY_KEY_SECRET`      | Yes      | _live secret_                                                                         | Live Razorpay Key Secret                     |
-| `RAZORPAY_WEBHOOK_SECRET`  | Yes      | _webhook secret_                                                                      | Razorpay webhook validation secret           |
-| `CLOUDINARY_CLOUD_NAME`    | Yes      | `veyora-cloud`                                                                        | Cloudinary storage bucket name               |
-| `CLOUDINARY_API_KEY`       | Yes      | `xxxxxxxxx`                                                                           | Cloudinary API Key                           |
-| `CLOUDINARY_API_SECRET`    | Yes      | _secret_                                                                              | Cloudinary API Secret                        |
-| `CLOUDINARY_UPLOAD_FOLDER` | No       | `veyora`                                                                              | Cloudinary asset folder                      |
-| `RATE_LIMIT_WINDOW_MS`     | No       | `900000`                                                                              | Rate limit window in ms (15 minutes)         |
-| `RATE_LIMIT_MAX`           | No       | `100`                                                                                 | Request limit per IP per window              |
-| `BODY_LIMIT`               | No       | `10mb`                                                                                | Max JSON payload size                        |
-| `LOG_LEVEL`                | No       | `info`                                                                                | Structured logging verbosity                 |
+1. Create a service account: `github-actions-deployer@PROJECT_ID.iam.gserviceaccount.com`.
+2. Grant roles:
+   - `roles/run.admin` (Cloud Run Administrator)
+   - `roles/artifactregistry.writer` (Artifact Registry Writer)
+   - `roles/iam.serviceAccountUser` (Service Account User)
+3. Create a Workload Identity Pool: `github-pool`.
+4. Add a Provider: `github-provider` (Issuer: `https://token.actions.githubusercontent.com`).
+5. Map attributes: `google.subject=assertion.sub`, `attribute.repository=assertion.repository`.
+6. Allow the GitHub repository (`sanjaytech63/veyora`) to impersonate the service account.
 
 ---
 
-## 4. Render Background Worker Deployment: `@veyora/worker`
+## 3. Backend API Deployment on Google Cloud Run (`apps/api`)
 
-The worker is deployed as an independent Render Background Worker service.
+### Container Specification
 
-### Render Dashboard Configuration
+- Built via [apps/api/Dockerfile](file:///c:/Users/Sanjay/Desktop/veyora/apps/api/Dockerfile) (Multi-stage Alpine, Node.js 24, non-root `node` user).
+- Reads port dynamically from `process.env.PORT` (Cloud Run injects `PORT=8080` or container-specified `4000`).
+- Binds explicitly to `0.0.0.0`.
+- Health check endpoints:
+  - Liveness probe: `GET /health/live` (HTTP 200 `{"status":"alive"}`)
+  - Readiness probe: `GET /health/ready` (Reports MongoDB and Redis connection status)
 
-- **Type**: Background Worker
-- **Name**: `veyora-worker`
-- **Region**: Oregon (same as API)
-- **Branch**: `main`
-- **Root Directory**: `.` (Monorepo root)
-- **Runtime**: `Node`
-- **Build Command**:
-  ```bash
-  npm run build:packages && npm run build --workspace=@veyora/worker
-  ```
-- **Start Command**:
-  ```bash
-  npm run start --workspace=@veyora/worker
-  ```
-- **Auto-Deploy**: Yes (or triggered via Deploy Hook)
+### Cloud Run Deployment Configuration
 
-### Environment Variables Checklist (`@veyora/worker`)
+- **CPU**: 1 vCPU
+- **Memory**: 1 GiB
+- **Concurrency**: 80 requests per instance
+- **Min Instances**: `1` (eliminates cold starts)
+- **Max Instances**: `10`
+- **CPU Allocation**: CPU throttled when not handling requests (`--cpu-throttling`)
+- **Ingress**: All (Public HTTPS endpoint)
 
-| Variable                | Required | Example / Default                                 | Description                                           |
-| ----------------------- | -------- | ------------------------------------------------- | ----------------------------------------------------- |
-| `NODE_ENV`              | Yes      | `production`                                      | Production mode                                       |
-| `MONGODB_URI`           | Yes      | `mongodb+srv://...`                               | MongoDB Atlas connection string                       |
-| `REDIS_URL`             | Yes      | `rediss://default:xxxx@usw1-xxxx.upstash.io:6379` | Upstash Redis connection URI                          |
-| `CONCURRENCY`           | No       | `5`                                               | BullMQ worker concurrency per queue                   |
-| `STOREFRONT_URL`        | Yes      | `https://www.veyora.com`                          | Storefront base URL for cache revalidation            |
-| `INTERNAL_CACHE_SECRET` | Yes      | _32+ char secret_                                 | Pre-shared secret matching Next.js revalidation route |
+### Environment Variables Matrix (`@veyora/api`)
 
----
-
-## 5. Vercel Web Storefront Deployment: `@veyora/web`
-
-### Vercel Dashboard Configuration
-
-- **Framework Preset**: Next.js
-- **Root Directory**: `apps/web`
-- **Build Command**: `cd ../.. && npm run build:packages && npm run build --workspace=@veyora/web`
-- **Install Command**: `npm ci`
-- **Output Directory**: Automatically handled by Next.js (`.next`)
-
-### Environment Variables Checklist (`@veyora/web`)
-
-| Variable                | Exposed to Client | Value / Example                 | Purpose                                          |
-| ----------------------- | ----------------- | ------------------------------- | ------------------------------------------------ |
-| `NODE_ENV`              | No                | `production`                    | Next.js environment                              |
-| `NEXT_PUBLIC_API_URL`   | Yes               | `https://api.veyora.com/api/v1` | Base URL for browser API calls                   |
-| `NEXT_PUBLIC_SITE_URL`  | Yes               | `https://www.veyora.com`        | Storefront canonical URL                         |
-| `INTERNAL_CACHE_SECRET` | No (Server only)  | _secret_                        | Authenticates worker cache invalidation requests |
-| `API_URL`               | No (Server only)  | `https://api.veyora.com/api/v1` | Server Component internal data fetch URL         |
-
-> [!CAUTION]
-> Never set `MONGODB_URI`, `REDIS_URL`, `JWT_ACCESS_SECRET`, or `RAZORPAY_KEY_SECRET` in Vercel. Frontend builds must never have access to private database or broker credentials.
+| Variable                   | Source                | Example / Default                                                                     | Description                             |
+| -------------------------- | --------------------- | ------------------------------------------------------------------------------------- | --------------------------------------- |
+| `NODE_ENV`                 | Cloud Run Env         | `production`                                                                          | Production runtime mode                 |
+| `PORT`                     | Injected by Cloud Run | `4000` or `8080`                                                                      | Port container listens on               |
+| `API_PREFIX`               | Cloud Run Env         | `/api/v1`                                                                             | Base prefix for REST endpoints          |
+| `MONGODB_URI`              | Secret Manager        | `mongodb+srv://user:pass@cluster.mongodb.net/veyora_prod?retryWrites=true&w=majority` | Primary MongoDB Atlas connection string |
+| `REDIS_URL`                | Secret Manager        | `rediss://default:xxxx@usw1-xxxx.upstash.io:6379`                                     | Upstash Redis TCP/TLS connection string |
+| `JWT_ACCESS_SECRET`        | Secret Manager        | _32+ char secret_                                                                     | Access token signing secret             |
+| `JWT_REFRESH_SECRET`       | Secret Manager        | _32+ char secret_                                                                     | Refresh token signing secret            |
+| `COOKIE_SECRET`            | Secret Manager        | _32+ char secret_                                                                     | Cookie signing secret                   |
+| `CORS_ORIGIN`              | Cloud Run Env         | `https://www.veyora.com,https://admin.veyora.com`                                     | Exact allowed frontend origins          |
+| `CLIENT_URL`               | Cloud Run Env         | `https://www.veyora.com`                                                              | Storefront origin                       |
+| `ADMIN_URL`                | Cloud Run Env         | `https://admin.veyora.com`                                                            | Admin portal origin                     |
+| `RAZORPAY_KEY_ID`          | Secret Manager        | `rzp_live_xxxxxxxxxxxx`                                                               | Live Razorpay key                       |
+| `RAZORPAY_KEY_SECRET`      | Secret Manager        | _secret_                                                                              | Live Razorpay secret                    |
+| `RAZORPAY_WEBHOOK_SECRET`  | Secret Manager        | _secret_                                                                              | Razorpay webhook validation secret      |
+| `CLOUDINARY_CLOUD_NAME`    | Cloud Run Env         | `veyora-cloud`                                                                        | Cloudinary storage bucket name          |
+| `CLOUDINARY_API_KEY`       | Secret Manager        | `xxxxxxxxx`                                                                           | Cloudinary API Key                      |
+| `CLOUDINARY_API_SECRET`    | Secret Manager        | _secret_                                                                              | Cloudinary API Secret                   |
+| `CLOUDINARY_UPLOAD_FOLDER` | Cloud Run Env         | `veyora`                                                                              | Cloudinary asset folder                 |
 
 ---
 
-## 6. Vercel Admin Portal Deployment: `@veyora/admin`
+## 4. Background Worker Deployment on Google Cloud Run (`apps/worker`)
 
-### Vercel Dashboard Configuration
+### Cloud Run Continuous Worker Architecture
 
-- **Framework Preset**: Next.js
-- **Root Directory**: `apps/admin`
-- **Build Command**: `cd ../.. && npm run build:packages && npm run build --workspace=@veyora/admin`
-- **Install Command**: `npm ci`
-- **Output Directory**: Automatically handled by Next.js (`.next`)
+Standard Cloud Run services throttle CPU to zero when no incoming HTTP requests exist, which would pause background BullMQ queue workers. To solve this reliably:
 
-### Environment Variables Checklist (`@veyora/admin`)
+1. **Always-On CPU**: Configured with `--no-cpu-throttling` (CPU is always allocated).
+2. **Min Instances**: Set to `--min-instances=1` (keeps at least 1 instance continuously polling Redis for jobs).
+3. **No Unauthenticated HTTP Ingress**: Set to `--no-allow-unauthenticated` so external public web traffic cannot trigger the worker.
+4. **BullMQ Reliability**: Connects via Upstash TCP Redis (`rediss://...`) with `maxRetriesPerRequest: null`.
+5. **No unnecessary HTTP servers**: The worker process runs purely event-driven BullMQ workers and handles graceful `SIGTERM` draining.
 
-| Variable              | Exposed to Client | Value / Example                 | Purpose                                |
-| --------------------- | ----------------- | ------------------------------- | -------------------------------------- |
-| `NODE_ENV`            | No                | `production`                    | Next.js environment                    |
-| `NEXT_PUBLIC_API_URL` | Yes               | `https://api.veyora.com/api/v1` | Backend API base URL for Admin browser |
-| `API_URL`             | No (Server only)  | `https://api.veyora.com/api/v1` | Server Component internal fetch URL    |
+### Environment Variables Matrix (`@veyora/worker`)
 
----
-
-## 7. CORS, Cookies, and Authentication Architecture
-
-### Production Cross-Origin Credential Policy
-
-- **Wildcard CORS (`*`) is strictly forbidden** when credentials are used.
-- `CORS_ORIGIN` in the backend API must be set to the exact origins:
-  ```env
-  CORS_ORIGIN=https://www.veyora.com,https://admin.veyora.com
-  ```
-- All client fetch requests specify `credentials: "include"`.
-
-### HTTP-Only Cookie Configuration
-
-The refresh token cookie is set by the API on login/verification:
-
-- `httpOnly: true` (prevents XSS extraction)
-- `secure: true` (transmitted only over HTTPS)
-- `sameSite: "lax"` (protects against CSRF while permitting cross-subdomain top-level navigations)
-- `path: "/api/v1/auth"` (scopes cookie strictly to authentication endpoints)
-
-### Dual-Channel Refresh Handling
-
-1. **Direct Browser Calls**: The browser sends `credentials: "include"` directly to `https://api.veyora.com/api/v1/auth/refresh`. Because the path is `/api/v1/auth`, the browser attaches the cookie.
-2. **Server-Side Session Forwarding**: In Next.js Server Components / Actions, `server-api-client.ts` reads the incoming request cookies and forwards `refreshToken` in the outbound `Cookie` header.
-3. **Payload Fallback**: If cookie delivery is blocked by strict cross-site partitioning, the client can supply `{ refreshToken }` in the request body.
+| Variable                | Source         | Example / Default                                 | Description                                |
+| ----------------------- | -------------- | ------------------------------------------------- | ------------------------------------------ |
+| `NODE_ENV`              | Cloud Run Env  | `production`                                      | Production mode                            |
+| `MONGODB_URI`           | Secret Manager | `mongodb+srv://...`                               | MongoDB Atlas connection string            |
+| `REDIS_URL`             | Secret Manager | `rediss://default:xxxx@usw1-xxxx.upstash.io:6379` | Upstash Redis connection URI               |
+| `CONCURRENCY`           | Cloud Run Env  | `5`                                               | BullMQ worker concurrency per queue        |
+| `STOREFRONT_URL`        | Cloud Run Env  | `https://www.veyora.com`                          | Storefront base URL for cache revalidation |
+| `INTERNAL_CACHE_SECRET` | Secret Manager | _32+ char secret_                                 | Secret matching Next.js revalidation route |
 
 ---
 
-## 8. Domain and DNS Architecture
+## 5. Upstash Redis Setup
 
-For apex domain `veyora.com`:
-
-| Hostname           | Type  | Target                    | Managed By              |
-| ------------------ | ----- | ------------------------- | ----------------------- |
-| `www.veyora.com`   | CNAME | `cname.vercel-dns.com`    | Vercel (Web Storefront) |
-| `admin.veyora.com` | CNAME | `cname.vercel-dns.com`    | Vercel (Admin Portal)   |
-| `api.veyora.com`   | CNAME | `veyora-api.onrender.com` | Render (Backend API)    |
-
-SSL/TLS certificates are automatically provisioned and renewed via Let's Encrypt by Vercel and Render.
+- **Protocol**: Standard Redis TCP with TLS enabled (`rediss://...`).
+- Upstash REST/HTTP API is NOT used for BullMQ workers because BullMQ requires persistent bidirectional TCP socket connections and stream commands (`XREAD`, `BRPOPLPUSH`, etc.).
+- Both `apps/api` and `apps/worker` automatically recognize `REDIS_URL` with `rediss://` or `REDIS_TLS=true` and instantiate `ioredis` with TLS options.
 
 ---
 
-## 9. CI/CD & GitHub Actions Automation
+## 6. Vercel Web Storefront (`apps/web`) & Admin Portal (`apps/admin`)
 
-The repository includes automated CI and CD workflows:
+Both applications are deployed as independent projects on Vercel:
 
-- `.github/workflows/ci.yml`: Runs on PRs and pushes to `main`/`develop`:
-  1. Code Quality & Linting (`npm run lint:check`, `npm run format:check`)
-  2. Strict TypeScript Typecheck (`npm run typecheck`)
-  3. Unit & Integration Tests (`npm run test`)
-  4. Monorepo Build Verification (`npm run build`)
-  5. Docker Build Validation
-- `.github/workflows/deploy-production.yml`: Runs on pushes to `main`:
-  1. Executes pre-deployment quality gates (`typecheck`, `lint:check`, `test`, `build`)
-  2. Dispatches Render Deploy Hooks (`RENDER_API_DEPLOY_HOOK_URL`, `RENDER_WORKER_DEPLOY_HOOK_URL`)
-  3. Dispatches Vercel Deploy Hooks (`VERCEL_WEB_DEPLOY_HOOK_URL`, `VERCEL_ADMIN_DEPLOY_HOOK_URL`)
-
-### Required GitHub Repository Secrets
-
-| Secret Name                     | Description                                |
-| ------------------------------- | ------------------------------------------ |
-| `RENDER_API_DEPLOY_HOOK_URL`    | Render Deploy Hook URL for `veyora-api`    |
-| `RENDER_WORKER_DEPLOY_HOOK_URL` | Render Deploy Hook URL for `veyora-worker` |
-| `VERCEL_WEB_DEPLOY_HOOK_URL`    | Vercel Deploy Hook URL for `veyora-web`    |
-| `VERCEL_ADMIN_DEPLOY_HOOK_URL`  | Vercel Deploy Hook URL for `veyora-admin`  |
+- **`apps/web`**:
+  - Root Directory: `apps/web`
+  - Build command: `cd ../.. && npm run build:packages && npm run build --workspace=@veyora/web`
+  - `NEXT_PUBLIC_API_URL` = `https://api.veyora.com/api/v1`
+  - `NEXT_PUBLIC_SITE_URL` = `https://www.veyora.com`
+  - `INTERNAL_CACHE_SECRET` = Pre-shared worker revalidation secret (server-only)
+- **`apps/admin`**:
+  - Root Directory: `apps/admin`
+  - Build command: `cd ../.. && npm run build:packages && npm run build --workspace=@veyora/admin`
+  - `NEXT_PUBLIC_API_URL` = `https://api.veyora.com/api/v1`
 
 ---
 
-## 10. Production Smoke-Test Checklist
+## 7. Authentication, CORS, and Cookies
 
-### Backend API (`api.veyora.com`)
-
-- [ ] `GET /health/live` returns HTTP 200 `{"status":"alive"}`.
-- [ ] `GET /health/ready` returns HTTP 200 with MongoDB and Redis statuses `connected`.
-- [ ] `OPTIONS /api/v1/auth/login` from `https://www.veyora.com` returns HTTP 204 with `Access-Control-Allow-Credentials: true`.
-- [ ] `POST /api/v1/auth/login` sets `refreshToken` cookie with `Secure; HttpOnly; SameSite=Lax`.
-- [ ] Unauthenticated calls to `/api/v1/admin/analytics/dashboard` return HTTP 401.
-
-### Background Worker
-
-- [ ] Worker logs show: `MongoDB connection established in worker process`.
-- [ ] Worker logs show: `Redis connection is ready`.
-- [ ] BullMQ queues (`veyora-email`, `veyora-notifications`, `veyora-orders`, `veyora-payments`, `veyora-system`) register without warnings.
-- [ ] SIGTERM triggers graceful draining and clean shutdown.
-
-### Web Storefront (`www.veyora.com`)
-
-- [ ] Homepage loads with SSR and image optimization via Cloudinary.
-- [ ] Catalog search and filter interact seamlessly with API.
-- [ ] Cart, wishlist, and session survive browser reload.
-- [ ] Revalidation webhook `/api/internal/cache/revalidate` rejects invalid secrets with HTTP 401.
-
-### Admin Portal (`admin.veyora.com`)
-
-- [ ] Non-admin accounts receive HTTP 403 on protected routes.
-- [ ] Real-time Socket.IO operational rooms receive notifications.
+1. **CORS**:
+   - `CORS_ORIGIN` contains the exact Vercel frontend domains (`https://www.veyora.com,https://admin.veyora.com`).
+   - Wildcards are rejected in production when credentials are sent.
+2. **Refresh Token Cookie**:
+   - `httpOnly: true` (XSS immune)
+   - `secure: true` (HTTPS only)
+   - `sameSite: "lax"`
+   - `path: "/api/v1/auth"` (Restricts cookie transmission strictly to auth endpoints)
+3. **Session Refresh**:
+   - Web Storefront and Admin Portal client code includes `credentials: "include"`.
+   - Next.js Server Components forward cookies through `server-api-client.ts`.
 
 ---
 
-## 11. Rollback Procedures
+## 8. GitHub Actions CI/CD Pipeline
 
-### Render (API & Worker)
+The `.github/workflows/deploy-production.yml` workflow automates the deployment:
 
-1. Go to the **Render Dashboard** > Select Service (`veyora-api` or `veyora-worker`).
-2. Navigate to the **Events** tab.
-3. Identify the previous successful deploy.
-4. Click **Rollback to this deploy**.
+1. **Pre-Deployment Quality Gates**:
+   - `npm run typecheck`
+   - `npm run lint:check`
+   - `npm run format:check`
+   - `npm run test`
+   - `npm run build`
+2. **Google Cloud Authentication**:
+   - Authenticates using `google-github-actions/auth` with Workload Identity Federation (no stored credentials).
+3. **Artifact Registry**:
+   - Builds API & Worker Docker containers using Buildx.
+   - Pushes images tagged with commit SHA (`${{ github.sha }}`) and `latest`.
+4. **Cloud Run Deployment**:
+   - Deploys `veyora-api` to Cloud Run.
+   - Deploys `veyora-worker` to Cloud Run with `--no-cpu-throttling` and `--min-instances=1`.
+5. **Vercel Deployment**:
+   - Dispatches Vercel deploy hooks for `veyora-web` and `veyora-admin`.
+
+### GitHub Secrets and Variables Required
+
+#### Variables (`vars`)
+
+- `GCP_PROJECT_ID`: Google Cloud Project ID (e.g. `veyora-production`)
+- `GCP_REGION`: Target region (e.g. `us-central1`)
+- `GCP_ARTIFACT_REPO`: Artifact Registry repo name (`veyora-docker-repo`)
+
+#### Secrets (`secrets`)
+
+- `GCP_WORKLOAD_IDENTITY_PROVIDER`: `projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/providers/github-provider`
+- `GCP_SERVICE_ACCOUNT`: `github-actions-deployer@PROJECT_ID.iam.gserviceaccount.com`
+- `VERCEL_WEB_DEPLOY_HOOK_URL`: Vercel Deploy Hook for Storefront
+- `VERCEL_ADMIN_DEPLOY_HOOK_URL`: Vercel Deploy Hook for Admin
+
+---
+
+## 9. Rollback Procedures
+
+### Google Cloud Run (API & Worker)
+
+Cloud Run maintains an immutable revision history for every deployment:
+
+1. In the Google Cloud Console, navigate to **Cloud Run** > Click `veyora-api` or `veyora-worker`.
+2. Go to the **Revisions** tab.
+3. Select the previous stable revision.
+4. Click **Manage Traffic** > Route 100% of traffic to the stable revision (instant 1-second atomic rollback).
 
 ### Vercel (Web & Admin)
 
-1. Go to the **Vercel Dashboard** > Select Project (`veyora-web` or `veyora-admin`).
-2. Navigate to the **Deployments** tab.
-3. Locate the previous healthy production deployment.
-4. Click the three dots `...` > **Promote to Production** (Instant atomic rollback).
-
-### Database & Redis
-
-- Upstash Redis: In case of corrupted queue state, flush the specific BullMQ keys (`bull:veyora-*:*`) without dropping application data.
-- MongoDB Atlas: Restore from continuous Point-In-Time Backup (PITR) via Atlas Console > Backups.
+1. Go to Vercel Dashboard > Select Project (`veyora-web` or `veyora-admin`).
+2. Go to the **Deployments** tab.
+3. Find the previous stable deployment > Click `...` > **Promote to Production**.

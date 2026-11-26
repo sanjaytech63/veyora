@@ -1,0 +1,66 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: veyora-api
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/client-name: gcloud
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "10"
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/cpu-throttling: "true"
+        run.googleapis.com/startup-cpu-boost: "true"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      containers:
+        - image: LOCATION-docker.pkg.dev/PROJECT_ID/veyora-docker-repo/veyora-api:latest
+          ports:
+            - name: http1
+              containerPort: 4000
+          resources:
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          startupProbe:
+            httpGet:
+              path: /health/live
+              port: 4000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 4000
+            periodSeconds: 15
+            failureThreshold: 3
+            timeoutSeconds: 3
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "4000"
+            - name: API_PREFIX
+              value: "/api/v1"
+            - name: LOG_LEVEL
+              value: "info"
+            - name: RATE_LIMIT_WINDOW_MS
+              value: "900000"
+            - name: RATE_LIMIT_MAX
+              value: "100"
+            - name: BODY_LIMIT
+              value: "10mb"
+            - name: CLOUDINARY_UPLOAD_FOLDER
+              value: "veyora"
+            # In production, inject secrets via Google Secret Manager:
+            # - name: MONGODB_URI
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: MONGODB_URI
+            #       key: latest

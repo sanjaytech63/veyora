@@ -1,4 +1,4 @@
-name: Veyora Production Deployment (Render & Vercel)
+name: Veyora Production Deployment (Google Cloud Run & Vercel)
 
 on:
   workflow_dispatch:
@@ -9,6 +9,10 @@ on:
 concurrency:
   group: deploy-production-${{ github.ref }}
   cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write # Required for Google Cloud Workload Identity Federation (Zero static secrets)
 
 jobs:
   validate-and-gate:
@@ -41,29 +45,95 @@ jobs:
           npm run test
           npm run build
 
-  deploy-render:
-    name: Trigger Render Deployments (API & Worker)
+  deploy-gcp-cloud-run:
+    name: Build & Deploy to Google Cloud Run
     needs: [validate-and-gate]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment:
+      name: production
     steps:
-      - name: Trigger Render API Web Service Deploy Hook
-        if: env.RENDER_API_DEPLOY_HOOK_URL != ''
-        env:
-          RENDER_API_DEPLOY_HOOK_URL: ${{ secrets.RENDER_API_DEPLOY_HOOK_URL }}
-        run: |
-          echo "Triggering Render API deployment..."
-          curl -s -f -X POST "${RENDER_API_DEPLOY_HOOK_URL}"
-          echo "Render API deployment hook dispatched."
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Trigger Render Background Worker Deploy Hook
-        if: env.RENDER_WORKER_DEPLOY_HOOK_URL != ''
-        env:
-          RENDER_WORKER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_WORKER_DEPLOY_HOOK_URL }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Authenticate to Google Cloud using Workload Identity Federation (No JSON keys)
+      - name: Authenticate to Google Cloud (WIF)
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker authentication for Artifact Registry
         run: |
-          echo "Triggering Render Background Worker deployment..."
-          curl -s -f -X POST "${RENDER_WORKER_DEPLOY_HOOK_URL}"
-          echo "Render Background Worker deployment hook dispatched."
+          gcloud auth configure-docker ${{ vars.GCP_REGION || 'us-central1' }}-docker.pkg.dev --quiet
+
+      - name: Define Image Tags
+        id: meta
+        run: |
+          REGISTRY="${{ vars.GCP_REGION || 'us-central1' }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GCP_ARTIFACT_REPO || 'veyora-docker-repo' }}"
+          SHA_TAG="${{ github.sha }}"
+          echo "api_image=${REGISTRY}/veyora-api:${SHA_TAG}" >> $GITHUB_OUTPUT
+          echo "api_image_latest=${REGISTRY}/veyora-api:latest" >> $GITHUB_OUTPUT
+          echo "worker_image=${REGISTRY}/veyora-worker:${SHA_TAG}" >> $GITHUB_OUTPUT
+          echo "worker_image_latest=${REGISTRY}/veyora-worker:latest" >> $GITHUB_OUTPUT
+
+      # ------------------------------------------------------------------------
+      # Build & Push API Image
+      # ------------------------------------------------------------------------
+      - name: Build & Push API Image to Artifact Registry
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.api_image }}
+            ${{ steps.meta.outputs.api_image_latest }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ------------------------------------------------------------------------
+      # Build & Push Worker Image
+      # ------------------------------------------------------------------------
+      - name: Build & Push Worker Image to Artifact Registry
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/worker/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.worker_image }}
+            ${{ steps.meta.outputs.worker_image_latest }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ------------------------------------------------------------------------
+      # Deploy API to Google Cloud Run
+      # ------------------------------------------------------------------------
+      - name: Deploy API Service to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: veyora-api
+          image: ${{ steps.meta.outputs.api_image }}
+          region: ${{ vars.GCP_REGION || 'us-central1' }}
+
+      # ------------------------------------------------------------------------
+      # Deploy Worker to Google Cloud Run (Dedicated Background Execution)
+      # ------------------------------------------------------------------------
+      - name: Deploy Worker Service to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: veyora-worker
+          image: ${{ steps.meta.outputs.worker_image }}
+          region: ${{ vars.GCP_REGION || 'us-central1' }}
+          flags: --no-cpu-throttling --min-instances=1 --max-instances=3 --no-allow-unauthenticated
 
   deploy-vercel:
     name: Trigger Vercel Deployments (Web & Admin)

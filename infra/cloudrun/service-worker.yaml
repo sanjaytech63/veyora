@@ -1,0 +1,37 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: veyora-worker
+  annotations:
+    run.googleapis.com/ingress: internal
+    run.googleapis.com/client-name: gcloud
+spec:
+  template:
+    metadata:
+      annotations:
+        # Crucial for continuous BullMQ background processing on Cloud Run:
+        # 1. minScale >= 1 keeps at least 1 container warm at all times.
+        # 2. cpu-throttling=false ensures CPU is always allocated, even when no incoming HTTP requests exist.
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "3"
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/execution-environment: gen2
+    spec:
+      containerConcurrency: 1
+      timeoutSeconds: 900
+      containers:
+        - image: LOCATION-docker.pkg.dev/PROJECT_ID/veyora-docker-repo/veyora-worker:latest
+          resources:
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: CONCURRENCY
+              value: "5"
+            # In production, inject secrets via Google Secret Manager:
+            # - name: MONGODB_URI
+            # - name: REDIS_URL
+            # - name: STOREFRONT_URL
+            # - name: INTERNAL_CACHE_SECRET
