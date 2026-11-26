@@ -118,11 +118,22 @@ jobs:
       # Deploy API to Google Cloud Run
       # ------------------------------------------------------------------------
       - name: Deploy API Service to Cloud Run
+        id: deploy-api
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: veyora-api
           image: ${{ steps.meta.outputs.api_image }}
           region: ${{ vars.GCP_REGION || 'us-central1' }}
+
+      # ------------------------------------------------------------------------
+      # Verify API Health Probe
+      # ------------------------------------------------------------------------
+      - name: Verify Deployed API Liveness Endpoint
+        run: |
+          API_URL="${{ steps.deploy-api.outputs.url }}"
+          echo "Probing API at ${API_URL}/health/live..."
+          curl -s -f --retry 5 --retry-delay 5 "${API_URL}/health/live"
+          echo "API Liveness verification passed."
 
       # ------------------------------------------------------------------------
       # Deploy Worker to Google Cloud Run (Dedicated Background Execution)

@@ -1,8 +1,8 @@
-# Production Deployment Architecture: Google Cloud Run + Vercel + Upstash Redis
+# Production Deployment Architecture: Google Cloud Run + Compute Engine MongoDB + Vercel + Upstash
 
 ## 1. Overview & Architecture
 
-Veyora is architected as a high-performance modern ecommerce monorepo. In production, backend services run containerized on **Google Cloud Run**, data & queues are hosted on **MongoDB Atlas** and **Upstash Redis**, and frontends run on **Vercel** with Next.js 16.
+Veyora is architected as a high-performance modern ecommerce monorepo. In production, backend services run containerized on **Google Cloud Run**, database storage runs containerized on **Google Compute Engine with Persistent Disk** (or managed **MongoDB Atlas**), real-time distributed queues/cache run on **Upstash Redis**, and frontends run on **Vercel** with Next.js 16.
 
 ```
                            +----------------------------------------+
@@ -34,231 +34,243 @@ Veyora is architected as a high-performance modern ecommerce monorepo. In produc
                       |                                                |
                       v                                                v
             +-------------------+                            +-------------------+
-            |   Upstash Redis   |                            |   MongoDB Atlas   |
-            | (TCP/TLS rediss:) |                            |   (M10+ Cluster)  |
-            +---------^---------+                            +---------^---------+
-                      |                                                |
-                      +------------------+          +------------------+
-                                         |          |
-                                    +----+----------+----+
-                                    |  Cloud Run Service |
-                                    |    veyora-worker   |
+            |   Upstash Redis   |                            | Google Compute    |
+            | (TCP/TLS rediss:) |                            | Engine VM         |
+            +---------^---------+                            | (Docker MongoDB   |
+                      |                                      | + Persistent Disk)|
+                      +------------------+                   +---------^---------+
+                                         |                             |
+                                    +----+----------+----+             |
+                                    |  Cloud Run Service |             |
+                                    |    veyora-worker   |-------------+
                                     | (Continuous Worker)|
                                     +--------------------+
 ```
 
-| Service                | Runtime / Platform                          | Role                                                                                            | Production Domain                                       |
-| ---------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| **API**                | Google Cloud Run (Containerized Node.js 24) | Express REST API, Socket.IO server, BullMQ producers                                            | `api.veyora.com`                                        |
-| **Worker**             | Google Cloud Run (Containerized Node.js 24) | BullMQ consumers, Email/Notification dispatch, Socket.IO Emitter, Storefront cache revalidation | Internal process (`--no-allow-unauthenticated`)         |
-| **Storefront**         | Vercel (Next.js 16)                         | Customer-facing ecommerce storefront with Cache Components, SSG, PPR                            | `www.veyora.com`                                        |
-| **Admin Portal**       | Vercel (Next.js 16)                         | Back-office management portal with TanStack Query and RBAC                                      | `admin.veyora.com`                                      |
-| **Cache & Queues**     | Upstash Redis                               | BullMQ job queue broker, Socket.IO Redis adapter & emitter                                      | Private TCP endpoint (`rediss://...`)                   |
-| **Database**           | MongoDB Atlas                               | Primary transactional datastore with replica set                                                | TLS connection string                                   |
-| **Container Registry** | Google Artifact Registry                    | Docker container repository with immutable SHA tags                                             | `LOCATION-docker.pkg.dev/PROJECT_ID/veyora-docker-repo` |
+| Component              | Platform                 | Deployment Type                                                                   | Production Endpoint / Identifier                        |
+| ---------------------- | ------------------------ | --------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| **Web Storefront**     | Vercel                   | Next.js 16 (SSG, PPR, Cache Components)                                           | `https://www.veyora.com`                                |
+| **Admin Portal**       | Vercel                   | Next.js 16 (TanStack Query, Dynamic, RBAC)                                        | `https://admin.veyora.com`                              |
+| **Backend API**        | Google Cloud Run         | Docker container (Node.js 24 Alpine, non-root)                                    | `https://api.veyora.com`                                |
+| **Background Worker**  | Google Cloud Run         | Separate continuous Docker container (`--no-cpu-throttling`, `--min-instances=1`) | Private (Internal only)                                 |
+| **MongoDB Database**   | Google Compute Engine    | Official Mongo 7.0 Docker container + GCP Persistent Disk (or Atlas)              | Private VPC IP (`10.128.0.2:27017`)                     |
+| **Redis & Queues**     | Upstash Redis            | Managed Redis over TCP with TLS (`rediss://...`)                                  | Private TCP endpoint                                    |
+| **Container Registry** | Google Artifact Registry | Docker format with immutable Git commit SHA tags                                  | `LOCATION-docker.pkg.dev/PROJECT_ID/veyora-docker-repo` |
+| **CI/CD**              | GitHub Actions           | Workload Identity Federation (Zero static JSON keys)                              | `.github/workflows/deploy-production.yml`               |
+| **Secrets Management** | Google Secret Manager    | Encrypted environment variables injected at runtime                               | `projects/PROJECT_ID/secrets/*`                         |
 
 ---
 
-## 2. Google Cloud Platform Setup
+## 2. Google Cloud Platform Setup & IAM Permissions
 
-### 2.1 Project & API Enablement
+### 2.1 Resolving Missing Cloud Run Admin API Permissions
 
-1. In the [Google Cloud Console](https://console.cloud.google.com/), select or create your project (e.g. `veyora-production`).
-2. Enable the required APIs:
-   - **Cloud Run Admin API** (`run.googleapis.com`)
-   - **Artifact Registry API** (`artifactregistry.googleapis.com`)
-   - **Cloud Build API** (`cloudbuild.googleapis.com`)
-   - **Secret Manager API** (`secretmanager.googleapis.com`)
-   - **IAM Service Account Credentials API** (`iamcredentials.googleapis.com`)
+When visiting the Cloud Run Console, if you encounter:
 
-### 2.2 Artifact Registry Setup
+> _"The Cloud Run Admin API is not enabled. You don't have permission to enable it."_
 
-Create a Docker repository in Artifact Registry:
+This indicates your Google Cloud account currently lacks the **Service Usage Admin** (`roles/serviceusage.serviceUsageAdmin`) or **Owner/Editor** role required to activate new Google Cloud APIs on the project.
 
-- **Repository Name**: `veyora-docker-repo`
-- **Format**: `Docker`
-- **Mode**: `Standard`
-- **Location Type**: `Region` (e.g., `us-central1` or region closest to your MongoDB Atlas cluster).
+#### Required Action from the Project Administrator
 
-### 2.3 IAM & Workload Identity Federation (Zero Static Keys)
+Request the Google Cloud Project Owner/Admin to run:
 
-Rather than downloading service account JSON keys (which poses security risks), GitHub Actions authenticates using **Workload Identity Federation**:
+```bash
+# Enable required APIs on the project
+gcloud services enable \
+  run.googleapis.com \
+  artifactregistry.googleapis.com \
+  compute.googleapis.com \
+  secretmanager.googleapis.com \
+  iamcredentials.googleapis.com \
+  cloudbuild.googleapis.com \
+  --project=YOUR_PROJECT_ID
+```
+
+And grant your IAM user / service account the following least-privilege roles:
+
+- `roles/run.admin` (Cloud Run Administrator)
+- `roles/artifactregistry.admin` or `roles/artifactregistry.writer` (Artifact Registry)
+- `roles/compute.instanceAdmin.v1` (Compute Engine Instance Admin for MongoDB VM)
+- `roles/secretmanager.secretAccessor` (Read access to production secrets)
+- `roles/iam.serviceAccountUser` (Permits deploying containers running as the default or custom service account)
+
+### 2.2 Workload Identity Federation for GitHub Actions
+
+To eliminate stored service-account JSON keys in GitHub:
 
 1. Create a service account: `github-actions-deployer@PROJECT_ID.iam.gserviceaccount.com`.
-2. Grant roles:
-   - `roles/run.admin` (Cloud Run Administrator)
-   - `roles/artifactregistry.writer` (Artifact Registry Writer)
-   - `roles/iam.serviceAccountUser` (Service Account User)
-3. Create a Workload Identity Pool: `github-pool`.
-4. Add a Provider: `github-provider` (Issuer: `https://token.actions.githubusercontent.com`).
-5. Map attributes: `google.subject=assertion.sub`, `attribute.repository=assertion.repository`.
-6. Allow the GitHub repository (`sanjaytech63/veyora`) to impersonate the service account.
+2. Grant it `roles/run.admin`, `roles/artifactregistry.writer`, and `roles/iam.serviceAccountUser`.
+3. Create Workload Identity Pool `github-pool` and Provider `github-provider`:
+   ```bash
+   gcloud iam workload-identity-pools create "github-pool" \
+     --project="PROJECT_ID" \
+     --location="global" \
+     --display-name="GitHub Actions Pool"
+
+   gcloud iam workload-identity-pools providers create-oidc "github-provider" \
+     --project="PROJECT_ID" \
+     --location="global" \
+     --workload-identity-pool="github-pool" \
+     --display-name="GitHub Actions Provider" \
+     --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository" \
+     --issuer-uri="https://token.actions.githubusercontent.com"
+   ```
+4. Authorize the repository:
+   ```bash
+   gcloud iam service-accounts add-iam-policy-binding "github-actions-deployer@PROJECT_ID.iam.gserviceaccount.com" \
+     --project="PROJECT_ID" \
+     --role="roles/iam.workloadIdentityUser" \
+     --member="principalSet://iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/attribute.repository/sanjaytech63/veyora"
+   ```
 
 ---
 
-## 3. Backend API Deployment on Google Cloud Run (`apps/api`)
+## 3. Containerized MongoDB on Google Compute Engine
 
-### Container Specification
+While **MongoDB Atlas** is the recommended managed multi-region solution, self-hosting on Google Compute Engine requires strict stateful disk guarantees and security isolation.
 
-- Built via [apps/api/Dockerfile](file:///c:/Users/Sanjay/Desktop/veyora/apps/api/Dockerfile) (Multi-stage Alpine, Node.js 24, non-root `node` user).
-- Reads port dynamically from `process.env.PORT` (Cloud Run injects `PORT=8080` or container-specified `4000`).
-- Binds explicitly to `0.0.0.0`.
-- Health check endpoints:
-  - Liveness probe: `GET /health/live` (HTTP 200 `{"status":"alive"}`)
-  - Readiness probe: `GET /health/ready` (Reports MongoDB and Redis connection status)
+### 3.1 Compute Engine Infrastructure Provisioning
 
-### Cloud Run Deployment Configuration
+1. **Create an Ubuntu VM in your VPC**:
 
-- **CPU**: 1 vCPU
-- **Memory**: 1 GiB
-- **Concurrency**: 80 requests per instance
-- **Min Instances**: `1` (eliminates cold starts)
-- **Max Instances**: `10`
-- **CPU Allocation**: CPU throttled when not handling requests (`--cpu-throttling`)
-- **Ingress**: All (Public HTTPS endpoint)
+   ```bash
+   gcloud compute instances create veyora-mongodb-instance \
+     --project=PROJECT_ID \
+     --zone=us-central1-a \
+     --machine-type=e2-standard-2 \
+     --network=default \
+     --subnet=default \
+     --no-address \
+     --tags=mongodb-server \
+     --metadata-from-file=startup-script=infra/gce-mongodb/startup-script.sh
+   ```
 
-### Environment Variables Matrix (`@veyora/api`)
+   _(Note: `--no-address` ensures no public IP is attached to the VM; it is reachable only via private VPC IP, e.g. `10.128.0.2`)._
 
-| Variable                   | Source                | Example / Default                                                                     | Description                             |
-| -------------------------- | --------------------- | ------------------------------------------------------------------------------------- | --------------------------------------- |
-| `NODE_ENV`                 | Cloud Run Env         | `production`                                                                          | Production runtime mode                 |
-| `PORT`                     | Injected by Cloud Run | `4000` or `8080`                                                                      | Port container listens on               |
-| `API_PREFIX`               | Cloud Run Env         | `/api/v1`                                                                             | Base prefix for REST endpoints          |
-| `MONGODB_URI`              | Secret Manager        | `mongodb+srv://user:pass@cluster.mongodb.net/veyora_prod?retryWrites=true&w=majority` | Primary MongoDB Atlas connection string |
-| `REDIS_URL`                | Secret Manager        | `rediss://default:xxxx@usw1-xxxx.upstash.io:6379`                                     | Upstash Redis TCP/TLS connection string |
-| `JWT_ACCESS_SECRET`        | Secret Manager        | _32+ char secret_                                                                     | Access token signing secret             |
-| `JWT_REFRESH_SECRET`       | Secret Manager        | _32+ char secret_                                                                     | Refresh token signing secret            |
-| `COOKIE_SECRET`            | Secret Manager        | _32+ char secret_                                                                     | Cookie signing secret                   |
-| `CORS_ORIGIN`              | Cloud Run Env         | `https://www.veyora.com,https://admin.veyora.com`                                     | Exact allowed frontend origins          |
-| `CLIENT_URL`               | Cloud Run Env         | `https://www.veyora.com`                                                              | Storefront origin                       |
-| `ADMIN_URL`                | Cloud Run Env         | `https://admin.veyora.com`                                                            | Admin portal origin                     |
-| `RAZORPAY_KEY_ID`          | Secret Manager        | `rzp_live_xxxxxxxxxxxx`                                                               | Live Razorpay key                       |
-| `RAZORPAY_KEY_SECRET`      | Secret Manager        | _secret_                                                                              | Live Razorpay secret                    |
-| `RAZORPAY_WEBHOOK_SECRET`  | Secret Manager        | _secret_                                                                              | Razorpay webhook validation secret      |
-| `CLOUDINARY_CLOUD_NAME`    | Cloud Run Env         | `veyora-cloud`                                                                        | Cloudinary storage bucket name          |
-| `CLOUDINARY_API_KEY`       | Secret Manager        | `xxxxxxxxx`                                                                           | Cloudinary API Key                      |
-| `CLOUDINARY_API_SECRET`    | Secret Manager        | _secret_                                                                              | Cloudinary API Secret                   |
-| `CLOUDINARY_UPLOAD_FOLDER` | Cloud Run Env         | `veyora`                                                                              | Cloudinary asset folder                 |
+2. **Provision and Attach Persistent Disk**:
 
----
+   ```bash
+   gcloud compute disks create mongodb-data-disk \
+     --project=PROJECT_ID \
+     --zone=us-central1-a \
+     --size=50GB \
+     --type=pd-ssd
 
-## 4. Background Worker Deployment on Google Cloud Run (`apps/worker`)
+   gcloud compute instances attach-disk veyora-mongodb-instance \
+     --project=PROJECT_ID \
+     --zone=us-central1-a \
+     --disk=mongodb-data-disk \
+     --device-name=mongodb-data
+   ```
 
-### Cloud Run Continuous Worker Architecture
+3. **Deploy Docker Compose**:
+   On the VM, files from `infra/gce-mongodb/` are placed in `/opt/veyora-mongodb`:
+   - `docker-compose.yml`: Spins up official `mongo:7.0.14` binding to private IP `10.128.0.2:27017` with WiredTiger cache tuning.
+   - `init-mongo.js`: Automatically executes on initial startup to create the unprivileged application user `veyora_app_user`.
+   - `startup-script.sh`: Automates disk formatting, mounting to `/mnt/disks/mongodb-data`, Docker Engine installation, and service startup.
 
-Standard Cloud Run services throttle CPU to zero when no incoming HTTP requests exist, which would pause background BullMQ queue workers. To solve this reliably:
+### 3.2 Automated Backups and Retention
 
-1. **Always-On CPU**: Configured with `--no-cpu-throttling` (CPU is always allocated).
-2. **Min Instances**: Set to `--min-instances=1` (keeps at least 1 instance continuously polling Redis for jobs).
-3. **No Unauthenticated HTTP Ingress**: Set to `--no-allow-unauthenticated` so external public web traffic cannot trigger the worker.
-4. **BullMQ Reliability**: Connects via Upstash TCP Redis (`rediss://...`) with `maxRetriesPerRequest: null`.
-5. **No unnecessary HTTP servers**: The worker process runs purely event-driven BullMQ workers and handles graceful `SIGTERM` draining.
+- Nightly cron job (`backup-mongodb.sh`) executes `mongodump --gzip` inside the container.
+- Syncs gzip archives to Google Cloud Storage (`gs://veyora-production-backups/mongodb/`).
+- Enforces a 7-day local disk retention policy.
 
-### Environment Variables Matrix (`@veyora/worker`)
+### 3.3 Restore Procedure
 
-| Variable                | Source         | Example / Default                                 | Description                                |
-| ----------------------- | -------------- | ------------------------------------------------- | ------------------------------------------ |
-| `NODE_ENV`              | Cloud Run Env  | `production`                                      | Production mode                            |
-| `MONGODB_URI`           | Secret Manager | `mongodb+srv://...`                               | MongoDB Atlas connection string            |
-| `REDIS_URL`             | Secret Manager | `rediss://default:xxxx@usw1-xxxx.upstash.io:6379` | Upstash Redis connection URI               |
-| `CONCURRENCY`           | Cloud Run Env  | `5`                                               | BullMQ worker concurrency per queue        |
-| `STOREFRONT_URL`        | Cloud Run Env  | `https://www.veyora.com`                          | Storefront base URL for cache revalidation |
-| `INTERNAL_CACHE_SECRET` | Secret Manager | _32+ char secret_                                 | Secret matching Next.js revalidation route |
+To restore a snapshot:
+
+```bash
+/usr/local/bin/restore-mongodb /mnt/disks/mongodb-data/backups/dump_YYYYMMDD_HHMMSS
+```
+
+The script uses `mongorestore --gzip --drop` and validates the database connection with a test ping.
 
 ---
 
-## 5. Upstash Redis Setup
+## 4. Backend API on Google Cloud Run (`apps/api`)
 
-- **Protocol**: Standard Redis TCP with TLS enabled (`rediss://...`).
-- Upstash REST/HTTP API is NOT used for BullMQ workers because BullMQ requires persistent bidirectional TCP socket connections and stream commands (`XREAD`, `BRPOPLPUSH`, etc.).
-- Both `apps/api` and `apps/worker` automatically recognize `REDIS_URL` with `rediss://` or `REDIS_TLS=true` and instantiate `ioredis` with TLS options.
-
----
-
-## 6. Vercel Web Storefront (`apps/web`) & Admin Portal (`apps/admin`)
-
-Both applications are deployed as independent projects on Vercel:
-
-- **`apps/web`**:
-  - Root Directory: `apps/web`
-  - Build command: `cd ../.. && npm run build:packages && npm run build --workspace=@veyora/web`
-  - `NEXT_PUBLIC_API_URL` = `https://api.veyora.com/api/v1`
-  - `NEXT_PUBLIC_SITE_URL` = `https://www.veyora.com`
-  - `INTERNAL_CACHE_SECRET` = Pre-shared worker revalidation secret (server-only)
-- **`apps/admin`**:
-  - Root Directory: `apps/admin`
-  - Build command: `cd ../.. && npm run build:packages && npm run build --workspace=@veyora/admin`
-  - `NEXT_PUBLIC_API_URL` = `https://api.veyora.com/api/v1`
+- **Container Image**: Built via `apps/api/Dockerfile` (Multi-stage Node.js 24 Alpine, non-root `node` user).
+- **Port Routing**: Listens on `0.0.0.0` reading `process.env.PORT`.
+- **Health Probes**:
+  - Liveness: `GET /health/live` (HTTP 200 `{"status":"alive"}`)
+  - Readiness: `GET /health/ready` (Verifies MongoDB & Redis status)
+- **CORS Policy**: Configured strictly to exact origins (`https://www.veyora.com,https://admin.veyora.com`).
+- **Cookies**: HTTP-only, Secure, SameSite=Lax, path `/api/v1/auth`.
 
 ---
 
-## 7. Authentication, CORS, and Cookies
+## 5. Background Worker on Google Cloud Run (`apps/worker`)
 
-1. **CORS**:
-   - `CORS_ORIGIN` contains the exact Vercel frontend domains (`https://www.veyora.com,https://admin.veyora.com`).
-   - Wildcards are rejected in production when credentials are sent.
-2. **Refresh Token Cookie**:
-   - `httpOnly: true` (XSS immune)
-   - `secure: true` (HTTPS only)
-   - `sameSite: "lax"`
-   - `path: "/api/v1/auth"` (Restricts cookie transmission strictly to auth endpoints)
-3. **Session Refresh**:
-   - Web Storefront and Admin Portal client code includes `credentials: "include"`.
-   - Next.js Server Components forward cookies through `server-api-client.ts`.
+### Continuous Processing vs Serverless Scale-to-Zero
+
+Standard Cloud Run request-driven services freeze CPU when no requests are being processed, breaking BullMQ queue consumption.
+
+- **Worker Configuration**:
+  - `--no-cpu-throttling`: Allocates CPU continuously.
+  - `--min-instances=1`: Guarantees at least 1 warm worker continuously listening for BullMQ queue events.
+  - `--no-allow-unauthenticated`: Ingress is blocked from public web traffic.
+- **Estimated Operating Cost**:
+  - An always-on 1 vCPU / 1 GiB instance running 24/7 on Cloud Run with `--no-cpu-throttling` costs approximately **$25 - $32 / month** on Google Cloud.
+  - In comparison, running on a shared Compute Engine VM or alongside MongoDB costs **$10 - $15 / month**.
+
+---
+
+## 6. Upstash Redis Setup
+
+- **Compatibility**: Standard TCP Redis connection over TLS (`rediss://...`).
+- BullMQ and `@socket.io/redis-adapter` require native TCP streaming commands.
+- `apps/api` and `apps/worker` automatically enable TLS when `REDIS_URL` starts with `rediss://` or `REDIS_TLS=true`.
+- Credentials remain strictly server-side.
+
+---
+
+## 7. Vercel Deployments (Storefront & Admin)
+
+### 7.1 Web Storefront (`apps/web`)
+
+- **Root Directory**: `apps/web`
+- **Build Command**: `cd ../.. && npm run build:packages && npm run build --workspace=@veyora/web`
+- **Environment Variables**:
+  - `NEXT_PUBLIC_API_URL`: `https://api.veyora.com/api/v1`
+  - `NEXT_PUBLIC_SITE_URL`: `https://www.veyora.com`
+  - `INTERNAL_CACHE_SECRET`: Pre-shared revalidation secret
+  - `API_URL`: `https://api.veyora.com/api/v1`
+
+### 7.2 Admin Portal (`apps/admin`)
+
+- **Root Directory**: `apps/admin`
+- **Build Command**: `cd ../.. && npm run build:packages && npm run build --workspace=@veyora/admin`
+- **Environment Variables**:
+  - `NEXT_PUBLIC_API_URL`: `https://api.veyora.com/api/v1`
+  - `API_URL`: `https://api.veyora.com/api/v1`
 
 ---
 
 ## 8. GitHub Actions CI/CD Pipeline
 
-The `.github/workflows/deploy-production.yml` workflow automates the deployment:
+The workflow `.github/workflows/deploy-production.yml` runs automatically on `main`:
 
-1. **Pre-Deployment Quality Gates**:
-   - `npm run typecheck`
-   - `npm run lint:check`
-   - `npm run format:check`
-   - `npm run test`
-   - `npm run build`
-2. **Google Cloud Authentication**:
-   - Authenticates using `google-github-actions/auth` with Workload Identity Federation (no stored credentials).
-3. **Artifact Registry**:
-   - Builds API & Worker Docker containers using Buildx.
-   - Pushes images tagged with commit SHA (`${{ github.sha }}`) and `latest`.
-4. **Cloud Run Deployment**:
-   - Deploys `veyora-api` to Cloud Run.
-   - Deploys `veyora-worker` to Cloud Run with `--no-cpu-throttling` and `--min-instances=1`.
-5. **Vercel Deployment**:
-   - Dispatches Vercel deploy hooks for `veyora-web` and `veyora-admin`.
-
-### GitHub Secrets and Variables Required
-
-#### Variables (`vars`)
-
-- `GCP_PROJECT_ID`: Google Cloud Project ID (e.g. `veyora-production`)
-- `GCP_REGION`: Target region (e.g. `us-central1`)
-- `GCP_ARTIFACT_REPO`: Artifact Registry repo name (`veyora-docker-repo`)
-
-#### Secrets (`secrets`)
-
-- `GCP_WORKLOAD_IDENTITY_PROVIDER`: `projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/providers/github-provider`
-- `GCP_SERVICE_ACCOUNT`: `github-actions-deployer@PROJECT_ID.iam.gserviceaccount.com`
-- `VERCEL_WEB_DEPLOY_HOOK_URL`: Vercel Deploy Hook for Storefront
-- `VERCEL_ADMIN_DEPLOY_HOOK_URL`: Vercel Deploy Hook for Admin
+1. **Quality Gates**: `typecheck`, `lint:check`, `format:check`, `test`, `build`.
+2. **OIDC Authentication**: Authenticates via Google Cloud Workload Identity Federation.
+3. **Container Registry**: Builds API and Worker images and pushes to Artifact Registry with commit SHA tags (`sha-${{ github.sha }}`) and `latest`.
+4. **Deploy API**: Deploys `veyora-api` to Cloud Run and verifies `/health/live`.
+5. **Deploy Worker**: Deploys `veyora-worker` to Cloud Run with `--no-cpu-throttling` and `--min-instances=1`.
+6. **Vercel Deployments**: Triggers Web Storefront and Admin Portal via Deploy Hooks.
 
 ---
 
 ## 9. Rollback Procedures
 
-### Google Cloud Run (API & Worker)
+### Google Cloud Run
 
-Cloud Run maintains an immutable revision history for every deployment:
+Cloud Run keeps immutable revision history:
 
-1. In the Google Cloud Console, navigate to **Cloud Run** > Click `veyora-api` or `veyora-worker`.
-2. Go to the **Revisions** tab.
-3. Select the previous stable revision.
-4. Click **Manage Traffic** > Route 100% of traffic to the stable revision (instant 1-second atomic rollback).
+1. Open Google Cloud Console > **Cloud Run** > Select `veyora-api` or `veyora-worker`.
+2. Go to **Revisions** tab.
+3. Select previous working revision > Click **Manage Traffic** > Route 100% of traffic. Instant 1-second rollback.
 
-### Vercel (Web & Admin)
+### Vercel
 
-1. Go to Vercel Dashboard > Select Project (`veyora-web` or `veyora-admin`).
-2. Go to the **Deployments** tab.
-3. Find the previous stable deployment > Click `...` > **Promote to Production**.
+1. Open Vercel Dashboard > Select Project (`veyora-web` or `veyora-admin`).
+2. Go to **Deployments** > Select previous working build > Click `...` > **Promote to Production**.

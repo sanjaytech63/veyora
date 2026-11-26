@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:7.0.14
+    container_name: veyora-mongodb-prod
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-veyora_prod}
+    ports:
+      # Bind only to the local private VPC network interface, never 0.0.0.0
+      - "10.128.0.2:27017:27017"
+    volumes:
+      # Mount point for the attached Google Compute Engine Persistent Disk
+      - /mnt/disks/mongodb-data/data/db:/data/db
+      - /mnt/disks/mongodb-data/data/configdb:/data/configdb
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    command: >
+      mongod
+      --bind_ip 10.128.0.2,127.0.0.1
+      --auth
+      --wiredTigerCacheSizeGB 1.5
+      --logpath /data/db/mongod.log
+      --logappend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
