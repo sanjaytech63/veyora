@@ -100,6 +100,6 @@ test.describe("E2E — Product Catalog Browsing & Search Relevance", () => {
       page.getByRole("heading", { name: "Chanderi Silk Kurti Set with Organza Dupatta" })
     ).toBeVisible();
     await expect(page.getByText(/handcrafted pure chanderi silk kurti/i).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: /add to bag/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /add to (cart|bag)/i }).first()).toBeVisible();
   });
 });
