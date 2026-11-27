@@ -44,6 +44,7 @@ export const apiEnvSchema = z
     CLOUDINARY_API_KEY: z.string().min(1).default("veyora_cloud_api_key_12345"),
     CLOUDINARY_API_SECRET: z.string().min(1).default("veyora_cloud_api_secret_67890"),
     CLOUDINARY_UPLOAD_FOLDER: z.string().default("veyora"),
+    ALLOW_TEST_PAYMENTS: z.coerce.boolean().optional().default(false),
   })
   .superRefine((data, ctx) => {
     if (data.NODE_ENV === "production") {
@@ -86,6 +87,11 @@ export const apiEnvSchema = z
       ] as const;
 
       for (const [key, fallback] of productionSecretDefaults) {
+        const isRazorpayKey = key.startsWith("RAZORPAY_");
+        if (isRazorpayKey && data.ALLOW_TEST_PAYMENTS) {
+          continue;
+        }
+
         if (
           data[key] === fallback ||
           (key === "RAZORPAY_KEY_ID" && data[key].startsWith("rzp_test_"))
