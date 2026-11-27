@@ -1,4 +1,4 @@
-name: Veyora Production Deployment (Google Cloud Run & Vercel)
+name: Veyora Production Deployment (Render + Vercel)
 
 on:
   workflow_dispatch:
@@ -12,7 +12,6 @@ concurrency:
 
 permissions:
   contents: read
-  id-token: write # Required for Google Cloud Workload Identity Federation (Zero static secrets)
 
 jobs:
   validate-and-gate:
@@ -37,7 +36,7 @@ jobs:
       - name: Build shared packages
         run: npm run build:packages
 
-      - name: Verify compilation and tests
+      - name: Verify compilation, linting, formatting and test suites
         run: |
           npm run typecheck
           npm run lint:check
@@ -45,112 +44,85 @@ jobs:
           npm run test
           npm run build
 
-  deploy-gcp-cloud-run:
-    name: Build & Deploy to Google Cloud Run
+  deploy-render:
+    name: Deploy API & Background Worker to Render
     needs: [validate-and-gate]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: production
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # Authenticate to Google Cloud using Workload Identity Federation (No JSON keys)
-      - name: Authenticate to Google Cloud (WIF)
-        id: auth
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: Configure Docker authentication for Artifact Registry
+      # ------------------------------------------------------------------------
+      # Trigger Render API Web Service Deployment
+      # ------------------------------------------------------------------------
+      - name: Trigger Render API Deploy Hook
+        if: env.RENDER_API_DEPLOY_HOOK_URL != ''
+        env:
+          RENDER_API_DEPLOY_HOOK_URL: ${{ secrets.RENDER_API_DEPLOY_HOOK_URL }}
         run: |
-          gcloud auth configure-docker ${{ vars.GCP_REGION || 'us-central1' }}-docker.pkg.dev --quiet
+          echo "Triggering Render API Web Service deployment..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${RENDER_API_DEPLOY_HOOK_URL}")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "Render API deployment hook dispatched successfully (HTTP $HTTP_CODE)."
+          else
+            echo "Render API deployment hook returned unexpected status: $HTTP_CODE"
+            exit 1
+          fi
 
-      - name: Define Image Tags
-        id: meta
+      - name: Fallback notice for Render API
+        if: env.RENDER_API_DEPLOY_HOOK_URL == ''
+        env:
+          RENDER_API_DEPLOY_HOOK_URL: ${{ secrets.RENDER_API_DEPLOY_HOOK_URL }}
         run: |
-          REGISTRY="${{ vars.GCP_REGION || 'us-central1' }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GCP_ARTIFACT_REPO || 'veyora-docker-repo' }}"
-          SHA_TAG="${{ github.sha }}"
-          echo "api_image=${REGISTRY}/veyora-api:${SHA_TAG}" >> $GITHUB_OUTPUT
-          echo "api_image_latest=${REGISTRY}/veyora-api:latest" >> $GITHUB_OUTPUT
-          echo "worker_image=${REGISTRY}/veyora-worker:${SHA_TAG}" >> $GITHUB_OUTPUT
-          echo "worker_image_latest=${REGISTRY}/veyora-worker:latest" >> $GITHUB_OUTPUT
+          echo "RENDER_API_DEPLOY_HOOK_URL secret is not set. If native Render autoDeploy is enabled on the main branch, Render triggers build automatically on push."
 
       # ------------------------------------------------------------------------
-      # Build & Push API Image
+      # Trigger Render Background Worker Deployment
       # ------------------------------------------------------------------------
-      - name: Build & Push API Image to Artifact Registry
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: apps/api/Dockerfile
-          push: true
-          tags: |
-            ${{ steps.meta.outputs.api_image }}
-            ${{ steps.meta.outputs.api_image_latest }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      # ------------------------------------------------------------------------
-      # Build & Push Worker Image
-      # ------------------------------------------------------------------------
-      - name: Build & Push Worker Image to Artifact Registry
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: apps/worker/Dockerfile
-          push: true
-          tags: |
-            ${{ steps.meta.outputs.worker_image }}
-            ${{ steps.meta.outputs.worker_image_latest }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      # ------------------------------------------------------------------------
-      # Deploy API to Google Cloud Run
-      # ------------------------------------------------------------------------
-      - name: Deploy API Service to Cloud Run
-        id: deploy-api
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          service: veyora-api
-          image: ${{ steps.meta.outputs.api_image }}
-          region: ${{ vars.GCP_REGION || 'us-central1' }}
-
-      # ------------------------------------------------------------------------
-      # Verify API Health Probe
-      # ------------------------------------------------------------------------
-      - name: Verify Deployed API Liveness Endpoint
+      - name: Trigger Render Worker Deploy Hook
+        if: env.RENDER_WORKER_DEPLOY_HOOK_URL != ''
+        env:
+          RENDER_WORKER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_WORKER_DEPLOY_HOOK_URL }}
         run: |
-          API_URL="${{ steps.deploy-api.outputs.url }}"
-          echo "Probing API at ${API_URL}/health/live..."
-          curl -s -f --retry 5 --retry-delay 5 "${API_URL}/health/live"
-          echo "API Liveness verification passed."
+          echo "Triggering Render Background Worker deployment..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${RENDER_WORKER_DEPLOY_HOOK_URL}")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "Render Worker deployment hook dispatched successfully (HTTP $HTTP_CODE)."
+          else
+            echo "Render Worker deployment hook returned unexpected status: $HTTP_CODE"
+            exit 1
+          fi
+
+      - name: Fallback notice for Render Worker
+        if: env.RENDER_WORKER_DEPLOY_HOOK_URL == ''
+        env:
+          RENDER_WORKER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_WORKER_DEPLOY_HOOK_URL }}
+        run: |
+          echo "RENDER_WORKER_DEPLOY_HOOK_URL secret is not set. If native Render autoDeploy is enabled on the main branch, Render triggers build automatically on push."
 
       # ------------------------------------------------------------------------
-      # Deploy Worker to Google Cloud Run (Dedicated Background Execution)
+      # Optional Health Verification if production API URL is provided
       # ------------------------------------------------------------------------
-      - name: Deploy Worker Service to Cloud Run
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          service: veyora-worker
-          image: ${{ steps.meta.outputs.worker_image }}
-          region: ${{ vars.GCP_REGION || 'us-central1' }}
-          flags: --no-cpu-throttling --min-instances=1 --max-instances=3 --no-allow-unauthenticated
+      - name: Verify Production API Liveness Probe
+        if: env.PRODUCTION_API_URL != ''
+        env:
+          PRODUCTION_API_URL: ${{ secrets.PRODUCTION_API_URL }}
+        run: |
+          echo "Waiting 30 seconds for Render rolling deployment to initiate..."
+          sleep 30
+          echo "Probing API at ${PRODUCTION_API_URL}/health/live..."
+          curl -s -f --retry 10 --retry-delay 10 --retry-connrefused "${PRODUCTION_API_URL}/health/live"
+          echo "Production API liveness check passed."
 
   deploy-vercel:
     name: Trigger Vercel Deployments (Web & Admin)
     needs: [validate-and-gate]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment:
+      name: production
     steps:
       - name: Trigger Vercel Web Deploy Hook
         if: env.VERCEL_WEB_DEPLOY_HOOK_URL != ''
@@ -158,8 +130,21 @@ jobs:
           VERCEL_WEB_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_WEB_DEPLOY_HOOK_URL }}
         run: |
           echo "Triggering Vercel Web Storefront deployment..."
-          curl -s -f -X POST "${VERCEL_WEB_DEPLOY_HOOK_URL}"
-          echo "Vercel Web deployment hook dispatched."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${VERCEL_WEB_DEPLOY_HOOK_URL}")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "Vercel Web deployment hook dispatched successfully (HTTP $HTTP_CODE)."
+          else
+            echo "Vercel Web deploy hook returned unexpected status: $HTTP_CODE"
+            exit 1
+          fi
+
+      - name: Fallback notice for Vercel Web
+        if: env.VERCEL_WEB_DEPLOY_HOOK_URL == ''
+        env:
+          VERCEL_WEB_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_WEB_DEPLOY_HOOK_URL }}
+        run: |
+          echo "VERCEL_WEB_DEPLOY_HOOK_URL is not set. Vercel native GitHub integration will automatically build and deploy apps/web on push to main."
 
       - name: Trigger Vercel Admin Deploy Hook
         if: env.VERCEL_ADMIN_DEPLOY_HOOK_URL != ''
@@ -167,5 +152,18 @@ jobs:
           VERCEL_ADMIN_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_ADMIN_DEPLOY_HOOK_URL }}
         run: |
           echo "Triggering Vercel Admin Portal deployment..."
-          curl -s -f -X POST "${VERCEL_ADMIN_DEPLOY_HOOK_URL}"
-          echo "Vercel Admin deployment hook dispatched."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${VERCEL_ADMIN_DEPLOY_HOOK_URL}")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "Vercel Admin deployment hook dispatched successfully (HTTP $HTTP_CODE)."
+          else
+            echo "Vercel Admin deploy hook returned unexpected status: $HTTP_CODE"
+            exit 1
+          fi
+
+      - name: Fallback notice for Vercel Admin
+        if: env.VERCEL_ADMIN_DEPLOY_HOOK_URL == ''
+        env:
+          VERCEL_ADMIN_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_ADMIN_DEPLOY_HOOK_URL }}
+        run: |
+          echo "VERCEL_ADMIN_DEPLOY_HOOK_URL is not set. Vercel native GitHub integration will automatically build and deploy apps/admin on push to main."

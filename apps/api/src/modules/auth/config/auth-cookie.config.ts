@@ -8,11 +8,13 @@ export const AUTH_COOKIE_NAME = "refreshToken";
  */
 export function getRefreshTokenCookieOptions(): CookieOptions {
   const isProduction = env.NODE_ENV === "production";
+  const sameSite = (env.COOKIE_SAME_SITE as "lax" | "none" | "strict") || "lax";
 
   return {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: "lax",
+    secure: isProduction || sameSite === "none",
+    sameSite,
+    ...(env.COOKIE_DOMAIN ? { domain: env.COOKIE_DOMAIN } : {}),
     path: "/api/v1/auth",
     maxAge: env.JWT_REFRESH_EXPIRES_IN_DAYS * 24 * 60 * 60 * 1000,
   };
@@ -24,11 +26,13 @@ export function getRefreshTokenCookieOptions(): CookieOptions {
  */
 export function getClearRefreshTokenCookieOptions(): CookieOptions {
   const isProduction = env.NODE_ENV === "production";
+  const sameSite = (env.COOKIE_SAME_SITE as "lax" | "none" | "strict") || "lax";
 
   return {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: "lax",
+    secure: isProduction || sameSite === "none",
+    sameSite,
+    ...(env.COOKIE_DOMAIN ? { domain: env.COOKIE_DOMAIN } : {}),
     path: "/api/v1/auth",
   };
 }

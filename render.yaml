@@ -1,0 +1,89 @@
+# ==============================================================================
+# Render Blueprint Specification (Infrastructure-as-Code)
+# Deploys Veyora Backend API (Web Service) & Background Worker
+# ==============================================================================
+services:
+  # ----------------------------------------------------------------------------
+  # 1. Veyora Backend API (Node.js Express Web Service)
+  # ----------------------------------------------------------------------------
+  - type: web
+    name: veyora-api
+    runtime: node
+    plan: starter
+    region: oregon
+    rootDir: .
+    buildCommand: npm ci && npm run build:packages && npm run build:api
+    startCommand: node apps/api/dist/server.js
+    healthCheckPath: /health/live
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: API_PREFIX
+        value: /api/v1
+      - key: CORS_ORIGIN
+        sync: false # Set to approved origins: e.g. https://www.veyora.com,https://admin.veyora.com
+      - key: COOKIE_SECRET
+        generateValue: true
+      - key: COOKIE_SAME_SITE
+        value: lax
+      - key: COOKIE_DOMAIN
+        sync: false # Set to .veyora.com when custom domain is active
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN_DAYS
+        value: 7
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 900000
+      - key: RATE_LIMIT_MAX
+        value: 100
+      - key: BODY_LIMIT
+        value: 10mb
+      - key: LOG_LEVEL
+        value: info
+      - key: MONGODB_URI
+        sync: false # MongoDB Atlas URI (mongodb+srv://...)
+      - key: REDIS_URL
+        sync: false # Upstash Redis TCP/TLS URI (rediss://default:...@...upstash.io:6379)
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLOUDINARY_UPLOAD_FOLDER
+        value: veyora
+
+  # ----------------------------------------------------------------------------
+  # 2. Veyora Background Worker (BullMQ Consumer Service)
+  # ----------------------------------------------------------------------------
+  - type: worker
+    name: veyora-worker
+    runtime: node
+    plan: starter
+    region: oregon
+    rootDir: .
+    buildCommand: npm ci && npm run build:packages && npm run build:worker
+    startCommand: node apps/worker/dist/index.js
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false # MongoDB Atlas URI (mongodb+srv://...)
+      - key: REDIS_URL
+        sync: false # Upstash Redis TCP/TLS URI (rediss://default:...@...upstash.io:6379)
+      - key: CONCURRENCY
+        value: 5

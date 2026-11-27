@@ -13,6 +13,8 @@ export const apiEnvSchema = z
       .string()
       .min(16, "COOKIE_SECRET must be at least 16 characters long")
       .default("veyora_secure_cookie_secret_dev_32chars"),
+    COOKIE_DOMAIN: z.string().optional(),
+    COOKIE_SAME_SITE: z.enum(["lax", "none", "strict"]).optional().default("lax"),
     RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(900000), // 15 mins
     RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
     BODY_LIMIT: z.string().default("10mb"),
