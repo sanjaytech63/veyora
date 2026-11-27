@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("E2E — Admin Product Management & Catalog Governance", () => {
-  const ADMIN_BASE = "http://localhost:3001";
+  const ADMIN_BASE = process.env["PLAYWRIGHT_ADMIN_BASE_URL"] || "http://localhost:3301";
 
   test.beforeEach(async ({ page }) => {
     // Mock admin auth session refresh and verification
