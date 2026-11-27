@@ -59,7 +59,7 @@ export function getNotificationStyle(type: NotificationType): NotificationMetaSt
 export function formatNotificationTime(isoDate: string): string {
   try {
     const date = new Date(isoDate);
-    return date.toLocaleDateString([], {
+    return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
     });
