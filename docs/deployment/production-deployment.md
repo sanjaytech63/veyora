@@ -240,18 +240,18 @@ Veyora implements secure, short-lived JWT access tokens (15m) paired with rotati
 
 - Web Storefront: `https://www.veyora.com` (and `https://veyora.com` redirect)
 - Admin Portal: `https://admin.veyora.com`
-- Backend API: `https://api.veyora.com`
+- Backend API (Render): `https://veyora-api-1lig.onrender.com` (custom domain: `https://api.veyora.com`)
 
 ### Required DNS Records
 
 In your domain registrar / DNS provider (e.g. Cloudflare, Route53, Namecheap):
 
-| Type      | Name / Host | Target / Value            | TTL  | Managed Service       |
-| --------- | ----------- | ------------------------- | ---- | --------------------- |
-| **CNAME** | `www`       | `cname.vercel-dns.com`    | Auto | Vercel (`apps/web`)   |
-| **A**     | `@`         | `76.76.21.21`             | Auto | Vercel Apex Redirect  |
-| **CNAME** | `admin`     | `cname.vercel-dns.com`    | Auto | Vercel (`apps/admin`) |
-| **CNAME** | `api`       | `veyora-api.onrender.com` | Auto | Render (`apps/api`)   |
+| Type      | Name / Host | Target / Value                 | TTL  | Managed Service       |
+| --------- | ----------- | ------------------------------ | ---- | --------------------- |
+| **CNAME** | `www`       | `cname.vercel-dns.com`         | Auto | Vercel (`apps/web`)   |
+| **A**     | `@`         | `76.76.21.21`                  | Auto | Vercel Apex Redirect  |
+| **CNAME** | `admin`     | `cname.vercel-dns.com`         | Auto | Vercel (`apps/admin`) |
+| **CNAME** | `api`       | `veyora-api-1lig.onrender.com` | Auto | Render (`apps/api`)   |
 
 _Note: Once DNS records propagate, Vercel and Render automatically provision and renew Let's Encrypt SSL/TLS certificates with zero downtime._
 
@@ -326,19 +326,19 @@ The repository includes a root `render.yaml` specification declaring both `veyor
 
 ### 10.3 Web Storefront (`apps/web` on Vercel)
 
-| Variable Name           | Required | Example / Description                            |
-| ----------------------- | -------- | ------------------------------------------------ |
-| `NODE_ENV`              | **Yes**  | `production`                                     |
-| `NEXT_PUBLIC_API_URL`   | **Yes**  | `https://api.veyora.com/api/v1`                  |
-| `NEXT_PUBLIC_SITE_URL`  | **Yes**  | `https://www.veyora.com`                         |
-| `INTERNAL_CACHE_SECRET` | Optional | Shared revalidation secret for ISR cache purging |
+| Variable Name           | Required | Example / Description                                                                            |
+| ----------------------- | -------- | ------------------------------------------------------------------------------------------------ |
+| `NODE_ENV`              | **Yes**  | `production`                                                                                     |
+| `NEXT_PUBLIC_API_URL`   | **Yes**  | `https://veyora-api-1lig.onrender.com/api/v1` (or custom domain `https://api.veyora.com/api/v1`) |
+| `NEXT_PUBLIC_SITE_URL`  | **Yes**  | `https://www.veyora.com`                                                                         |
+| `INTERNAL_CACHE_SECRET` | Optional | Shared revalidation secret for ISR cache purging                                                 |
 
 ### 10.4 Admin Portal (`apps/admin` on Vercel)
 
-| Variable Name         | Required | Example / Description           |
-| --------------------- | -------- | ------------------------------- |
-| `NODE_ENV`            | **Yes**  | `production`                    |
-| `NEXT_PUBLIC_API_URL` | **Yes**  | `https://api.veyora.com/api/v1` |
+| Variable Name         | Required | Example / Description                                                                            |
+| --------------------- | -------- | ------------------------------------------------------------------------------------------------ |
+| `NODE_ENV`            | **Yes**  | `production`                                                                                     |
+| `NEXT_PUBLIC_API_URL` | **Yes**  | `https://veyora-api-1lig.onrender.com/api/v1` (or custom domain `https://api.veyora.com/api/v1`) |
 
 ---
 
