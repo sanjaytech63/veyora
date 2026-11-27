@@ -1,19 +1,19 @@
 # ==============================================================================
 # Render Blueprint Specification (Infrastructure-as-Code)
-# Deploys Veyora Backend API (Web Service) & Background Worker
+# Deploys Veyora Backend API & Integrated BullMQ Worker on 100% Free Tier
 # ==============================================================================
 services:
   # ----------------------------------------------------------------------------
-  # 1. Veyora Backend API (Node.js Express Web Service)
+  # 1. Veyora Backend API & Background Worker (100% Free Tier Web Service)
   # ----------------------------------------------------------------------------
   - type: web
     name: veyora-api
     runtime: node
-    plan: starter
+    plan: free
     region: oregon
     rootDir: .
-    buildCommand: npm ci && npm run build:packages && npm run build:api
-    startCommand: node apps/api/dist/server.js
+    buildCommand: npm ci && npm run build:packages && npm run build:api && npm run build:worker
+    startCommand: node scripts/start-render.cjs
     healthCheckPath: /health/live
     autoDeploy: true
     envVars:
@@ -51,6 +51,8 @@ services:
         sync: false # MongoDB Atlas URI (mongodb+srv://...)
       - key: REDIS_URL
         sync: false # Upstash Redis TCP/TLS URI (rediss://default:...@...upstash.io:6379)
+      - key: CONCURRENCY
+        value: 3
       - key: RAZORPAY_KEY_ID
         sync: false
       - key: RAZORPAY_KEY_SECRET
@@ -65,25 +67,3 @@ services:
         sync: false
       - key: CLOUDINARY_UPLOAD_FOLDER
         value: veyora
-
-  # ----------------------------------------------------------------------------
-  # 2. Veyora Background Worker (BullMQ Consumer Service)
-  # ----------------------------------------------------------------------------
-  - type: worker
-    name: veyora-worker
-    runtime: node
-    plan: starter
-    region: oregon
-    rootDir: .
-    buildCommand: npm ci && npm run build:packages && npm run build:worker
-    startCommand: node apps/worker/dist/index.js
-    autoDeploy: true
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: MONGODB_URI
-        sync: false # MongoDB Atlas URI (mongodb+srv://...)
-      - key: REDIS_URL
-        sync: false # Upstash Redis TCP/TLS URI (rediss://default:...@...upstash.io:6379)
-      - key: CONCURRENCY
-        value: 5
