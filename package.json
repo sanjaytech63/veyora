@@ -47,7 +47,7 @@
     "check:push": "npm run build:packages && npm run typecheck && npm run lint && npm run format:check && npm run test",
     "check:turbo": "turbo run typecheck lint test build",
     "clean": "rimraf node_modules apps/*/node_modules apps/*/.next apps/*/dist packages/*/node_modules packages/*/dist .turbo",
-    "prepare": "husky"
+    "prepare": "node -e \"if (process.env.NODE_ENV !== 'production' && !process.env.CI) { try { require('child_process').execSync('husky', { stdio: 'ignore' }); } catch {} }\""
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",
